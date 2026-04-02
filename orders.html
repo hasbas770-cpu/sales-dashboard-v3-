@@ -146,7 +146,7 @@ const DB={
   set:(k,v)=>localStorage.setItem(k,JSON.stringify(v)),
 };
 
-const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx19-gvFKvmwIVteZCiiW0d1qUaLpTRnT6yQGaCm_OfaRLbvpiE9hI8qYLVrqW9cmBXtw/exec';
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycby75MvmFGFgbJlvSbVp1_f3OvFnvgNzyR5MuLkZx3SQG_AqegkH-0BUPMd8vbjR6r6iqg/exec';
 
 async function pushOrderToSheets(order){
   try {
@@ -249,7 +249,19 @@ function jsonpRequest(url, callback){
 function getLineByProduct(productName){
   const prods = DB.get('products');
   const p = prods.find(x=>x.name===productName);
-  return p?.line || '';
+  if(p?.line) return p.line;
+
+  const name = String(productName).toLowerCase();
+  const derma   = ['acretin','elica','fusibact','hi-quin','hiquin','lamifen','lican','promax','surecure','elicasal'];
+  const optha   = ['arox','brimo','brofix','fluca','hyfresh','latano','loxtra','olopat','optidex','optiflox','optifresh','optilone','optipred','tymer','uni fresh','unifresh','xola','xolamol','optha'];
+  const general = ['azi-once','azionce','feroton','maxim','prima','fast-flam','fastflam','relaxon','dompy','fixit','meva','zoron','azi once'];
+  const cm      = ['vittoria','dapazin','sitagen','sitavic','vildus','lintra'];
+
+  if (derma.some(k   => name.includes(k))) return 'Derma';
+  if (optha.some(k   => name.includes(k))) return 'Optha';
+  if (general.some(k => name.includes(k))) return 'General Line';
+  if (cm.some(k      => name.includes(k))) return 'CM Line';
+  return '';
 }
 
 function renderOrdersFromSheets(orders){
