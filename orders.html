@@ -206,14 +206,17 @@ async function loadOrdersFromSheets(){
         };
       }
       grouped[key].items.push({
-        product:  o.product,
-        line:     getLineByProduct(o.product),
-        qty:      o.quantity,
-        bonusPct: o.bonusPct,
-        bonusQty: o.bonusQty,
-        price:    o.unitPrice,
-        value:    o.totalValue,
-        doctor:   getDoctorByLine(o.pharmacy, getLineByProduct(o.product)),
+        product:    o.product,
+        line:       o.line || getLineByProduct(o.product),
+        qty:        o.quantity,
+        bonusPct:   o.bonusPct,
+        bonusQty:   o.bonusQty,
+        price:      o.unitPrice,
+        orderValue: o.orderValue || o.quantity * o.unitPrice,
+        bonusValue: o.bonusValue || o.bonusQty * o.unitPrice,
+        value:      o.totalValue,
+        totalValue: o.totalValue,
+        doctor:     getDoctorByLine(o.pharmacy, o.line || getLineByProduct(o.product)),
       });
       grouped[key].total += o.totalValue;
     });
@@ -256,78 +259,113 @@ function renderOrdersFromSheets(orders){
   const monthF = document.getElementById('filter-month')?.value     || '';
 
   const filtered = orders.filter(o=>{
-    if(repF   && o.rep!==repF)           return false;
-    if(phF    && o.pharmacy!==phF)       return false;
-    if(lineF  && !o.items.some(i=>i.line===lineF)) return false;
-    if(monthF && !o.date.startsWith(monthF))       return false;
+    if(repF   && o.rep!==repF)                         return false;
+    if(phF    && o.pharmacy!==phF)                     return false;
+    if(lineF  && !o.items.some(i=>i.line===lineF))     return false;
+    if(monthF && !o.date.startsWith(monthF))           return false;
     return true;
   });
 
-  const totalValue  = filtered.reduce((s,o)=>s+o.total,0);
-  const totalQty    = filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+i.qty,0)+s,0);
-  const totalBonus  = filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+(i.bonusQty||0),0)+s,0);
+  // حسابات صحيحة
+  const totalOrders    = filtered.length;
+  const totalQty       = filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+i.qty,0)+s,0);
+  const totalBonusQty  = filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+(i.bonusQty||0),0)+s,0);
+  const totalOrderVal  = filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+(i.qty*i.price),0)+s,0);
+  const totalBonusVal  = filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+(i.bonusQty*i.price),0)+s,0);
+  const totalGrand     = totalOrderVal + totalBonusVal;
 
   const stats = document.getElementById('list-stats');
   if(stats) stats.innerHTML=`
-    <div class="stat-mini">الأوردرات <span>${filtered.length}</span></div>
+    <div class="stat-mini">الأوردرات <span>${totalOrders}</span></div>
     <div class="stat-mini">إجمالي الكميات <span>${fmt(totalQty)}</span></div>
-    <div class="stat-mini">إجمالي البونص <span>${fmt(totalBonus)}</span></div>
-    <div class="stat-mini">إجمالي القيمة <span>${fmtV(totalValue)}</span></div>
+    <div class="stat-mini">إجمالي البونص <span>${fmt(totalBonusQty)}</span></div>
+    <div class="stat-mini">قيمة الطلبيات <span>${fmtV(totalOrderVal)}</span></div>
+    <div class="stat-mini">قيمة البونص <span>${fmtV(totalBonusVal)}</span></div>
+    <div class="stat-mini">الإجمالي الكلي <span>${fmtV(totalGrand)}</span></div>
   `;
 
   const container = document.getElementById('order-list');
   if(!container) return;
+  if(!filtered.length){ container.innerHTML='<div class="empty">لا توجد أوردرات</div>'; return; }
 
-  if(!filtered.length){
-    container.innerHTML='<div class="empty">لا توجد أوردرات</div>';
-    return;
-  }
+  container.innerHTML = filtered.map((o,oi)=>{
+    const lines   = [...new Set(o.items.map(i=>i.line).filter(Boolean))];
+    const doctors = [...new Set(o.items.map(i=>i.doctor).filter(d=>d&&d!=='—'))];
+    const ordVal  = o.items.reduce((s,i)=>s+(i.qty*i.price),0);
+    const bonVal  = o.items.reduce((s,i)=>s+(i.bonusQty*i.price),0);
+    const grand   = ordVal + bonVal;
+    const safeId  = `ord_${oi}`;
 
-  container.innerHTML = filtered.map(o=>{
-    const lineChips=[...new Set(o.items.map(i=>i.line).filter(Boolean))].map(l=>
-      `<span style="background:${lc(l)}22;color:${lc(l)};border-radius:999px;padding:1px 7px;font-size:10px">${l}</span>`
+    const lineChips = lines.map(l=>
+      `<span style="background:${lc(l)}22;color:${lc(l)};border:1px solid ${lc(l)}44;border-radius:999px;padding:2px 8px;font-size:10px;font-weight:600">${l}</span>`
     ).join('');
-    const doctors=[...new Set(o.items.map(i=>i.doctor).filter(d=>d&&d!=='—'))];
 
     return `
     <div class="order-card">
-      <div class="order-head" onclick="toggleOrder('${o.id.replace(/'/g,"\\'")}')">
+      <div class="order-head" onclick="toggleOrder('${safeId}')">
         <div class="order-info">
-          <span style="font-weight:600">${o.pharmacy}</span>
-          ${o.rep?`<span style="font-size:11px;color:var(--muted)">👤 ${o.rep}</span>`:''}
-          ${o.warehouse?`<span style="font-size:11px;color:var(--muted)">🏭 ${o.warehouse}</span>`:''}
+          <span style="font-size:14px;font-weight:700">${o.pharmacy}</span>
+          ${o.rep    ?`<span style="font-size:11px;color:var(--muted);background:var(--surface2);padding:2px 8px;border-radius:999px">👤 ${o.rep}</span>`:''}
+          ${o.warehouse?`<span style="font-size:11px;color:var(--muted);background:var(--surface2);padding:2px 8px;border-radius:999px">🏭 ${o.warehouse}</span>`:''}
           <span style="font-size:11px;color:var(--muted)">📅 ${o.date}</span>
           ${lineChips}
-          ${doctors.map(d=>`<span style="font-size:10px;color:var(--accent)">👨‍⚕️ ${d}</span>`).join('')}
+          ${doctors.map(d=>`<span style="font-size:10px;color:var(--accent);background:rgba(79,142,247,.1);padding:2px 8px;border-radius:999px">👨‍⚕️ ${d}</span>`).join('')}
         </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-          <span style="font-size:13px;font-weight:700;color:var(--accent2)">${fmtV(o.total)}</span>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">
+          <span style="font-size:12px;color:var(--accent2)">طلبية: <strong>${fmtV(ordVal)}</strong></span>
+          <span style="font-size:12px;color:var(--warn)">بونص: <strong>${fmtV(bonVal)}</strong></span>
+          <span style="font-size:13px;color:#fff;font-weight:700">الإجمالي: ${fmtV(grand)}</span>
         </div>
       </div>
-      <div class="order-body" id="body-${o.id.replace(/[^a-zA-Z0-9]/g,'_')}">
+      <div class="order-body" id="body-${safeId}">
+        <div style="overflow-x:auto">
         <table class="detail-table">
           <thead><tr>
-            <th>المادة</th><th>اللاين</th><th>الطبيب</th>
-            <th>الكمية</th><th>البونص%</th><th>كمية البونص</th><th>السعر</th><th>القيمة</th>
+            <th style="text-align:right">المادة</th>
+            <th>اللاين</th>
+            <th>الطبيب</th>
+            <th>الكمية</th>
+            <th>السعر</th>
+            <th>قيمة الطلبية</th>
+            <th>البونص%</th>
+            <th>كمية البونص</th>
+            <th>قيمة البونص</th>
+            <th>الإجمالي</th>
           </tr></thead>
           <tbody>
-            ${o.items.map(i=>`<tr>
-              <td style="text-align:right;font-weight:600">${i.product}</td>
-              <td>${i.line?`<span style="background:${lc(i.line)}22;color:${lc(i.line)};border-radius:999px;padding:1px 7px;font-size:10px">${i.line}</span>`:'-'}</td>
-              <td style="font-size:10px;color:var(--accent)">${i.doctor||'—'}</td>
-              <td>${fmt(i.qty)}</td>
-              <td>${i.bonusPct||0}%</td>
-              <td style="color:var(--warn)">${fmt(i.bonusQty||0)}</td>
-              <td>${fmtV(i.price)}</td>
-              <td style="color:var(--accent2);font-weight:600">${fmtV(i.value)}</td>
-            </tr>`).join('')}
+            ${o.items.map(i=>{
+              const iOrdVal  = i.qty      * i.price;
+              const iBonVal  = i.bonusQty * i.price;
+              const iGrand   = iOrdVal + iBonVal;
+              return `<tr>
+                <td style="text-align:right;font-weight:600;white-space:nowrap">${i.product}</td>
+                <td>${i.line?`<span style="background:${lc(i.line)}22;color:${lc(i.line)};border-radius:999px;padding:1px 8px;font-size:10px;font-weight:600">${i.line}</span>`:'-'}</td>
+                <td style="font-size:10px;color:var(--accent);white-space:nowrap">${i.doctor||'—'}</td>
+                <td style="font-weight:600">${fmt(i.qty)}</td>
+                <td>${fmtV(i.price)}</td>
+                <td style="color:var(--accent2);font-weight:600">${fmtV(iOrdVal)}</td>
+                <td style="color:var(--muted)">${i.bonusPct||0}%</td>
+                <td style="color:var(--warn);font-weight:600">${fmt(i.bonusQty||0)}</td>
+                <td style="color:var(--warn);font-weight:600">${fmtV(iBonVal)}</td>
+                <td style="color:#fff;font-weight:700;background:rgba(255,255,255,.05)">${fmtV(iGrand)}</td>
+              </tr>`;
+            }).join('')}
+            <tr style="background:var(--surface2);font-weight:700">
+              <td colspan="5" style="text-align:right;color:var(--muted)">الإجمالي</td>
+              <td style="color:var(--accent2)">${fmtV(ordVal)}</td>
+              <td></td>
+              <td style="color:var(--warn)">${fmt(o.items.reduce((s,i)=>s+(i.bonusQty||0),0))}</td>
+              <td style="color:var(--warn)">${fmtV(bonVal)}</td>
+              <td style="color:#fff">${fmtV(grand)}</td>
+            </tr>
           </tbody>
         </table>
+        </div>
       </div>
     </div>`;
   }).join('');
 
-  // Update filter dropdowns with real data
+  // Update filter dropdowns
   const reps = [...new Set(orders.map(o=>o.rep).filter(Boolean))];
   const phs  = [...new Set(orders.map(o=>o.pharmacy).filter(Boolean))];
   document.getElementById('filter-rep').innerHTML =
@@ -498,8 +536,8 @@ function resetForm(){
 function renderOrderList(){ loadOrdersFromSheets(); }
 
 function toggleOrder(id){
-  const safeId = id.replace(/[^a-zA-Z0-9]/g,'_');
-  document.getElementById(`body-${safeId}`)?.classList.toggle('open');
+  const el = document.getElementById(`body-${id}`);
+  if(el) el.classList.toggle('open');
 }
 
 function deleteOrder(id){
