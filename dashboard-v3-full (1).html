@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sales Dashboard v3 - Full Lines</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #0b1020;
+      --bg-alt: #111729;
+      --card: #151b30;
+      --accent: #3b82f6;
+      --accent-soft: rgba(59, 130, 246, 0.15);
+      --accent-strong: rgba(59, 130, 246, 0.35);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --danger: #f97373;
+      --success: #22c55e;
+      --warning: #eab308;
+      --border-subtle: rgba(148, 163, 184, 0.25);
+      --radius-lg: 14px;
+      --radius-md: 10px;
+      --radius-pill: 999px;
+      --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.75);
+      --shadow-subtle: 0 10px 30px rgba(15, 23, 42, 0.6);
+      --transition-fast: 0.18s ease-out;
+      --transition-med: 0.25s ease-out;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1f2937 0, #020617 55%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 18px;
+      display: flex;
+      justify-content: center;
+    }
+    .app-shell {
+      width: 100%;
+      max-width: 1320px;
+      background: linear-gradient(145deg, #020617 0, #020617 40%, #020617 100%);
+      border-radius: 22px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      padding: 18px 18px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 6px 4px 4px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+    }
+    .app-title-block { display: flex; align-items: center; gap: 10px; }
+    .app-logo {
+      width: 34px; height: 34px; border-radius: 12px;
+      background: radial-gradient(circle at 30% 0, #60a5fa 0, #1d4ed8 40%, #020617 100%);
+      display: flex; align-items: center; justify-content: center;
+      color: #e5e7eb; font-weight: 700; font-size: 17px;
+      box-shadow: 0 0 0 1px rgba(37,99,235,0.7), 0 10px 25px rgba(37,99,235,0.55);
+    }
+    .app-title-text { display: flex; flex-direction: column; gap: 2px; }
+    .app-title-text h1 { font-size: 17px; letter-spacing: 0.03em; font-weight: 600; color: #e5e7eb; }
+    .app-title-text span { font-size: 11px; color: var(--muted); }
+    .app-header-right { display: flex; align-items: center; gap: 10px; }
+    .pill-badge {
+      padding: 4px 10px; border-radius: 999px; font-size: 11px;
+      border: 1px solid rgba(148,163,184,0.4); color: var(--muted);
+      display: inline-flex; align-items: center; gap: 6px;
+      background: radial-gradient(circle at top left, #1f2937 0, #020617 60%);
+    }
+    .pill-dot { width: 7px; height: 7px; border-radius: 999px; background: #22c55e; box-shadow: 0 0 0 4px rgba(34,197,94,0.25); }
+    .filters-bar {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px; padding: 10px 8px 4px; border-radius: 16px;
+      background: radial-gradient(circle at top left, #111827 0, #020617 60%);
+      border: 1px solid rgba(148,163,184,0.35);
+    }
+    @media (max-width: 1100px) { .filters-bar { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (max-width: 720px)  { .filters-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .filter-group { display: flex; flex-direction: column; gap: 4px; }
+    .filter-label { font-size: 11px; color: var(--muted); letter-spacing: 0.03em; text-transform: uppercase; }
+    .filter-select, .filter-input {
+      width: 100%; border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.45);
+      background: radial-gradient(circle at top left, #020617 0, #020617 60%);
+      color: var(--text); font-size: 12px; padding: 7px 10px; outline: none;
+      appearance: none; -webkit-appearance: none;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform 0.08s ease-out;
+    }
+    .filter-select:focus, .filter-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(59,130,246,0.7), 0 0 0 8px rgba(37,99,235,0.25);
+      transform: translateY(-0.5px);
+    }
+    .filter-select:hover, .filter-input:hover { border-color: rgba(148,163,184,0.8); }
+    .filter-select option { background: #020617; color: #e5e7eb; }
+    .main-grid { display: grid; grid-template-columns: 2.1fr 1.4fr; gap: 12px; margin-top: 4px; }
+    @media (max-width: 1024px) { .main-grid { grid-template-columns: 1fr; } }
+    .card {
+      background: radial-gradient(circle at top left, #020617 0, #020617 60%);
+      border-radius: var(--radius-lg); border: 1px solid rgba(148,163,184,0.35);
+      box-shadow: var(--shadow-subtle); padding: 10px 12px 12px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .card-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .card-title { font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #e5e7eb; display: flex; align-items: center; gap: 6px; }
+    .card-subtitle { font-size: 11px; color: var(--muted); }
+    .kpi-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+    @media (max-width: 720px) { .kpi-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .kpi-card {
+      border-radius: var(--radius-md); padding: 8px 9px;
+      background: radial-gradient(circle at top left, #020617 0, #020617 65%);
+      border: 1px solid rgba(148,163,184,0.35);
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .kpi-label { font-size: 11px; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+    .kpi-value { font-size: 17px; font-weight: 600; color: #e5e7eb; }
+    .kpi-trend { font-size: 11px; color: var(--muted); }
+    .kpi-trend.up span { color: var(--success); }
+    .kpi-trend.down span { color: var(--danger); }
+    .table-wrapper {
+      border-radius: var(--radius-md); border: 1px solid rgba(148,163,184,0.35);
+      overflow: hidden; background: radial-gradient(circle at top left, #020617 0, #020617 65%);
+    }
+    .table-header {
+      display: grid; grid-template-columns: 2.4fr 1fr 1fr 1fr 1fr;
+      gap: 4px; padding: 6px 10px; font-size: 11px; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--muted);
+      border-bottom: 1px solid rgba(148,163,184,0.35);
+    }
+    .table-body { max-height: 340px; overflow: auto; }
+    .table-row {
+      display: grid; grid-template-columns: 2.4fr 1fr 1fr 1fr 1fr;
+      gap: 4px; padding: 6px 10px; font-size: 12px;
+      border-bottom: 1px solid rgba(15,23,42,0.9); align-items: center;
+    }
+    .table-row:nth-child(2n) { background: radial-gradient(circle at left, #020617 0, #020617 80%); }
+    .table-row:hover { background: radial-gradient(circle at left, rgba(37,99,235,0.18) 0, #020617 70%); }
+    .table-cell-muted { color: var(--muted); font-size: 11px; }
+    .ach-badge {
+      padding: 2px 7px; border-radius: 999px; font-size: 11px;
+      display: inline-flex; align-items: center; justify-content: center; min-width: 52px;
+    }
+    .ach-good { background: rgba(34,197,94,0.12); color: #4ade80; border: 1px solid rgba(34,197,94,0.5); }
+    .ach-mid  { background: rgba(234,179,8,0.12);  color: #facc15; border: 1px solid rgba(234,179,8,0.5); }
+    .ach-bad  { background: rgba(248,113,113,0.12); color: #fca5a5; border: 1px solid rgba(248,113,113,0.5); }
+    .right-column-section { display: flex; flex-direction: column; gap: 10px; }
+    .mini-chart {
+      border-radius: var(--radius-md); border: 1px solid rgba(148,163,184,0.35);
+      background: radial-gradient(circle at top left, #020617 0, #020617 65%);
+      padding: 8px 10px; font-size: 11px; color: var(--muted);
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .bar-row { display: flex; align-items: center; gap: 8px; }
+    .bar-label { font-size: 10px; color: var(--muted); width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bar-track { flex: 1; background: rgba(148,163,184,0.12); border-radius: 999px; height: 12px; overflow: hidden; }
+    .bar-fill  { height: 100%; border-radius: 999px; background: var(--accent); min-width: 4px; transition: width .5s ease; }
+    .bar-fill.good { background: #22c55e; }
+    .bar-fill.warn { background: #eab308; }
+    .bar-fill.bad  { background: #f97373; }
+    .bar-pct { font-size: 10px; color: var(--muted); width: 36px; text-align: left; }
+    .footer-bar {
+      margin-top: 6px; display: flex; justify-content: space-between; align-items: center;
+      font-size: 10px; color: var(--muted); padding: 4px 4px 0;
+      border-top: 1px solid rgba(15,23,42,0.9);
+    }
+    .footer-right { display: flex; align-items: center; gap: 8px; }
+    .status-dot { width: 7px; height: 7px; border-radius: 999px; background: #22c55e; }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="app-header">
+    <div class="app-title-block">
+      <div class="app-logo">V3</div>
+      <div class="app-title-text">
+        <h1>Sales Dashboard v3 – Full Lines</h1>
+        <span>Entries-based engine • Multi-line • Flexible filters</span>
+      </div>
+    </div>
+    <div class="app-header-right">
+      <a href="data-entry.html" style="padding:5px 12px;border-radius:999px;font-size:11px;background:#3b82f6;color:#fff;text-decoration:none;font-weight:500">➕ إدخال بيانات</a>
+      <div class="pill-badge"><span class="pill-dot"></span>Live • Local HTML</div>
+    </div>
+  </header>
+
+  <section class="filters-bar">
+    <div class="filter-group"><label class="filter-label">Year</label><select id="yearFilter" class="filter-select"><option value="">All</option></select></div>
+    <div class="filter-group"><label class="filter-label">Area</label><select id="areaFilter" class="filter-select"><option value="">All</option></select></div>
+    <div class="filter-group"><label class="filter-label">Line</label><select id="lineFilter" class="filter-select"><option value="">All</option></select></div>
+    <div class="filter-group"><label class="filter-label">Sub Line</label><select id="subLineFilter" class="filter-select"><option value="">All</option></select></div>
+    <div class="filter-group"><label class="filter-label">Product</label><select id="productFilter" class="filter-select"><option value="">All</option></select></div>
+    <div class="filter-group">
+      <label class="filter-label">Period Type</label>
+      <select id="periodTypeFilter" class="filter-select">
+        <option value="YTD">YTD</option>
+        <option value="Month">Month</option>
+        <option value="Quarter">Quarter</option>
+        <option value="Half">Half</option>
+        <option value="Custom">Custom Range</option>
+      </select>
+    </div>
+  </section>
+
+  <main class="main-grid">
+    <section class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Overall Performance</div>
+          <div class="card-subtitle" id="contextLabel">All lines • All products • YTD</div>
+        </div>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">Actual</div><div class="kpi-value" id="kpiActual">0</div><div class="kpi-trend" id="kpiActualTrend">vs target</div></div>
+        <div class="kpi-card"><div class="kpi-label">Target</div><div class="kpi-value" id="kpiTarget">0</div><div class="kpi-trend">Period</div></div>
+        <div class="kpi-card"><div class="kpi-label">Achievement</div><div class="kpi-value" id="kpiAch">0%</div><div class="kpi-trend" id="kpiAchTrend">Status</div></div>
+        <div class="kpi-card"><div class="kpi-label">Pace vs time</div><div class="kpi-value" id="kpiPace">0%</div><div class="kpi-trend" id="kpiPaceTrend">On track?</div></div>
+      </div>
+      <!-- أوردرات المجمعات — Google Sheets -->
+      <div class="kpi-row" id="orders-kpi" style="margin-top:6px">
+        <div class="kpi-card"><div class="kpi-label">أوردرات المجمعات</div><div class="kpi-value" style="color:var(--muted);font-size:12px">⏳ جاري التحميل...</div></div>
+      </div>
+      <div class="table-wrapper" style="margin-top:10px">
+        <div class="table-header">
+          <div>Product</div><div>Sub Line</div><div>Period Target</div><div>Actual</div><div>ACH%</div>
+        </div>
+        <div class="table-body" id="productsTableBody"></div>
+      </div>
+    </section>
+
+    <section class="right-column-section">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Flow Rate</div><div class="card-subtitle" id="flowContextLabel">By product • selected period</div></div>
+        </div>
+        <div class="mini-chart" id="flowChart" style="gap:5px;padding:10px"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Target by Line</div><div class="card-subtitle">Annual target distribution</div></div>
+        </div>
+        <div class="mini-chart" id="lineChart" style="gap:5px;padding:10px"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer-bar">
+    <div>v3 engine • entries-based • multi-line • Basra 2026</div>
+    <div class="footer-right"><span class="status-dot"></span><span id="footerSummary">Ready</span></div>
+  </footer>
+</div>
+
+<script>
+const entries = [
+  // Derma
+  { product:"Acretin 0.025% Cream 30G",       line:"Derma",        subLine:"Derma 2",        annualTarget:44000,  area:"Basra", year:2026 },
+  { product:"Acretin 0.05% Cream 30G",        line:"Derma",        subLine:"Derma 1",        annualTarget:43000,  area:"Basra", year:2026 },
+  { product:"Elica Cream",                    line:"Derma",        subLine:"Derma 2",        annualTarget:53000,  area:"Basra", year:2026 },
+  { product:"Elica Ointment 30G",             line:"Derma",        subLine:"Derma 1",        annualTarget:32000,  area:"Basra", year:2026 },
+  { product:"Elica-M Cream 30G",              line:"Derma",        subLine:"Derma 1",        annualTarget:74000,  area:"Basra", year:2026 },
+  { product:"Elicasal Ointment 30G",          line:"Derma",        subLine:"Derma 2",        annualTarget:19500,  area:"Basra", year:2026 },
+  { product:"Fusibact Cream 15G",             line:"Derma",        subLine:"Derma 1",        annualTarget:23000,  area:"Basra", year:2026 },
+  { product:"Fusibact Ointment 15G",          line:"Derma",        subLine:"Derma 1",        annualTarget:17500,  area:"Basra", year:2026 },
+  { product:"Fusibact-B Cream 15G",           line:"Derma",        subLine:"Derma 1",        annualTarget:14000,  area:"Basra", year:2026 },
+  { product:"Hi-Quin 2% Cream 30G",           line:"Derma",        subLine:"Derma 1",        annualTarget:9000,   area:"Basra", year:2026 },
+  { product:"Hi-Quin 4% Cream 30G",           line:"Derma",        subLine:"Derma 2",        annualTarget:20000,  area:"Basra", year:2026 },
+  { product:"Lamifen 250Mg 14 Tabs",          line:"Derma",        subLine:"Derma 1",        annualTarget:2300,   area:"Basra", year:2026 },
+  { product:"Lamifen Cream 15G",              line:"Derma",        subLine:"Derma 2",        annualTarget:17000,  area:"Basra", year:2026 },
+  { product:"Lican Cream 1% 30G",             line:"Derma",        subLine:"Derma 1",        annualTarget:7500,   area:"Basra", year:2026 },
+  { product:"Promax Ointment 30G",            line:"Derma",        subLine:"Derma 2",        annualTarget:40000,  area:"Basra", year:2026 },
+  { product:"Surecure Gel 30G",               line:"Derma",        subLine:"Derma 2",        annualTarget:7500,   area:"Basra", year:2026 },
+  // Optha
+  { product:"Arox 0.5% Ophthalmic",          line:"Optha",        subLine:"Optha 1",        annualTarget:14000,  area:"Basra", year:2026 },
+  { product:"Brimo Ophthalmic 5Ml",          line:"Optha",        subLine:"Optha 2",        annualTarget:22000,  area:"Basra", year:2026 },
+  { product:"Brofix Oph. 5Ml",               line:"Optha",        subLine:"Optha 2",        annualTarget:21000,  area:"Basra", year:2026 },
+  { product:"Fluca Ophthalmic 5Ml",          line:"Optha",        subLine:"Optha 3",        annualTarget:33000,  area:"Basra", year:2026 },
+  { product:"Hyfresh 10Ml",                  line:"Optha",        subLine:"Optha 1",        annualTarget:69000,  area:"Basra", year:2026 },
+  { product:"Hyfresh UD 20x0.45Ml",          line:"Optha",        subLine:"Optha 2",        annualTarget:10000,  area:"Basra", year:2026 },
+  { product:"Latano",                         line:"Optha",        subLine:"Optha 2",        annualTarget:3000,   area:"Basra", year:2026 },
+  { product:"Loxtra Oph. 5Ml",               line:"Optha",        subLine:"Optha 1",        annualTarget:31000,  area:"Basra", year:2026 },
+  { product:"Olopat Ophthalmic 5Ml",         line:"Optha",        subLine:"Optha 2",        annualTarget:13000,  area:"Basra", year:2026 },
+  { product:"Olopat UD 0.4Ml x30",           line:"Optha",        subLine:"Optha 3",        annualTarget:4000,   area:"Basra", year:2026 },
+  { product:"Optidex-T 5Ml",                 line:"Optha",        subLine:"Optha 2",        annualTarget:36000,  area:"Basra", year:2026 },
+  { product:"Optiflox 5Ml",                  line:"Optha",        subLine:"Optha 2",        annualTarget:18500,  area:"Basra", year:2026 },
+  { product:"Optifresh 10Ml",                line:"Optha",        subLine:"Optha 3",        annualTarget:9000,   area:"Basra", year:2026 },
+  { product:"Optilone 5Ml",                  line:"Optha",        subLine:"Optha 2",        annualTarget:25000,  area:"Basra", year:2026 },
+  { product:"Optipred 1%",                   line:"Optha",        subLine:"Optha 1",        annualTarget:16000,  area:"Basra", year:2026 },
+  { product:"Tymer 5Ml",                     line:"Optha",        subLine:"Optha 3",        annualTarget:11000,  area:"Basra", year:2026 },
+  { product:"Uni Fresh 30 UD",               line:"Optha",        subLine:"Optha 1",        annualTarget:10500,  area:"Basra", year:2026 },
+  { product:"Xola 5Ml",                      line:"Optha",        subLine:"Optha 3",        annualTarget:5250,   area:"Basra", year:2026 },
+  { product:"Xolamol 5Ml",                   line:"Optha",        subLine:"Optha 3",        annualTarget:60000,  area:"Basra", year:2026 },
+  { product:"Xolamol UD 5Ml",               line:"Optha",        subLine:"Optha 1",        annualTarget:5000,   area:"Basra", year:2026 },
+  // General Line
+  { product:"Azi-Once 250Mg 6's",            line:"General Line", subLine:"General Line 1", annualTarget:23000,  area:"Basra", year:2026 },
+  { product:"Azi-Once Forte 500Mg 3's",      line:"General Line", subLine:"General Line 1", annualTarget:30000,  area:"Basra", year:2026 },
+  { product:"Azi-Once Susp 22.5Ml",          line:"General Line", subLine:"General Line 1", annualTarget:154000, area:"Basra", year:2026 },
+  { product:"Feroton Injection 5Ml",         line:"General Line", subLine:"General Line 1", annualTarget:6000,   area:"Basra", year:2026 },
+  { product:"Maxim 400Mg 5 Tab",             line:"General Line", subLine:"General Line 1", annualTarget:8000,   area:"Basra", year:2026 },
+  { product:"Maxim 400Mg 7 Tab",             line:"General Line", subLine:"General Line 1", annualTarget:1800,   area:"Basra", year:2026 },
+  { product:"Prima D3 10000 IU 30's",        line:"General Line", subLine:"General Line 1", annualTarget:5250,   area:"Basra", year:2026 },
+  { product:"Prima D3 50000 IU 30's",        line:"General Line", subLine:"General Line 1", annualTarget:3750,   area:"Basra", year:2026 },
+  { product:"Fast-Flam 50Mg 20 Tab",         line:"General Line", subLine:"General Line 1", annualTarget:5000,   area:"Basra", year:2026 },
+  { product:"Relaxon Forte 500Mg 30's",      line:"General Line", subLine:"General Line 1", annualTarget:0,      area:"Basra", year:2026 },
+  { product:"Dompy 10Mg 30 Tab",             line:"General Line", subLine:"General Line 1", annualTarget:22000,  area:"Basra", year:2026 },
+  { product:"Dompy 200Ml Susp",              line:"General Line", subLine:"General Line 1", annualTarget:18000,  area:"Basra", year:2026 },
+  { product:"Fixit 150Mg 14 Cap",            line:"General Line", subLine:"General Line 1", annualTarget:0,      area:"Basra", year:2026 },
+  { product:"Fixit 300Mg 14 Cap",            line:"General Line", subLine:"General Line 1", annualTarget:0,      area:"Basra", year:2026 },
+  { product:"Meva 135Mg 30 Tab",             line:"General Line", subLine:"General Line 1", annualTarget:0,      area:"Basra", year:2026 },
+  { product:"Zoron 2Mg/Ml Inj 4Ml 5's",     line:"General Line", subLine:"General Line 1", annualTarget:0,      area:"Basra", year:2026 },
+  { product:"Zoron 8Mg Tab 30's",            line:"General Line", subLine:"General Line 1", annualTarget:13000,  area:"Basra", year:2026 },
+  // CM Line
+  { product:"Vittoria 10/160Mg 28's",        line:"CM Line",      subLine:"CM Line 1",      annualTarget:5000,   area:"Basra", year:2026 },
+  { product:"Vittoria 5/160Mg 28's",         line:"CM Line",      subLine:"CM Line 1",      annualTarget:5500,   area:"Basra", year:2026 },
+  { product:"Vittoria HCT 10/160/25Mg 28's", line:"CM Line",      subLine:"CM Line 1",      annualTarget:4000,   area:"Basra", year:2026 },
+  { product:"Vittoria-HCT 5/160/12.5 28's",  line:"CM Line",      subLine:"CM Line 1",      annualTarget:6000,   area:"Basra", year:2026 },
+  { product:"Vittoria-HCT 5/160/25 28's",    line:"CM Line",      subLine:"CM Line 1",      annualTarget:5000,   area:"Basra", year:2026 },
+  { product:"Dapazin 10Mg",                  line:"CM Line",      subLine:"CM Line 1",      annualTarget:10000,  area:"Basra", year:2026 },
+  { product:"Dapazin 5Mg",                   line:"CM Line",      subLine:"CM Line 1",      annualTarget:2000,   area:"Basra", year:2026 },
+  { product:"Sitagen 100Mg",                 line:"CM Line",      subLine:"CM Line 1",      annualTarget:2500,   area:"Basra", year:2026 },
+  { product:"Sitavic 50Mg/1000Mg",           line:"CM Line",      subLine:"CM Line 1",      annualTarget:7000,   area:"Basra", year:2026 },
+  { product:"Vildus 50Mg 30's",              line:"CM Line",      subLine:"CM Line 1",      annualTarget:175,    area:"Basra", year:2026 },
+  { product:"Lintra 5Mg",                    line:"CM Line",      subLine:"CM Line 1",      annualTarget:180,    area:"Basra", year:2026 },
+];
+
+/* ════════════════════════════════
+   STORAGE
+════════════════════════════════ */
+const DB = {
+  getObj: k => { try{ return JSON.parse(localStorage.getItem(k))||{}; }catch{ return {}; } }
+};
+
+/* ════════════════════════════════
+   HELPERS
+════════════════════════════════ */
+function fmt(n){ return Number(n||0).toLocaleString("en-US"); }
+function fmtPct(n){ return Number(n||0).toFixed(1)+"%"; }
+function achClass(p){ return p>=90?"ach-good":p>=70?"ach-mid":"ach-bad"; }
+function unique(arr,k){ return [...new Set(arr.map(x=>x[k]))].sort(); }
+
+const lineColors = { Derma:'#3b82f6', Optha:'#22c55e', 'General Line':'#eab308', 'CM Line':'#a78bfa' };
+function lc(line){ return lineColors[line]||'#64748b'; }
+
+/* ════════════════════════════════
+   PERIOD LOGIC
+════════════════════════════════ */
+function getPeriodMonths(){
+  const type = document.getElementById("periodTypeFilter").value;
+  const now  = new Date();
+  const cur  = now.getMonth() + 1; // 1-12
+
+  if(type === "YTD")     return Array.from({length: cur}, (_,i)=>i+1);
+  if(type === "Month")   return [cur];
+  if(type === "Quarter"){
+    const q = Math.ceil(cur/3);
+    return q===1?[1,2,3]:q===2?[4,5,6]:q===3?[7,8,9]:[10,11,12];
+  }
+  if(type === "Half")    return cur<=6?[1,2,3,4,5,6]:[7,8,9,10,11,12];
+  return Array.from({length:12},(_,i)=>i+1); // full year
+}
+
+function getMonthlyTarget(annualTarget, months, product, area, year){
+  try {
+    const targets = JSON.parse(localStorage.getItem('productTargets')) || {};
+    const key = `${year}__${product}__${area}`;
+    if (targets[key] !== undefined){
+      return (targets[key] / 12) * months.length;
+    }
+  } catch(e){}
+  // Only fallback to hardcoded for Basra 2026
+  if (area === 'Basra' && Number(year) === 2026){
+    return (annualTarget / 12) * months.length;
+  }
+  return 0;
+}
+
+/* ════════════════════════════════
+   READ ACTUAL FROM localStorage
+   key format: YEAR__PRODUCT__GOV__MONTH
+════════════════════════════════ */
+function getActual(product, area, year, months){
+  const ps = DB.getObj('primarySales');
+  let total = 0;
+  months.forEach(m => {
+    const key = `${year}__${product}__${area}__${m}`;
+    total += Number(ps[key]||0);
+  });
+  return total;
+}
+
+function getSecondary(product, area, year, months){
+  const sec = DB.getObj('warehouseFlow');
+  let total = 0;
+  months.forEach(m => {
+    const key = `${year}__${product}__${area}__${m}`;
+    total += Number(sec[key]||0);
+  });
+  return total;
+}
+
+function getFlowRate(product, area, year, months){
+  const primary   = getActual(product, area, year, months);
+  const secondary = getSecondary(product, area, year, months);
+  if (primary) return (secondary / primary * 100);
+  return 0;
+}
+
+/* ════════════════════════════════
+   POPULATE FILTERS
+════════════════════════════════ */
+function populateFilters(){
+  const add = (id,vals) => {
+    const el = document.getElementById(id);
+    vals.forEach(v=>{ const o=document.createElement("option"); o.value=o.textContent=v; el.appendChild(o); });
+  };
+  add("yearFilter",    unique(entries,"year"));
+  add("areaFilter",    unique(entries,"area"));
+  add("lineFilter",    unique(entries,"line"));
+  add("subLineFilter", unique(entries,"subLine"));
+  add("productFilter", unique(entries,"product"));
+}
+
+/* ════════════════════════════════
+   GET FILTERED LIST
+════════════════════════════════ */
+function getFiltered(){
+  const y=document.getElementById("yearFilter").value;
+  const a=document.getElementById("areaFilter").value;
+  const l=document.getElementById("lineFilter").value;
+  const s=document.getElementById("subLineFilter").value;
+  const p=document.getElementById("productFilter").value;
+  return entries.filter(e=>
+    (!y||e.year==y)&&(!g||e.area==a)&&
+    (!l||e.line==l)&&(!s||e.subLine==s)&&(!p||e.product==p)
+  );
+}
+
+/* ════════════════════════════════
+   RENDER TABLE
+════════════════════════════════ */
+function renderTable(list, months, year, area){
+  const body = document.getElementById("productsTableBody");
+  body.innerHTML = "";
+  list.forEach(e=>{
+    const actual    = getActual(e.product, area||e.area, year||e.year, months);
+    const secondary = getSecondary(e.product, area||e.area, year||e.year, months);
+    const mTarget   = getMonthlyTarget(e.annualTarget, months, e.product, area||e.area, year||e.year);
+    const ach       = mTarget ? Math.round(actual/mTarget*100) : 0;
+    const flow      = getFlowRate(e.product, area||e.area, year||e.year, months);
+
+    const row = document.createElement("div");
+    row.className = "table-row";
+    row.innerHTML = `
+      <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${e.product}">${e.product}</div>
+      <div class="table-cell-muted">${e.subLine}</div>
+      <div>${fmt(Math.round(mTarget))}</div>
+      <div style="color:${actual>0?'#e5e7eb':'var(--muted)'}">${fmt(actual)}</div>
+      <div style="display:flex;gap:4px;align-items:center">
+        <span class="ach-badge ${achClass(ach)}">${ach}%</span>
+        ${flow>0?`<span style="font-size:10px;color:#9ca3af">↻${flow.toFixed(0)}%</span>`:''}
+      </div>`;
+    body.appendChild(row);
+  });
+}
+
+/* ════════════════════════════════
+   RENDER KPIs
+════════════════════════════════ */
+function renderKPIs(list, months, year, area){
+  const totalMTarget = list.reduce((s,e)=>s+getMonthlyTarget(e.annualTarget,months,e.product,area||e.area,year||e.year),0);
+  const totalActual  = list.reduce((s,e)=>s+getActual(e.product,area||e.area,year||e.year,months),0);
+  const totalAnnual  = list.reduce((s,e)=>s+e.annualTarget,0);
+  const ach  = totalMTarget ? (totalActual/totalMTarget*100) : 0;
+
+  // Pace = ACH vs elapsed months
+  const now    = new Date();
+  const elapsed = now.getMonth()+1; // months elapsed this year
+  const timePct = elapsed/12*100;
+  const pace    = timePct ? (ach/timePct*100) : 0;
+
+  document.getElementById("kpiActual").textContent  = fmt(totalActual);
+  document.getElementById("kpiTarget").textContent  = fmt(Math.round(totalMTarget));
+  document.getElementById("kpiAch").textContent     = fmtPct(ach);
+  document.getElementById("kpiPace").textContent    = fmtPct(pace);
+
+  // Color KPI values
+  const achEl  = document.getElementById("kpiAch");
+  const paceEl = document.getElementById("kpiPace");
+  achEl.style.color  = ach>=90?"#22c55e":ach>=70?"#eab308":"#f97373";
+  paceEl.style.color = pace>=90?"#22c55e":pace>=70?"#eab308":"#f97373";
+
+  document.getElementById("kpiActualTrend").textContent = totalActual>0
+    ? `${fmt(totalMTarget-totalActual)} remaining`
+    : "No data yet";
+
+  const l = document.getElementById("lineFilter").value    || "All lines";
+  const p = document.getElementById("productFilter").value || "All products";
+  const t = document.getElementById("periodTypeFilter").value;
+  document.getElementById("contextLabel").textContent = `${l} • ${p} • ${t} • ${months.length}M`;
+}
+
+/* ════════════════════════════════
+   RENDER FLOW CHART
+════════════════════════════════ */
+function renderFlowChart(list, months, year, area){
+  const el  = document.getElementById("flowChart");
+  const top = list.filter(e=>e.annualTarget>0).slice(0,8);
+  if(!top.length){ el.innerHTML='<div style="color:var(--muted);font-size:11px;text-align:center;padding:20px">لا توجد بيانات</div>'; return; }
+
+  const hasData = top.some(e=>getFlowRate(e.product,area||e.area,year||e.year,months)>0);
+
+  el.innerHTML = `<div style="font-size:11px;color:var(--muted);margin-bottom:6px">
+    Monthly Flow Rate ${hasData?'':'— أدخل بيانات لتفعيل'}
+  </div>` + top.map(e=>{
+    const fr  = getFlowRate(e.product, area||e.area, year||e.year, months);
+    const pct = Math.min(fr, 120);
+    const cls = fr>=80?'good':fr>=60?'warn':'bad';
+    const label = e.product.split(' ').slice(0,2).join(' ');
+    return `<div class="bar-row">
+      <div class="bar-label" title="${e.product}">${label}</div>
+      <div class="bar-track"><div class="bar-fill ${cls}" style="width:${pct}%"></div></div>
+      <div class="bar-pct">${fr>0?fr.toFixed(0)+'%':'—'}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ════════════════════════════════
+   RENDER LINE CHART (ACH by line)
+════════════════════════════════ */
+function renderLineChart(list, months, year, area){
+  const el = document.getElementById("lineChart");
+  const lineMap = {};
+  list.forEach(e=>{
+    if(!lineMap[e.line]) lineMap[e.line]={target:0,actual:0};
+    lineMap[e.line].target += getMonthlyTarget(e.annualTarget,months,e.product,area||e.area,year||e.year);
+    lineMap[e.line].actual += getActual(e.product,area||e.area,year||e.year,months);
+  });
+
+  el.innerHTML = '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">ACH% by Line</div>' +
+    Object.entries(lineMap).sort((a,b)=>b[1].target-a[1].target).map(([line,v])=>{
+      const ach = v.target ? (v.actual/v.target*100) : 0;
+      const pct = Math.min(ach,120);
+      const cls = ach>=90?'good':ach>=70?'warn':'bad';
+      const color = lc(line);
+      return `<div class="bar-row">
+        <div class="bar-label" style="color:${color}">${line}</div>
+        <div class="bar-track"><div class="bar-fill ${cls}" style="width:${pct}%;background:${color}"></div></div>
+        <div class="bar-pct">${ach>0?ach.toFixed(0)+'%':'0%'}</div>
+      </div>`;
+    }).join('');
+}
+
+/* ════════════════════════════════
+   MAIN REFRESH
+════════════════════════════════ */
+function refresh(){
+  const filtered = getFiltered();
+  const months   = getPeriodMonths();
+  const year     = document.getElementById("yearFilter").value || new Date().getFullYear();
+  const area     = document.getElementById("areaFilter").value  || "Basra";
+
+  renderTable(filtered, months, year, area);
+  renderKPIs(filtered, months, year, area);
+  renderFlowChart(filtered, months, year, area);
+  renderLineChart(filtered, months, year, area);
+
+  const totalActual = filtered.reduce((s,e)=>s+getActual(e.product,area||e.area,year||e.year,months),0);
+  document.getElementById("footerSummary").textContent =
+    `${filtered.length} products • Target: ${fmt(Math.round(filtered.reduce((s,e)=>s+getMonthlyTarget(e.annualTarget,months,e.product,area||e.area,year||e.year),0)))} • Actual: ${fmt(totalActual)}`;
+}
+
+/* ════════════════════════════════
+   GOOGLE SHEETS API
+════════════════════════════════ */
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx19-gvFKvmwIVteZCiiW0d1qUaLpTRnT6yQGaCm_OfaRLbvpiE9hI8qYLVrqW9cmBXtw/exec';
+
+let sheetsOrders = []; // cached orders from Sheets
+let sheetsLoaded = false;
+
+async function loadSheetsOrders(){
+  try {
+    const res  = await fetch(`${SHEETS_URL}?action=getOrders`);
+    const data = await res.json();
+    if (data.success){
+      sheetsOrders = data.orders || [];
+      sheetsLoaded = true;
+      updateOrdersKPI();
+    }
+  } catch(e){
+    console.warn('Sheets load failed:', e);
+  }
+}
+
+// حساب Secondary من Sheets (أوردرات المجمعات)
+function getSheetsSecondary(product, area, year, months){
+  return sheetsOrders
+    .filter(o => {
+      const d = o.date || '';
+      const m = Number(d.split('-')[1]);
+      const y = Number(d.split('-')[0]);
+      return o.product === product &&
+             Number(year) === y &&
+             months.includes(m);
+    })
+    .reduce((s,o) => s + o.quantity, 0);
+}
+
+function updateOrdersKPI(){
+  const totalOrders = sheetsOrders.length;
+  const totalValue  = sheetsOrders.reduce((s,o)=>s+o.totalValue,0);
+  const el = document.getElementById('orders-kpi');
+  if (el) el.innerHTML = `
+    <div class="kpi-card"><div class="kpi-label">أوردرات المجمعات</div><div class="kpi-value">${totalOrders.toLocaleString()}</div></div>
+    <div class="kpi-card"><div class="kpi-label">قيمة الأوردرات</div><div class="kpi-value" style="color:var(--accent2)">${fmt(Math.round(totalValue))}</div></div>
+  `;
+}
+
+document.querySelectorAll(".filter-select").forEach(s=>s.addEventListener("change",refresh));
+populateFilters();
+refresh();
+loadSheetsOrders();
+</script>
+</body>
+</html>

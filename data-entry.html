@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إدخال البيانات — v3</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222636;
+    --border: #2e3347;
+    --accent: #4f8ef7;
+    --accent2: #6ee7b7;
+    --warn: #f59e0b;
+    --danger: #ef4444;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 20px 16px 60px;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .header h1 { font-size: 18px; font-weight: 600; }
+  .header h1 span { color: var(--accent); }
+  .back-btn {
+    font-size: 12px;
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background .2s;
+  }
+  .back-btn:hover { background: var(--border); }
+
+  /* ── Tabs ── */
+  .tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    padding: 7px 16px;
+    font-size: 13px;
+    font-family: inherit;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .tab-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .card h2 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ── Form Grid ── */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .form-group label {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .form-group select,
+  .form-group input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 7px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    transition: border .2s;
+  }
+  .form-group select:focus,
+  .form-group input:focus {
+    border-color: var(--accent);
+  }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-family: inherit;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: opacity .2s;
+  }
+  .btn:hover { opacity: .85; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-success { background: #059669; color: #fff; }
+  .btn-danger  { background: var(--danger); color: #fff; font-size: 11px; padding: 4px 10px; }
+  .btn-warn    { background: var(--warn); color: #000; }
+  .btn-edit    { background: #0369a1; color: #fff; font-size: 11px; padding: 3px 8px; }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #059669;
+    color: #fff;
+    padding: 10px 22px;
+    border-radius: 999px;
+    font-size: 13px;
+    transition: transform .3s;
+    z-index: 999;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── Data Table ── */
+  .data-table-wrap { overflow-x: auto; margin-top: 12px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  th, td {
+    padding: 7px 10px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  th { background: var(--surface2); color: var(--muted); font-weight: 500; }
+  tr:hover td { background: rgba(79,142,247,.05); }
+
+  /* ── Product / Area pills ── */
+  .pill-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .pill {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pill .line-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    display: inline-block;
+  }
+
+  /* ── Empty state ── */
+  .empty { color: var(--muted); font-size: 12px; padding: 20px 0; text-align: center; }
+
+  /* ── Stats row ── */
+  .stats-row {
+    display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px;
+  }
+  .stat-mini {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 12px;
+    border: 1px solid var(--border);
+  }
+  .stat-mini span { color: var(--accent); font-weight: 600; font-size: 15px; display: block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📊 إدخال البيانات <span>v3</span></h1>
+  <a href="dashboard-v3.html" class="back-btn">← الداشبورد</a>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('tab-sales',this)">Primary Sales</button>
+  <button class="tab-btn" onclick="switchTab('tab-flow',this)">Secondary Sales</button>
+  <button class="tab-btn" onclick="switchTab('tab-config',this)">⚙ الإعدادات</button>
+</div>
+
+<!-- ═══════════════════════════════
+     TAB: PRIMARY SALES
+════════════════════════════════ -->
+<div id="tab-sales" class="section active">
+  <div class="card">
+    <h2>📥 Primary Sales — إدخال شهري</h2>
+    <div class="form-grid" style="margin-bottom:12px">
+      <div class="form-group"><label>السنة</label><select id="ps-year" onchange="renderPSGrid()"></select></div>
+      <div class="form-group"><label>الشهر</label><select id="ps-month" onchange="renderPSGrid()"></select></div>
+      <div class="form-group"><label>المنطقة</label><select id="ps-area" onchange="renderPSGrid()"></select></div>
+      <div class="form-group"><label>Line</label>
+        <select id="ps-line" onchange="renderPSGrid()">
+          <option value="all">الكل</option>
+          <option value="Derma">Derma</option>
+          <option value="Optha">Optha</option>
+          <option value="General Line">General Line</option>
+          <option value="CM Line">CM Line</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="savePSGrid()" style="margin-bottom:12px">💾 حفظ الكل</button>
+    <input type="text" id="ps-search" placeholder="🔍 ابحث عن مادة..." oninput="filterPSGrid()"
+      style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;font-size:13px;font-family:inherit;margin-bottom:10px;outline:none">
+    <div class="data-table-wrap">
+      <table>
+        <thead><tr><th>المنتج</th><th>Line</th><th>الهدف الشهري</th><th>الكمية</th></tr></thead>
+        <tbody id="ps-grid-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📋 البيانات المدخلة</h2>
+    <div class="stats-row" id="ps-stats"></div>
+    <div class="data-table-wrap">
+      <table><thead><tr>
+        <th>السنة</th><th>الشهر</th><th>المنتج</th><th>المنطقة</th><th>الكمية</th><th>حذف</th>
+      </tr></thead><tbody id="ps-tbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     TAB: SECONDARY SALES
+════════════════════════════════ -->
+<div id="tab-flow" class="section">
+  <div class="card">
+    <h2>📤 Secondary Sales — إدخال شهري</h2>
+    <div class="form-grid" style="margin-bottom:12px">
+      <div class="form-group"><label>السنة</label><select id="wf-year" onchange="renderWFGrid()"></select></div>
+      <div class="form-group"><label>الشهر</label><select id="wf-month" onchange="renderWFGrid()"></select></div>
+      <div class="form-group"><label>المنطقة</label><select id="wf-area" onchange="renderWFGrid()"></select></div>
+      <div class="form-group"><label>Line</label>
+        <select id="wf-line" onchange="renderWFGrid()">
+          <option value="all">الكل</option>
+          <option value="Derma">Derma</option>
+          <option value="Optha">Optha</option>
+          <option value="General Line">General Line</option>
+          <option value="CM Line">CM Line</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="saveWFGrid()" style="margin-bottom:12px">💾 حفظ الكل</button>
+    <input type="text" id="wf-search" placeholder="🔍 ابحث عن مادة..." oninput="filterWFGrid()"
+      style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;font-size:13px;font-family:inherit;margin-bottom:10px;outline:none">
+    <div class="data-table-wrap">
+      <table>
+        <thead><tr><th>المنتج</th><th>Line</th><th>الهدف الشهري</th><th>الكمية</th></tr></thead>
+        <tbody id="wf-grid-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📋 البيانات المدخلة</h2>
+    <div class="stats-row" id="wf-stats"></div>
+    <div class="data-table-wrap">
+      <table><thead><tr>
+        <th>السنة</th><th>الشهر</th><th>المنتج</th><th>المنطقة</th><th>الكمية</th><th>حذف</th>
+      </tr></thead><tbody id="wf-tbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     TAB: MONTHLY FLOW RATE
+════════════════════════════════ -->
+<!-- ═══════════════════════════════
+     TAB: CONFIG
+════════════════════════════════ -->
+<div id="tab-config" class="section">
+
+  <!-- Products & Targets -->
+  <div class="card">
+    <h2>💊 المنتجات والأهداف</h2>
+
+    <!-- Step 1: Select year + area -->
+    <div class="form-grid" style="margin-bottom:14px">
+      <div class="form-group">
+        <label>السنة</label>
+        <select id="cfg-year" onchange="renderTargetsTable()">
+          <option value="">— اختر —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>المنطقة</label>
+        <select id="cfg-area" onchange="renderTargetsTable()"></select>
+      </div>
+    </div>
+
+    <!-- Add new product -->
+    <details style="margin-bottom:12px">
+      <summary style="cursor:pointer;font-size:12px;color:var(--accent);padding:6px 0">➕ إضافة منتج جديد</summary>
+      <div class="form-grid" style="margin-top:10px">
+        <div class="form-group"><label>اسم المنتج</label><input type="text" id="prod-name" placeholder="مثال: NewDrug"></div>
+        <div class="form-group"><label>الـ Line</label>
+          <select id="prod-line" onchange="toggleCustomLine()">
+            <option>Derma</option>
+            <option>Optha</option>
+            <option>General Line</option>
+            <option>CM Line</option>
+            <option value="__custom__">➕ Line جديدة...</option>
+          </select>
+        </div>
+        <div class="form-group" id="custom-line-group" style="display:none">
+          <label>اسم الـ Line</label>
+          <input type="text" id="prod-line-custom" placeholder="مثال: Neuro">
+        </div>
+        <div class="form-group"><label>سعر الوحدة (IQD)</label><input type="number" id="prod-price" placeholder="0" min="0" step="250"></div>
+      </div>
+      <button class="btn btn-success" onclick="addProduct()">➕ إضافة</button>
+    </details>
+
+    <!-- Targets table -->
+    <div id="targets-context" style="font-size:11px;color:var(--muted);margin-bottom:8px"></div>
+    <div class="data-table-wrap">
+      <table>
+        <thead><tr>
+          <th>المنتج</th><th>Line</th><th>Sub Line</th><th>الهدف السنوي</th><th>السعر (IQD)</th><th>إجراء</th>
+        </tr></thead>
+        <tbody id="prod-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Doctors -->
+  <div class="card">
+    <h2>👨‍⚕️ الأطباء</h2>
+    <div class="form-grid">
+      <div class="form-group"><label>اسم الطبيب</label><input type="text" id="doc-name" placeholder="مثال: د. محمد علي"></div>
+      <div class="form-group"><label>اللاين</label>
+        <select id="doc-line">
+          <option value="Optha">Optha</option>
+          <option value="Derma">Derma</option>
+          <option value="General Line">General Line</option>
+          <option value="CM Line">CM Line</option>
+        </select>
+      </div>
+      <div class="form-group"><label>المنطقة / العيادة</label><input type="text" id="doc-area" placeholder="مثال: العشار، مستشفى البصرة"></div>
+    </div>
+    <button class="btn btn-success" onclick="addDoctor()">➕ إضافة طبيب</button>
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="filterDoctors('all')" id="df-all">الكل</button>
+      <button class="btn btn-ghost btn-sm" onclick="filterDoctors('Optha')" id="df-optha">Optha</button>
+      <button class="btn btn-ghost btn-sm" onclick="filterDoctors('Derma')" id="df-derma">Derma</button>
+      <button class="btn btn-ghost btn-sm" onclick="filterDoctors('General Line')" id="df-gen">General Line</button>
+      <button class="btn btn-ghost btn-sm" onclick="filterDoctors('CM Line')" id="df-cm">CM Line</button>
+    </div>
+    <div class="data-table-wrap" style="margin-top:10px">
+      <table><thead><tr><th>الطبيب</th><th>اللاين</th><th>المنطقة</th><th>تعديل</th><th>حذف</th></tr></thead>
+      <tbody id="doc-tbody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- Areas -->
+  <div class="card">
+    <h2>📍 المناطق</h2>
+    <div class="form-grid">
+      <div class="form-group"><label>اسم المنطقة</label><input type="text" id="area-name" placeholder="مثال: Baghdad"></div>
+    </div>
+    <button class="btn btn-success" onclick="addArea()">➕ إضافة منطقة</button>
+
+    <div class="pill-list" id="area-list"></div>
+  </div>
+
+  <!-- Pharmacies -->
+  <div class="card">
+    <h2>🏥 الصيدليات</h2>
+    <div class="form-grid">
+      <div class="form-group"><label>اسم الصيدلية</label><input type="text" id="ph-name" placeholder="مثال: Al-Noor"></div>
+      <div class="form-group"><label>المنطقة</label><select id="ph-area"></select></div>
+      <div class="form-group"><label>الموقع (محلة/شارع)</label><input type="text" id="ph-location" placeholder="مثال: العشار، شارع النضال"></div>
+    </div>
+    <div style="margin-bottom:10px">
+      <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px">الأطباء المرتبطون بهذه الصيدلية</label>
+      <div id="ph-doctors-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="text" id="ph-doctor-input" placeholder="اسم الطبيب" style="flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:inherit;outline:none">
+        <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px" onclick="addDoctorToForm()">➕ إضافة</button>
+      </div>
+    </div>
+    <button class="btn btn-success" onclick="addPharmacy()">➕ إضافة صيدلية</button>
+
+    <div class="data-table-wrap" style="margin-top:12px">
+      <table><thead><tr><th>الصيدلية</th><th>المنطقة</th><th>الأطباء</th><th>تعديل</th><th>حذف</th></tr></thead>
+      <tbody id="ph-tbody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- Danger Zone -->
+  <div class="card" style="border-color:#ef444440">
+    <h2 style="color:var(--danger)">⚠ منطقة الخطر</h2>
+    <button class="btn btn-danger" onclick="resetAll()">🗑 حذف كل البيانات</button>
+  </div>
+
+</div>
+
+<div id="toast">✓ تم الحفظ</div>
+
+<script>
+/* ════════════════════════════════
+   STORAGE HELPERS
+════════════════════════════════ */
+const DB = {
+  get: k => { try { return JSON.parse(localStorage.getItem(k)) || []; } catch{ return []; } },
+  getObj: k => { try { return JSON.parse(localStorage.getItem(k)) || {}; } catch{ return {}; } },
+  set: (k,v) => localStorage.setItem(k, JSON.stringify(v)),
+  setObj: (k,v) => localStorage.setItem(k, JSON.stringify(v)),
+};
+
+/* ════════════════════════════════
+   DEFAULT SEED DATA
+════════════════════════════════ */
+const MASTER_PRODUCTS = [
+  // Derma
+  { name:"Acretin 0.025% Cream 30G",       line:"Derma",        subLine:"Derma 2",        annualTarget:44000  },
+  { name:"Acretin 0.05% Cream 30G",        line:"Derma",        subLine:"Derma 1",        annualTarget:43000  },
+  { name:"Elica Cream",                    line:"Derma",        subLine:"Derma 2",        annualTarget:53000  },
+  { name:"Elica Ointment 30G",             line:"Derma",        subLine:"Derma 1",        annualTarget:32000  },
+  { name:"Elica-M Cream 30G",              line:"Derma",        subLine:"Derma 1",        annualTarget:74000  },
+  { name:"Elicasal Ointment 30G",          line:"Derma",        subLine:"Derma 2",        annualTarget:19500  },
+  { name:"Fusibact Cream 15G",             line:"Derma",        subLine:"Derma 1",        annualTarget:23000  },
+  { name:"Fusibact Ointment 15G",          line:"Derma",        subLine:"Derma 1",        annualTarget:17500  },
+  { name:"Fusibact-B Cream 15G",           line:"Derma",        subLine:"Derma 1",        annualTarget:14000  },
+  { name:"Hi-Quin 2% Cream 30G",           line:"Derma",        subLine:"Derma 1",        annualTarget:9000   },
+  { name:"Hi-Quin 4% Cream 30G",           line:"Derma",        subLine:"Derma 2",        annualTarget:20000  },
+  { name:"Lamifen 250Mg 14 Tabs",          line:"Derma",        subLine:"Derma 1",        annualTarget:2300   },
+  { name:"Lamifen Cream 15G",              line:"Derma",        subLine:"Derma 2",        annualTarget:17000  },
+  { name:"Lican Cream 1% 30G",             line:"Derma",        subLine:"Derma 1",        annualTarget:7500   },
+  { name:"Promax Ointment 30G",            line:"Derma",        subLine:"Derma 2",        annualTarget:40000  },
+  { name:"Surecure Gel 30G",               line:"Derma",        subLine:"Derma 2",        annualTarget:7500   },
+  // Optha
+  { name:"Arox 0.5% Ophthalmic",          line:"Optha",        subLine:"Optha 1",        annualTarget:14000  },
+  { name:"Brimo Ophthalmic 5Ml",          line:"Optha",        subLine:"Optha 2",        annualTarget:22000  },
+  { name:"Brofix Oph. 5Ml",               line:"Optha",        subLine:"Optha 2",        annualTarget:21000  },
+  { name:"Fluca Ophthalmic 5Ml",          line:"Optha",        subLine:"Optha 3",        annualTarget:33000  },
+  { name:"Hyfresh 10Ml",                  line:"Optha",        subLine:"Optha 1",        annualTarget:69000  },
+  { name:"Hyfresh UD 20x0.45Ml",          line:"Optha",        subLine:"Optha 2",        annualTarget:10000  },
+  { name:"Latano",                         line:"Optha",        subLine:"Optha 2",        annualTarget:3000   },
+  { name:"Loxtra Oph. 5Ml",               line:"Optha",        subLine:"Optha 1",        annualTarget:31000  },
+  { name:"Olopat Ophthalmic 5Ml",         line:"Optha",        subLine:"Optha 2",        annualTarget:13000  },
+  { name:"Olopat UD 0.4Ml x30",           line:"Optha",        subLine:"Optha 3",        annualTarget:4000   },
+  { name:"Optidex-T 5Ml",                 line:"Optha",        subLine:"Optha 2",        annualTarget:36000  },
+  { name:"Optiflox 5Ml",                  line:"Optha",        subLine:"Optha 2",        annualTarget:18500  },
+  { name:"Optifresh 10Ml",                line:"Optha",        subLine:"Optha 3",        annualTarget:9000   },
+  { name:"Optilone 5Ml",                  line:"Optha",        subLine:"Optha 2",        annualTarget:25000  },
+  { name:"Optipred 1%",                   line:"Optha",        subLine:"Optha 1",        annualTarget:16000  },
+  { name:"Tymer 5Ml",                     line:"Optha",        subLine:"Optha 3",        annualTarget:11000  },
+  { name:"Uni Fresh 30 UD",               line:"Optha",        subLine:"Optha 1",        annualTarget:10500  },
+  { name:"Xola 5Ml",                      line:"Optha",        subLine:"Optha 3",        annualTarget:5250   },
+  { name:"Xolamol 5Ml",                   line:"Optha",        subLine:"Optha 3",        annualTarget:60000  },
+  { name:"Xolamol UD 5Ml",               line:"Optha",        subLine:"Optha 1",        annualTarget:5000   },
+  // General Line
+  { name:"Azi-Once 250Mg 6's",            line:"General Line", subLine:"General Line 1", annualTarget:23000  },
+  { name:"Azi-Once Forte 500Mg 3's",      line:"General Line", subLine:"General Line 1", annualTarget:30000  },
+  { name:"Azi-Once Susp 22.5Ml",          line:"General Line", subLine:"General Line 1", annualTarget:154000 },
+  { name:"Feroton Injection 5Ml",         line:"General Line", subLine:"General Line 1", annualTarget:6000   },
+  { name:"Maxim 400Mg 5 Tab",             line:"General Line", subLine:"General Line 1", annualTarget:8000   },
+  { name:"Maxim 400Mg 7 Tab",             line:"General Line", subLine:"General Line 1", annualTarget:1800   },
+  { name:"Prima D3 10000 IU 30's",        line:"General Line", subLine:"General Line 1", annualTarget:5250   },
+  { name:"Prima D3 50000 IU 30's",        line:"General Line", subLine:"General Line 1", annualTarget:3750   },
+  { name:"Fast-Flam 50Mg 20 Tab",         line:"General Line", subLine:"General Line 1", annualTarget:5000   },
+  { name:"Relaxon Forte 500Mg 30's",      line:"General Line", subLine:"General Line 1", annualTarget:0      },
+  { name:"Dompy 10Mg 30 Tab",             line:"General Line", subLine:"General Line 1", annualTarget:22000  },
+  { name:"Dompy 200Ml Susp",              line:"General Line", subLine:"General Line 1", annualTarget:18000  },
+  { name:"Fixit 150Mg 14 Cap",            line:"General Line", subLine:"General Line 1", annualTarget:0      },
+  { name:"Fixit 300Mg 14 Cap",            line:"General Line", subLine:"General Line 1", annualTarget:0      },
+  { name:"Meva 135Mg 30 Tab",             line:"General Line", subLine:"General Line 1", annualTarget:0      },
+  { name:"Zoron 2Mg/Ml Inj 4Ml 5's",     line:"General Line", subLine:"General Line 1", annualTarget:0      },
+  { name:"Zoron 8Mg Tab 30's",            line:"General Line", subLine:"General Line 1", annualTarget:13000  },
+  // CM Line
+  { name:"Vittoria 10/160Mg 28's",        line:"CM Line",      subLine:"CM Line 1",      annualTarget:5000   },
+  { name:"Vittoria 5/160Mg 28's",         line:"CM Line",      subLine:"CM Line 1",      annualTarget:5500   },
+  { name:"Vittoria HCT 10/160/25Mg 28's", line:"CM Line",      subLine:"CM Line 1",      annualTarget:4000   },
+  { name:"Vittoria-HCT 5/160/12.5 28's",  line:"CM Line",      subLine:"CM Line 1",      annualTarget:6000   },
+  { name:"Vittoria-HCT 5/160/25 28's",    line:"CM Line",      subLine:"CM Line 1",      annualTarget:5000   },
+  { name:"Dapazin 10Mg",                  line:"CM Line",      subLine:"CM Line 1",      annualTarget:10000  },
+  { name:"Dapazin 5Mg",                   line:"CM Line",      subLine:"CM Line 1",      annualTarget:2000   },
+  { name:"Sitagen 100Mg",                 line:"CM Line",      subLine:"CM Line 1",      annualTarget:2500   },
+  { name:"Sitavic 50Mg/1000Mg",           line:"CM Line",      subLine:"CM Line 1",      annualTarget:7000   },
+  { name:"Vildus 50Mg 30's",              line:"CM Line",      subLine:"CM Line 1",      annualTarget:175    },
+  { name:"Lintra 5Mg",                    line:"CM Line",      subLine:"CM Line 1",      annualTarget:180    },
+];
+
+const MASTER_DOCTORS = [
+  // Optha
+  { name:"د.ايمن مجيد العاشور",        line:"Optha" },
+  { name:"د. محمد عبد الخالق المالكي", line:"Optha" },
+  { name:"د. فريد ورد",                line:"Optha" },
+  { name:"د. احمد عبود شذر",           line:"Optha" },
+  { name:"د. لؤي عبدالمطلب الموسوي",  line:"Optha" },
+  { name:"د. مخلص جري",               line:"Optha" },
+  { name:"د. ساجد الأسدي",             line:"Optha" },
+  { name:"د. فراس شنشل خلف",          line:"Optha" },
+  { name:"د. صلاح الاسدي",            line:"Optha" },
+  { name:"د. هاني محمود العبيدي",      line:"Optha" },
+  { name:"د. وسام جاسب الحمداني",     line:"Optha" },
+  { name:"د. زينب كامل الدوركي",      line:"Optha" },
+  { name:"د. محمد عبد الاله العاشور", line:"Optha" },
+  { name:"د.حامد منذر",               line:"Optha" },
+  { name:"د. أحمد السماك",            line:"Optha" },
+  { name:"د. طارق الحمداني",          line:"Optha" },
+  { name:"د.محمد توفيق مهدي",         line:"Optha" },
+  { name:"د. قصي حسين المالكي",       line:"Optha" },
+  { name:"د. مها اصغر محمد",          line:"Optha" },
+  { name:"د. محمد موسى عمران",        line:"Optha" },
+  { name:"د. وسام جاسم الشريفي",      line:"Optha" },
+  { name:"د. خالد يوسف العيداني",     line:"Optha" },
+  { name:"د.سرمد عبد الامير قاسم",    line:"Optha" },
+  { name:"د. خالد شاتي البيضاني",     line:"Optha" },
+  { name:"د.مصطفى يحيى النصر",        line:"Optha" },
+  { name:"د. غفران عبد الحسن الحسيني",line:"Optha" },
+  { name:"د. علي طة",                 line:"Optha" },
+  { name:"د. نورس كاظم المظفر",       line:"Optha" },
+  { name:"د. خالد خلف الكنعان",       line:"Optha" },
+  { name:"د. عهود سعدي العبادي",      line:"Optha" },
+  { name:"د. ميثم هاشم الموسوي",      line:"Optha" },
+  { name:"د. فتحي عبدالله الاسدي",    line:"Optha" },
+  { name:"د. وسام جبار الحيدري",      line:"Optha" },
+  { name:"د. عماد المياح",            line:"Optha" },
+  { name:"د. خالد توفيق",             line:"Optha" },
+  { name:"د. حسين خضير ياسين",        line:"Optha" },
+  { name:"د. خلود حسين المطوري",      line:"Optha" },
+  { name:"د. قاسم سالم علوان",        line:"Optha" },
+  { name:"د. مصطفى عبدالحسن السريج", line:"Optha" },
+  { name:"د. نوار رعد عبدالباقي",     line:"Optha" },
+  { name:"د. علاء حسين الاسدي",       line:"Optha" },
+  { name:"د. مثال محمد الشريده",      line:"Optha" },
+  { name:"د. قاسم عبد عبدعلي",        line:"Optha" },
+  { name:"د. خالد نجم",               line:"Optha" },
+  { name:"د. غلام محمد الربيعي",      line:"Optha" },
+  { name:"د. غيداء عبدالرضا حامد",    line:"Optha" },
+  { name:"د. هناء عربي المساعد",      line:"Optha" },
+  { name:"د. صباح عبدالحسن علي",      line:"Optha" },
+  { name:"د. مؤيد عبدالأمير عبدالرزضا",line:"Optha"},
+  { name:"د. عمار رياض",              line:"Optha" },
+  { name:"د. رواء سعدون فهد",         line:"Optha" },
+  { name:"د. حميد زبون محمد",         line:"Optha" },
+  { name:"دكتوره جاذر مسلم عبدالرزاق",line:"Optha"},
+  { name:"د. علي قاسم الساعدي",       line:"Optha" },
+  { name:"د. علي مهاوي",              line:"Optha" },
+  // Derma
+  { name:"د. كاظم الربيعي",           line:"Derma" },
+  { name:"د. سامر عبد الامير",        line:"Derma" },
+  { name:"د. خليل إسماعيل الحمدي",   line:"Derma" },
+  { name:"د. اسامة ملا الله مكي",     line:"Derma" },
+  { name:"د. فراس فاخر التميمي",      line:"Derma" },
+  { name:"د. أحمد السطام",            line:"Derma" },
+  { name:"د. أحمد نديم المالكي",      line:"Derma" },
+  { name:"د. عدي شاكر العبيدي",       line:"Derma" },
+  { name:"د. هيثم داود الاحمد",       line:"Derma" },
+  { name:"د. هادي لازم العبادي",      line:"Derma" },
+  { name:"د. منجد محمد علي العامري",  line:"Derma" },
+  { name:"د. سجاد عبدالنبي موسى",     line:"Derma" },
+  { name:"د. اسعد قدوري الياسين",     line:"Derma" },
+  { name:"د. غادة لطيف الحسناوي",     line:"Derma" },
+  { name:"د. زينب الخالدي",           line:"Derma" },
+  { name:"د. ضحى خليل الحمدي",        line:"Derma" },
+  { name:"د. فرات عاصف معتوق",        line:"Derma" },
+  { name:"د. سهى ضمد المالكي",        line:"Derma" },
+  { name:"د. امجد حافظ الغزال",       line:"Derma" },
+  { name:"د. محمد سعيد نعمة",         line:"Derma" },
+  { name:"د. جنان قاسم العبيدي",      line:"Derma" },
+  { name:"د. حيدر عبداللطيف",         line:"Derma" },
+  { name:"د. درنا عبدالله التميمي",   line:"Derma" },
+  { name:"د. علاء عبدالله",           line:"Derma" },
+  { name:"د. لؤي سالم حسين",          line:"Derma" },
+  { name:"د. أماني احمد الزاهدي",     line:"Derma" },
+  { name:"د. فاتن طالب الشمخاني",     line:"Derma" },
+  { name:"د. اسعد الفلك",             line:"Derma" },
+  { name:"د. صلاح عياش",              line:"Derma" },
+  { name:"د. علياء هاشم اليونس",      line:"Derma" },
+  { name:"د. رشا حامد السعدون",       line:"Derma" },
+  { name:"د. لينا سلام الجبارة",      line:"Derma" },
+  { name:"د. معتز عبدالله عبدالرحمن", line:"Derma" },
+  { name:"د. احمد محمد راضي",         line:"Derma" },
+  { name:"د. حيدر محمد الاديب",       line:"Derma" },
+  { name:"د. هادي عبيس مرزوق",        line:"Derma" },
+  { name:"د. عبد الهادي عبدالباقي",   line:"Derma" },
+  { name:"د. كمال رضا",               line:"Derma" },
+  { name:"د. زهراء محمود جاسم",       line:"Derma" },
+  { name:"د. عبدالوهاب عادل مبارك",   line:"Derma" },
+  { name:"د. حامد الزيدي",            line:"Derma" },
+  { name:"د. منتظر عبدالهدي الربيعي", line:"Derma" },
+  { name:"د. تبارك رحيم مجبل",        line:"Derma" },
+  { name:"د. زكي عبدالساده",          line:"Derma" },
+  { name:"د. حامد جبار لفتة",         line:"Derma" },
+  { name:"د. سلا زكي الفداغ",         line:"Derma" },
+  { name:"د. شهد فهمي الشهاوي",       line:"Derma" },
+  { name:"د. علاء عبداللطيف",         line:"Derma" },
+  { name:"د. عبدالله ايوب يعقوب",     line:"Derma" },
+  { name:"د. وسن جبر الخفاجي",        line:"Derma" },
+  { name:"د. وسن محمد جواد",          line:"Derma" },
+  { name:"د. ثائر علي حسين",          line:"Derma" },
+  { name:"د. علي احمد التميمي",       line:"Derma" },
+  { name:"د. بهاء الدين محمد",        line:"Derma" },
+  { name:"نور حسين عبدالجبار",        line:"Derma" },
+  { name:"د. هالة جبار حسين",         line:"Derma" },
+  { name:"د. علي محمود الاسدي",       line:"Derma" },
+  { name:"د. محمد السلمان",           line:"Derma" },
+  { name:"د. سمر فاضل الشيبان",       line:"Derma" },
+  { name:"د. احمد حميد حسن",          line:"Derma" },
+  { name:"د. محسن عبدالقاسم عبدالرض", line:"Derma" },
+  { name:"د. زينب عب الالة",          line:"Derma" },
+];
+
+function seedIfEmpty(){
+  // Always sync products and doctors with master lists
+  DB.set('products', MASTER_PRODUCTS);
+  DB.set('doctors',  MASTER_DOCTORS);
+
+  if (!localStorage.getItem('areas')){
+    DB.set('areas', ["Basra"]);
+  }
+  if (!localStorage.getItem('pharmacies')){
+    DB.set('pharmacies', []);
+  }  // Clear old mismatched sales data
+  if (localStorage.getItem('primarySales')){
+    const ps = DB.getObj('primarySales');
+    const keys = Object.keys(ps);
+    // If keys use old short names, wipe them
+    const hasOld = keys.some(k => k.includes('__Hi-Quin__') && !k.includes('Hi-Quin 2%'));
+    if(hasOld){ localStorage.removeItem('primarySales'); localStorage.removeItem('warehouseFlow'); localStorage.removeItem('monthlyFlowRate'); }
+  }
+}
+
+/* ════════════════════════════════
+   INIT
+════════════════════════════════ */
+function init(){
+  seedIfEmpty();
+  populateYears();
+  populateMonths();
+  populateCfgSelectors();
+  renderFormDoctors();
+  renderAll();
+  // Render grids after areas are populated
+  setTimeout(()=>{ renderPSGrid(); renderWFGrid(); }, 50);
+}
+
+function populateYears(){
+  const years = [2024,2025,2026,2027,2028,2029,2030];
+  const cur = new Date().getFullYear();
+  ['ps-year','wf-year'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = years.map(y=>`<option value="${y}"${y===cur?' selected':''}>${y}</option>`).join('');
+  });
+}
+
+function populateMonths(){
+  const months = [...Array(12)].map((_,i)=>i+1);
+  const cur = new Date().getMonth()+1;
+  ['ps-month','wf-month'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = months.map(m=>`<option value="${m}"${m===cur?' selected':''}>${m}</option>`).join('');
+  });
+}
+
+function renderAll(){
+  renderProductDropdowns();
+  renderAreaDropdowns();
+  renderPrimarySalesTable();
+  renderWarehouseFlowTable();
+  renderProductList();
+  renderAreaList();
+  renderPharmacyTable();
+  renderDoctorTable();
+}
+
+/* ════════════════════════════════
+   DROPDOWNS
+════════════════════════════════ */
+function renderProductDropdowns(){
+  const prods = DB.get('products');
+  const opts = prods.map(p=>`<option value="${p.name}">${p.name} (${p.line})</option>`).join('');
+  ['ps-product','wf-product'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = opts || '<option>لا توجد منتجات</option>';
+  });
+}
+
+function renderAreaDropdowns(){
+  const areas = DB.get('areas');
+  const opts = areas.map(a=>`<option>${a}</option>`).join('');
+  ['ps-area','wf-area','ph-area'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = opts || '<option>لا توجد مناطق</option>';
+  });
+}
+
+/* ════════════════════════════════
+/* ════════════════════════════════
+   PRIMARY SALES — GRID
+════════════════════════════════ */
+function renderPSGrid(){
+  const year  = document.getElementById('ps-year')?.value;
+  const month = document.getElementById('ps-month')?.value;
+  const area  = document.getElementById('ps-area')?.value;
+  const line  = document.getElementById('ps-line')?.value || 'all';
+  if (!year || !month || !area) return;
+  const prods = DB.get('products').filter(p => line==='all' || p.line===line);
+  const ps    = DB.getObj('primarySales');
+  const tbody = document.getElementById('ps-grid-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = prods.map(p => {
+    const key = `${year}__${p.name}__${area}__${month}`;
+    const val = ps[key] || 0;
+    const mTarget = Math.round(getProductTarget(p.name, year, area) / 12);
+    const color = lineColor(p.line);
+    return `<tr>
+      <td style="text-align:right;font-weight:600;font-size:12px">
+        <span style="background:${color};width:6px;height:6px;border-radius:50%;display:inline-block;margin-left:6px"></span>
+        ${p.name}
+      </td>
+      <td><span style="background:${color}22;color:${color};border-radius:999px;padding:1px 7px;font-size:10px">${p.line}</span></td>
+      <td style="color:var(--muted);font-size:11px">${mTarget.toLocaleString()}</td>
+      <td><input type="number" class="ps-qty-input" data-key="${key}" value="${val}" min="0"
+        style="width:90px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:4px;font-size:12px;text-align:center"
+        placeholder="0"></td>
+    </tr>`;
+  }).join('');
+}
+
+function savePSGrid(){
+  const data = DB.getObj('primarySales');
+  document.querySelectorAll('.ps-qty-input').forEach(inp => {
+    const key = inp.dataset.key;
+    const val = Number(inp.value||0);
+    if (val > 0) data[key] = val;
+    else delete data[key];
+  });
+  DB.setObj('primarySales', data);
+  toast('✓ تم حفظ Primary Sales');
+  renderPrimarySalesTable();
+}
+
+function savePrimarySales(){ savePSGrid(); }
+
+function deletePrimarySales(key){
+  if (!confirm('حذف هذا السجل؟')) return;
+  const data = DB.getObj('primarySales');
+  delete data[key];
+  DB.setObj('primarySales', data);
+  renderPrimarySalesTable();
+}
+
+function renderPrimarySalesTable(){
+  const data = DB.getObj('primarySales');
+  const keys = Object.keys(data);
+  const tbody = document.getElementById('ps-tbody');
+  const stats = document.getElementById('ps-stats');
+  const total = Object.values(data).reduce((s,v)=>s+(typeof v==='number'?v:0),0);
+  if(stats) stats.innerHTML = `
+    <div class="stat-mini">إجمالي السجلات <span>${keys.length}</span></div>
+    <div class="stat-mini">إجمالي الكميات <span>${total.toLocaleString()}</span></div>`;
+  if (!tbody) return;
+  if (!keys.length){ tbody.innerHTML = `<tr><td colspan="6" class="empty">لا توجد بيانات</td></tr>`; return; }
+  tbody.innerHTML = keys.sort().map(k => {
+    const [year, prod, area, month] = k.split('__');
+    return `<tr>
+      <td>${year}</td><td>${month}</td><td style="text-align:right">${prod}</td><td>${area}</td>
+      <td><strong>${Number(data[k]).toLocaleString()}</strong></td>
+      <td><button class="btn btn-danger" onclick="deletePrimarySales('${k}')">🗑</button></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ════════════════════════════════
+   SECONDARY SALES — GRID
+════════════════════════════════ */
+function renderWFGrid(){
+  const year  = document.getElementById('wf-year')?.value;
+  const month = document.getElementById('wf-month')?.value;
+  const area  = document.getElementById('wf-area')?.value;
+  const line  = document.getElementById('wf-line')?.value || 'all';
+  if (!year || !month || !area) return;
+  const prods = DB.get('products').filter(p => line==='all' || p.line===line);
+  const wf    = DB.getObj('warehouseFlow');
+  const tbody = document.getElementById('wf-grid-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = prods.map(p => {
+    const key = `${year}__${p.name}__${area}__${month}`;
+    const val = wf[key] || 0;
+    const mTarget = Math.round(getProductTarget(p.name, year, area) / 12);
+    const color = lineColor(p.line);
+    return `<tr>
+      <td style="text-align:right;font-weight:600;font-size:12px">
+        <span style="background:${color};width:6px;height:6px;border-radius:50%;display:inline-block;margin-left:6px"></span>
+        ${p.name}
+      </td>
+      <td><span style="background:${color}22;color:${color};border-radius:999px;padding:1px 7px;font-size:10px">${p.line}</span></td>
+      <td style="color:var(--muted);font-size:11px">${mTarget.toLocaleString()}</td>
+      <td><input type="number" class="wf-qty-input" data-key="${key}" value="${val}" min="0"
+        style="width:90px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:4px;font-size:12px;text-align:center"
+        placeholder="0"></td>
+    </tr>`;
+  }).join('');
+}
+
+function saveWFGrid(){
+  const data = DB.getObj('warehouseFlow');
+  document.querySelectorAll('.wf-qty-input').forEach(inp => {
+    const key = inp.dataset.key;
+    const val = Number(inp.value||0);
+    if (val > 0) data[key] = val;
+    else delete data[key];
+  });
+  DB.setObj('warehouseFlow', data);
+  toast('✓ تم حفظ Secondary Sales');
+  renderWarehouseFlowTable();
+}
+
+function saveWarehouseFlow(){ saveWFGrid(); }
+
+function deleteWarehouseFlow(key){
+  if (!confirm('حذف هذا السجل؟')) return;
+  const data = DB.getObj('warehouseFlow');
+  delete data[key];
+  DB.setObj('warehouseFlow', data);
+  renderWarehouseFlowTable();
+}
+
+function renderWarehouseFlowTable(){
+  const data = DB.getObj('warehouseFlow');
+  const keys = Object.keys(data);
+  const tbody = document.getElementById('wf-tbody');
+  const stats = document.getElementById('wf-stats');
+  const total = Object.values(data).reduce((s,v)=>s+(typeof v==='number'?v:0),0);
+  if(stats) stats.innerHTML = `
+    <div class="stat-mini">إجمالي السجلات <span>${keys.length}</span></div>
+    <div class="stat-mini">إجمالي الكميات <span>${total.toLocaleString()}</span></div>`;
+  if (!tbody) return;
+  if (!keys.length){ tbody.innerHTML = `<tr><td colspan="6" class="empty">لا توجد بيانات</td></tr>`; return; }
+  tbody.innerHTML = keys.sort().map(k => {
+    const [year, prod, area, month] = k.split('__');
+    return `<tr>
+      <td>${year}</td><td>${month}</td><td style="text-align:right">${prod}</td><td>${area}</td>
+      <td><strong>${Number(data[k]).toLocaleString()}</strong></td>
+      <td><button class="btn btn-danger" onclick="deleteWarehouseFlow('${k}')">🗑</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterPSGrid(){
+  const q = document.getElementById('ps-search')?.value.toLowerCase() || '';
+  document.querySelectorAll('#ps-grid-tbody tr').forEach(row => {
+    const name = row.querySelector('td')?.textContent.toLowerCase() || '';
+    row.style.display = name.includes(q) ? '' : 'none';
+  });
+}
+
+function filterWFGrid(){
+  const q = document.getElementById('wf-search')?.value.toLowerCase() || '';
+  document.querySelectorAll('#wf-grid-tbody tr').forEach(row => {
+    const name = row.querySelector('td')?.textContent.toLowerCase() || '';
+    row.style.display = name.includes(q) ? '' : 'none';
+  });
+}
+
+function lineColor(line){
+  const map = { Derma:'#4f8ef7', Optha:'#6ee7b7', 'General Line':'#f59e0b', 'CM Line':'#a78bfa' };
+  if (map[line]) return map[line];
+  let h=0; for(let c of (line||'')) h=c.charCodeAt(0)+((h<<5)-h);
+  return `hsl(${Math.abs(h)%360},60%,55%)`;
+}
+
+/* ════════════════════════════════
+   MONTHLY FLOW RATE
+════════════════════════════════ */
+function calcFlowRate(){
+  const open  = Number(document.getElementById('mfr-open').value  || 0);
+  const close = Number(document.getElementById('mfr-close').value || 0);
+  const diff  = open - close;
+  const rate  = open ? (diff / open * 100) : 0;
+  const prev  = document.getElementById('mfr-preview');
+  if (open && close !== ''){
+    const color = rate >= 80 ? 'var(--accent2)' : rate >= 60 ? 'var(--warn)' : 'var(--danger)';
+    prev.innerHTML = `<span style="color:${color}">📦 الفرق = ${diff.toLocaleString()} &nbsp;|&nbsp; Flow Rate = ${rate.toFixed(1)}%</span>`;
+  } else {
+    prev.textContent = '';
+  }
+}
+
+function saveFlowRate(){
+  const year    = document.getElementById('mfr-year').value;
+  const month   = document.getElementById('mfr-month').value;
+  const product = document.getElementById('mfr-product').value;
+  const area    = document.getElementById('mfr-area').value;
+  const open    = Number(document.getElementById('mfr-open').value  || 0);
+  const close   = Number(document.getElementById('mfr-close').value || 0);
+
+  if (!open) return alert('ادخل ستوك البداية');
+
+  const key  = `${year}__${product}__${area}__${month}`;
+  const data = DB.getObj('monthlyFlowRate');
+  data[key]  = { open, close, diff: open - close, rate: open ? ((open-close)/open*100) : 0 };
+  DB.setObj('monthlyFlowRate', data);
+
+  document.getElementById('mfr-open').value  = '';
+  document.getElementById('mfr-close').value = '';
+  document.getElementById('mfr-preview').textContent = '';
+  toast('✓ تم حفظ Monthly Flow Rate');
+}
+
+function deleteFlowRate(key){
+  if (!confirm('حذف هذا السجل؟')) return;
+  const data = DB.getObj('monthlyFlowRate');
+  delete data[key];
+  DB.setObj('monthlyFlowRate', data);
+}
+
+function renderFlowRateTable(){
+  const data  = DB.getObj('monthlyFlowRate');
+  const keys  = Object.keys(data);
+  const tbody = document.getElementById('mfr-tbody');
+  const stats = document.getElementById('mfr-stats');
+
+  const avgRate = keys.length
+    ? (keys.reduce((s,k)=>s+(data[k].rate||0),0) / keys.length)
+    : 0;
+
+  stats.innerHTML = `
+    <div class="stat-mini">إجمالي السجلات <span>${keys.length}</span></div>
+    <div class="stat-mini">متوسط Flow Rate <span>${avgRate.toFixed(1)}%</span></div>
+  `;
+
+  if (!keys.length){ tbody.innerHTML = `<tr><td colspan="9" class="empty">لا توجد بيانات</td></tr>`; return; }
+
+  tbody.innerHTML = keys.sort().map(k => {
+    const [year, prod, area, month] = k.split('__');
+    const r = data[k];
+    const rateColor = r.rate >= 80 ? '#6ee7b7' : r.rate >= 60 ? '#f59e0b' : '#ef4444';
+    return `<tr>
+      <td>${year}</td><td>${month}</td><td>${prod}</td><td>${area}</td>
+      <td>${r.open.toLocaleString()}</td>
+      <td>${r.close.toLocaleString()}</td>
+      <td>${r.diff.toLocaleString()}</td>
+      <td style="color:${rateColor};font-weight:700">${r.rate.toFixed(1)}%</td>
+      <td><button class="btn btn-danger" onclick="deleteFlowRate('${k}')">🗑</button></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ════════════════════════════════
+   CONFIG — PRODUCTS
+════════════════════════════════ */
+const lineColors = { Derma:'#4f8ef7', Optha:'#6ee7b7', Cardio:'#f59e0b', Other:'#a78bfa' };
+
+function getLineColor(line){
+  if (lineColors[line]) return lineColors[line];
+  // Generate consistent color for custom lines
+  let hash = 0;
+  for(let i=0;i<line.length;i++) hash = line.charCodeAt(i) + ((hash<<5)-hash);
+  return `hsl(${Math.abs(hash)%360},60%,55%)`;
+}
+
+function toggleCustomLine(){
+  const val = document.getElementById('prod-line').value;
+  document.getElementById('custom-line-group').style.display = val==='__custom__' ? 'block' : 'none';
+}
+
+function addProduct(){
+  const name   = document.getElementById('prod-name').value.trim();
+  let   line   = document.getElementById('prod-line').value;
+  const price  = Number(document.getElementById('prod-price').value||0);
+  if (!name) return alert('ادخل اسم المنتج');
+
+  // Handle custom line
+  if (line === '__custom__'){
+    line = document.getElementById('prod-line-custom').value.trim();
+    if (!line) return alert('ادخل اسم الـ Line');
+    // Add to select if not already there
+    const sel = document.getElementById('prod-line');
+    const exists = [...sel.options].some(o => o.value === line);
+    if (!exists){
+      const opt = document.createElement('option');
+      opt.value = opt.text = line;
+      sel.insertBefore(opt, sel.querySelector('option[value="__custom__"]'));
+    }
+    sel.value = line;
+    document.getElementById('custom-line-group').style.display = 'none';
+    document.getElementById('prod-line-custom').value = '';
+  }
+
+  const prods = DB.get('products');
+  if (prods.find(p=>p.name===name)) return alert('المنتج موجود مسبقاً');
+  prods.push({ name, line, annualTarget: 0, price });
+  DB.set('products', prods);
+  document.getElementById('prod-name').value = '';
+  document.getElementById('prod-price').value = '';
+  toast('✓ تمت إضافة المنتج');
+  renderAll();
+}
+
+function deleteProduct(name){
+  if (!confirm(`حذف ${name}؟`)) return;
+  DB.set('products', DB.get('products').filter(p=>p.name!==name));
+  renderAll();
+}
+
+function editProduct(name){
+  const prods = DB.get('products');
+  const p = prods.find(x=>x.name===name);
+  if(!p) return;
+
+  const tbody = document.getElementById('prod-tbody');
+  const rows  = tbody.querySelectorAll('tr');
+  let targetRow = null;
+  rows.forEach(r => { if(r.dataset.name === name) targetRow = r; });
+  if(!targetRow) return;
+
+  // Replace row with inline edit form
+  targetRow.innerHTML = `
+    <td style="text-align:right;font-weight:600;font-size:11px" colspan="2">
+      <span class="line-dot" style="background:${getLineColor(p.line)};display:inline-block;width:7px;height:7px;border-radius:50%;margin-left:4px"></span>
+      ${p.name}
+    </td>
+    <td><input type="text" id="edit-sub-${name.replace(/\W/g,'_')}" value="${p.subLine||''}"
+      style="width:80px;background:var(--surface2);border:1px solid var(--accent);color:var(--text);padding:4px 6px;border-radius:4px;font-size:11px"></td>
+    <td><input type="number" id="edit-target-${name.replace(/\W/g,'_')}" value="${p.annualTarget||0}"
+      style="width:90px;background:var(--surface2);border:1px solid var(--accent);color:var(--text);padding:4px 6px;border-radius:4px;font-size:11px"></td>
+    <td><input type="number" id="edit-price-${name.replace(/\W/g,'_')}" value="${p.price||0}"
+      style="width:90px;background:var(--surface2);border:1px solid var(--accent);color:var(--text);padding:4px 6px;border-radius:4px;font-size:11px"></td>
+    <td>
+      <button class="btn btn-primary" style="font-size:11px;padding:4px 10px" onclick="saveEditProduct('${name.replace(/'/g,"\\'")}')">✓ حفظ</button>
+      <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;margin-right:4px" onclick="renderProductList()">✕</button>
+    </td>
+  `;
+  // Focus first input
+  document.getElementById(`edit-target-${name.replace(/\W/g,'_')}`)?.focus();
+}
+
+function saveEditProduct(name){
+  const prods = DB.get('products');
+  const p = prods.find(x=>x.name===name);
+  if(!p) return;
+  const key = name.replace(/\W/g,'_');
+  const newTarget = Number(document.getElementById(`edit-target-${key}`)?.value||0);
+  const newPrice  = Number(document.getElementById(`edit-price-${key}`)?.value||0);
+  const newSub    = document.getElementById(`edit-sub-${key}`)?.value || p.subLine || '';
+  p.annualTarget = newTarget;
+  p.price        = newPrice;
+  p.subLine      = newSub;
+  DB.set('products', prods);
+  toast(`✓ تم تحديث ${name}`);
+  renderAll();
+}
+
+/* ════════════════════════════════
+   CONFIG — PRODUCTS & TARGETS
+════════════════════════════════ */
+
+function populateCfgSelectors(){
+  const yEl = document.getElementById('cfg-year');
+  if (yEl){
+    const prevY = Number(yEl.value) || 2026;
+    yEl.innerHTML = '';
+    for(let y=2024; y<=2030; y++){
+      const o = document.createElement('option');
+      o.value = o.textContent = y;
+      if(prevY===y) o.selected = true;
+      yEl.appendChild(o);
+    }
+  }
+  // Always refresh areas
+  const areas = DB.get('areas');
+  const aEl = document.getElementById('cfg-area');
+  if (aEl){
+    const prev = aEl.value;
+    aEl.innerHTML = areas.map(a=>`<option value="${a}">${a}</option>`).join('') || '<option>لا توجد مناطق</option>';
+    if (prev && areas.includes(prev)) aEl.value = prev;
+  }
+}
+
+// Get target for a product in a specific year+area
+function getProductTarget(productName, year, area){
+  const targets = DB.getObj('productTargets');
+  const key = `${year}__${productName}__${area}`;
+  if (targets[key] !== undefined) return targets[key];
+  // Only fallback to MASTER for Basra 2026
+  if (area === 'Basra' && Number(year) === 2026){
+    const p = DB.get('products').find(x=>x.name===productName);
+    return p ? (p.annualTarget||0) : 0;
+  }
+  return 0;
+}
+
+function saveProductTarget(productName, year, area, value){
+  const targets = DB.getObj('productTargets');
+  const key = `${year}__${productName}__${area}`;
+  targets[key] = Number(value)||0;
+  DB.setObj('productTargets', targets);
+}
+
+function renderTargetsTable(){
+  const yEl  = document.getElementById('cfg-year');
+  const aEl  = document.getElementById('cfg-area');
+  const year = yEl?.value || new Date().getFullYear();
+  const area = aEl?.value || 'Basra';
+  const prods = DB.get('products');
+  const tbody = document.getElementById('prod-tbody');
+  if (!tbody) return;
+
+  document.getElementById('targets-context').textContent =
+    `عرض أهداف: ${area} — ${year}`;
+
+  if (!prods.length){
+    tbody.innerHTML = `<tr><td colspan="6" class="empty">لا توجد منتجات</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = prods.map((p,i) => {
+    const target   = getProductTarget(p.name, year, area);
+    const priceStr = p.price ? Number(p.price).toLocaleString()+' IQD' : '—';
+    return `<tr data-idx="${i}">
+      <td style="text-align:right;font-weight:600">
+        <span style="background:${getLineColor(p.line)};display:inline-block;width:7px;height:7px;border-radius:50%;margin-left:6px"></span>
+        ${p.name}
+      </td>
+      <td>${p.line}</td>
+      <td style="color:var(--muted)">${p.subLine||'—'}</td>
+      <td>
+        <input type="number" value="${target}" min="0"
+          style="width:90px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:4px;font-size:12px;text-align:center"
+          onchange="saveProductTarget('${p.name.replace(/'/g,"\\'")}','${year}','${area}',this.value);toast('✓ تم حفظ الهدف')">
+      </td>
+      <td style="color:var(--accent2)">${priceStr}</td>
+      <td>
+        <button class="btn btn-warn" style="font-size:11px;padding:3px 8px" data-idx="${i}" onclick="editProductByIdx(this)">✏️</button>
+        <button class="btn btn-danger" style="margin-right:4px" data-idx="${i}" onclick="deleteProductByIdx(this)">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderProductList(){ renderTargetsTable(); }
+
+function editProductByIdx(btn){
+  const prods = DB.get('products');
+  const i = Number(btn.dataset.idx);
+  const p = prods[i];
+  if (!p) return;
+
+  const row = btn.closest('tr');
+  if (!row) return;
+
+  const lineOpts = ['Derma','Optha','General Line','CM Line']
+    .map(l=>`<option value="${l}"${p.line===l?' selected':''}>${l}</option>`).join('');
+
+  row.innerHTML = `
+    <td style="text-align:right" colspan="2">
+      <input type="text" id="pedit-name" value="${p.name}"
+        style="width:100%;background:var(--surface2);border:1px solid var(--accent);color:var(--text);padding:4px 8px;border-radius:4px;font-size:12px;font-family:inherit;direction:rtl">
+    </td>
+    <td>
+      <select id="pedit-line" style="background:var(--surface2);border:1px solid var(--accent);color:var(--text);padding:4px 6px;border-radius:4px;font-size:11px;font-family:inherit">
+        ${lineOpts}
+      </select>
+    </td>
+    <td>
+      <input type="number" id="pedit-target" value="${p.annualTarget||0}"
+        style="width:90px;background:var(--surface2);border:1px solid var(--accent);color:var(--text);padding:4px 8px;border-radius:4px;font-size:12px">
+    </td>
+    <td>
+      <input type="number" id="pedit-price" value="${p.price||0}"
+        style="width:90px;background:var(--surface2);border:1px solid var(--accent);color:var(--text);padding:4px 8px;border-radius:4px;font-size:12px">
+    </td>
+    <td>
+      <button class="btn btn-primary" style="font-size:11px;padding:4px 10px" onclick="saveProductEdit(${i})">✓</button>
+      <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;margin-right:4px" onclick="renderTargetsTable()">✕</button>
+    </td>
+  `;
+}
+
+function saveProductEdit(i){
+  const prods = DB.get('products');
+  const p = prods[i];
+  if (!p) return;
+  p.name        = document.getElementById('pedit-name')?.value.trim()  || p.name;
+  p.line        = document.getElementById('pedit-line')?.value          || p.line;
+  p.annualTarget= Number(document.getElementById('pedit-target')?.value||0);
+  p.price       = Number(document.getElementById('pedit-price')?.value ||0);
+  DB.set('products', prods);
+  toast('✓ تم التحديث');
+  renderAll();
+}
+
+function deleteProductByIdx(btn){
+  const prods = DB.get('products');
+  const i = Number(btn.dataset.idx);
+  const p = prods[i];
+  if (!p) return;
+  if (!confirm(`حذف ${p.name}؟`)) return;
+  prods.splice(i, 1);
+  DB.set('products', prods);
+  renderAll();
+}
+
+/* ════════════════════════════════
+   CONFIG — DOCTORS
+════════════════════════════════ */
+let doctorFilter = 'all';
+
+function filterDoctors(line){
+  doctorFilter = line;
+  renderDoctorTable();
+}
+
+function addDoctor(){
+  const name = document.getElementById('doc-name').value.trim();
+  const line = document.getElementById('doc-line').value;
+  const area = document.getElementById('doc-area').value.trim();
+  if (!name) return alert('ادخل اسم الطبيب');
+  const docs = DB.get('doctors');
+  if (docs.find(d=>d.name===name)) return alert('الطبيب موجود مسبقاً');
+  docs.push({ name, line, area });
+  DB.set('doctors', docs);
+  document.getElementById('doc-name').value = '';
+  document.getElementById('doc-area').value = '';
+  toast('✓ تمت إضافة الطبيب');
+  renderDoctorTable();
+}
+
+function editDoctor(name){
+  const docs = DB.get('doctors');
+  const d = docs.find(x=>x.name===name);
+  if (!d) return;
+  const tbody = document.getElementById('doc-tbody');
+  const rows  = tbody.querySelectorAll('tr');
+  let targetRow = null;
+  rows.forEach(r => { if(r.dataset.name === name) targetRow = r; });
+  if (!targetRow) return;
+
+  const lineOpts = ['Optha','Derma','General Line','CM Line']
+    .map(l=>`<option value="${l}"${d.line===l?' selected':''}>${l}</option>`).join('');
+
+  targetRow.innerHTML = `
+    <td style="text-align:right">
+      <input type="text" id="dedit-name" value="${d.name}"
+        style="width:100%;background:var(--surface2);border:1px solid var(--accent);color:var(--text);padding:4px 8px;border-radius:4px;font-size:12px;font-family:inherit;direction:rtl">
+    </td>
+    <td>
+      <select id="dedit-line" style="background:var(--surface2);border:1px solid var(--accent);color:var(--text);padding:4px 6px;border-radius:4px;font-size:11px;font-family:inherit">
+        ${lineOpts}
+      </select>
+    </td>
+    <td>
+      <input type="text" id="dedit-area" value="${d.area||''}"
+        style="width:100%;background:var(--surface2);border:1px solid var(--accent);color:var(--text);padding:4px 8px;border-radius:4px;font-size:12px;font-family:inherit;direction:rtl"
+        placeholder="المنطقة/العيادة">
+    </td>
+    <td colspan="2" style="white-space:nowrap">
+      <button class="btn btn-primary" style="font-size:11px;padding:4px 10px" onclick="saveDoctorEdit('${name.replace(/'/g,"\\'")}')">✓ حفظ</button>
+      <button class="btn btn-ghost" style="font-size:11px;padding:4px 8px;margin-right:4px" onclick="renderDoctorTable()">✕</button>
+    </td>
+  `;
+}
+
+function saveDoctorEdit(oldName){
+  const docs    = DB.get('doctors');
+  const d       = docs.find(x=>x.name===oldName);
+  if (!d) return;
+  d.name = document.getElementById('dedit-name').value.trim() || oldName;
+  d.line = document.getElementById('dedit-line').value;
+  d.area = document.getElementById('dedit-area').value.trim();
+  DB.set('doctors', docs);
+  toast('✓ تم التحديث');
+  renderDoctorTable();
+}
+
+function editDoctorByIdx(btn){
+  const allDocs = DB.get('doctors');
+  // find actual index in full list
+  const filteredDocs = doctorFilter==='all' ? allDocs : allDocs.filter(d=>d.line===doctorFilter);
+  const fi = Number(btn.dataset.idx);
+  const d  = filteredDocs[fi];
+  if (!d) return;
+  editDoctor(d.name);
+}
+
+function deleteDoctorByIdx(btn){
+  const allDocs = DB.get('doctors');
+  const filteredDocs = doctorFilter==='all' ? allDocs : allDocs.filter(d=>d.line===doctorFilter);
+  const fi = Number(btn.dataset.idx);
+  const d  = filteredDocs[fi];
+  if (!d) return;
+  if (!confirm(`حذف ${d.name}؟`)) return;
+  DB.set('doctors', allDocs.filter(x=>x.name!==d.name));
+  renderDoctorTable();
+}
+
+function renderDoctorTable(){
+  let docs = DB.get('doctors');
+  if (doctorFilter !== 'all') docs = docs.filter(d=>d.line===doctorFilter);
+  const tbody = document.getElementById('doc-tbody');
+  if (!tbody) return;
+  const lineColors = { Optha:'#6ee7b7', Derma:'#4f8ef7', 'General Line':'#f59e0b', 'CM Line':'#a78bfa' };
+  if (!docs.length){ tbody.innerHTML=`<tr><td colspan="5" class="empty">لا يوجد أطباء</td></tr>`; return; }
+  tbody.innerHTML = docs.map((d,i)=>{
+    const color = lineColors[d.line]||'#64748b';
+    return `<tr data-name="${d.name.replace(/"/g,'&quot;')}">
+      <td style="text-align:right">${d.name}</td>
+      <td><span style="background:${color}22;color:${color};border:1px solid ${color}55;border-radius:999px;padding:2px 8px;font-size:10px">${d.line}</span></td>
+      <td style="color:var(--muted);font-size:11px">${d.area||'—'}</td>
+      <td><button class="btn btn-warn" style="font-size:11px;padding:3px 8px" data-idx="${i}" onclick="editDoctorByIdx(this)">✏️</button></td>
+      <td><button class="btn btn-danger" data-idx="${i}" onclick="deleteDoctorByIdx(this)">🗑</button></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ════════════════════════════════
+   CONFIG — AREAS
+════════════════════════════════ */
+function addArea(){
+  const name = document.getElementById('area-name').value.trim();
+  if (!name) return alert('ادخل اسم المنطقة');
+  const areas = DB.get('areas');
+  if (areas.includes(name)) return alert('المنطقة موجودة مسبقاً');
+  areas.push(name);
+  DB.set('areas', areas);
+  document.getElementById('area-name').value = '';
+  toast('✓ تمت إضافة المنطقة');
+  renderAll();
+}
+
+function deleteArea(name){
+  if (!confirm(`حذف ${name}؟`)) return;
+  DB.set('areas', DB.get('areas').filter(a=>a!==name));
+  renderAll();
+}
+
+function renderAreaList(){
+  const areas = DB.get('areas');
+  const el = document.getElementById('area-list');
+  if (!areas.length){ el.innerHTML = '<span class="empty">لا توجد مناطق</span>'; return; }
+  el.innerHTML = areas.map(a => `
+    <div class="pill">
+      📍 <strong>${a}</strong>
+      <button class="btn btn-danger" onclick="deleteArea('${a}')">✕</button>
+    </div>
+  `).join('');
+}
+
+/* ════════════════════════════════
+   CONFIG — PHARMACIES
+════════════════════════════════ */
+/* ════════════════════════════════
+   CONFIG — PHARMACIES
+════════════════════════════════ */
+let formDoctors = []; // temp list while filling form
+
+function addDoctorToForm(){
+  const input = document.getElementById('ph-doctor-input');
+  const name  = input.value.trim();
+  if (!name) return;
+  if (formDoctors.includes(name)) return alert('الطبيب مضاف مسبقاً');
+  formDoctors.push(name);
+  input.value = '';
+  renderFormDoctors();
+}
+
+function removeFormDoctor(name){
+  formDoctors = formDoctors.filter(d=>d!==name);
+  renderFormDoctors();
+}
+
+function renderFormDoctors(){
+  const el = document.getElementById('ph-doctors-list');
+  if (!formDoctors.length){
+    el.innerHTML = '<span style="font-size:11px;color:var(--muted)">لا يوجد أطباء — أضف طبيب واحد على الأقل</span>';
+    return;
+  }
+  el.innerHTML = formDoctors.map(d => `
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:999px;padding:3px 10px;font-size:11px;display:flex;align-items:center;gap:6px">
+      👨‍⚕️ ${d}
+      <button onclick="removeFormDoctor('${d.replace(/'/g,"\\'")}')" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:13px;line-height:1">✕</button>
+    </div>`).join('');
+}
+
+function addPharmacy(){
+  const name     = document.getElementById('ph-name').value.trim();
+  const area     = document.getElementById('ph-area').value;
+  const location = document.getElementById('ph-location')?.value.trim() || '';
+  if (!name) return alert('ادخل اسم الصيدلية');
+  if (!formDoctors.length) return alert('أضف طبيب واحد على الأقل');
+
+  const phs = DB.get('pharmacies');
+  if (phs.find(p=>p.name===name)) return alert('الصيدلية موجودة مسبقاً');
+  phs.push({ name, area, location, doctors: [...formDoctors] });
+  DB.set('pharmacies', phs);
+
+  // Reset form
+  document.getElementById('ph-name').value = '';
+  if(document.getElementById('ph-location')) document.getElementById('ph-location').value = '';
+  formDoctors = [];
+  renderFormDoctors();
+  toast('✓ تمت إضافة الصيدلية');
+  renderAll();
+}
+
+function addDoctorToPharmacy(phName){
+  const phs  = DB.get('pharmacies');
+  const ph   = phs.find(p=>p.name===phName);
+  if (!ph) return;
+  const doc = prompt('اسم الطبيب الجديد:');
+  if (!doc || !doc.trim()) return;
+  if (!ph.doctors) ph.doctors = ph.doctor ? [ph.doctor] : [];
+  if (ph.doctors.includes(doc.trim())) return alert('الطبيب موجود مسبقاً');
+  ph.doctors.push(doc.trim());
+  DB.set('pharmacies', phs);
+  renderAll();
+}
+
+function removeDoctorFromPharmacy(phName, docName){
+  const phs = DB.get('pharmacies');
+  const ph  = phs.find(p=>p.name===phName);
+  if (!ph) return;
+  ph.doctors = (ph.doctors || []).filter(d=>d!==docName);
+  DB.set('pharmacies', phs);
+  renderAll();
+}
+
+function deletePharmacy(name){
+  if (!confirm(`حذف ${name}؟`)) return;
+  DB.set('pharmacies', DB.get('pharmacies').filter(p=>p.name!==name));
+  renderAll();
+}
+
+function renderPharmacyTable(){
+  const phs   = DB.get('pharmacies');
+  const tbody = document.getElementById('ph-tbody');
+  if (!phs.length){ tbody.innerHTML = `<tr><td colspan="5" class="empty">لا توجد صيدليات</td></tr>`; return; }
+  tbody.innerHTML = phs.map((p,i) => {
+    const doctors = p.doctors || (p.doctor ? [p.doctor] : []);
+    const doctorChips = doctors.map((d,di) => `
+      <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.3);border-radius:999px;padding:2px 8px;font-size:10px;margin:2px">
+        👨‍⚕️ ${d}
+        <button data-phidx="${i}" data-didx="${di}" onclick="removeDoctorByIdx(this);event.stopPropagation()" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:11px;line-height:1;padding:0">✕</button>
+      </span>`).join('');
+    return `<tr>
+      <td style="font-weight:600">${p.name}</td>
+      <td>${p.area}</td>
+      <td>
+        <div style="display:flex;flex-wrap:wrap;gap:2px;align-items:center">
+          ${doctorChips || '<span style="color:var(--muted);font-size:11px">—</span>'}
+          <button data-phidx="${i}" onclick="addDoctorToPharmacyByIdx(this)" style="background:none;border:1px dashed var(--border);color:var(--accent);border-radius:999px;padding:2px 8px;font-size:10px;cursor:pointer;margin:2px">+ طبيب</button>
+        </div>
+      </td>
+      <td style="font-size:10px;color:var(--muted)">${p.location||'—'}</td>
+      <td><button class="btn btn-danger" data-phidx="${i}" onclick="deletePharmacyByIdx(this)">🗑</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function deletePharmacyByIdx(btn){
+  const phs = DB.get('pharmacies');
+  const i   = Number(btn.dataset.phidx);
+  if (!phs[i]) return;
+  if (!confirm(`حذف ${phs[i].name}؟`)) return;
+  phs.splice(i,1);
+  DB.set('pharmacies', phs);
+  renderAll();
+}
+
+function addDoctorToPharmacyByIdx(btn){
+  const phs = DB.get('pharmacies');
+  const i   = Number(btn.dataset.phidx);
+  const ph  = phs[i];
+  if (!ph) return;
+  const doc = prompt('اسم الطبيب:');
+  if (!doc || !doc.trim()) return;
+  if (!ph.doctors) ph.doctors = ph.doctor ? [ph.doctor] : [];
+  if (ph.doctors.includes(doc.trim())) return alert('الطبيب موجود مسبقاً');
+  ph.doctors.push(doc.trim());
+  DB.set('pharmacies', phs);
+  renderAll();
+}
+
+function removeDoctorByIdx(btn){
+  const phs  = DB.get('pharmacies');
+  const pi   = Number(btn.dataset.phidx);
+  const di   = Number(btn.dataset.didx);
+  const ph   = phs[pi];
+  if (!ph) return;
+  if (!ph.doctors) ph.doctors = ph.doctor ? [ph.doctor] : [];
+  ph.doctors.splice(di,1);
+  DB.set('pharmacies', phs);
+  renderAll();
+}
+
+/* ════════════════════════════════
+   RESET ALL
+════════════════════════════════ */
+function resetAll(){
+  if (!confirm('هذا الإجراء سيحذف كل البيانات نهائياً. تأكيد؟')) return;
+  ['products','areas','pharmacies','primarySales','warehouseFlow','monthlyFlowRate']
+    .forEach(k => localStorage.removeItem(k));
+  seedIfEmpty();
+  renderAll();
+  toast('🗑 تم إعادة التعيين');
+}
+
+/* ════════════════════════════════
+   UI HELPERS
+════════════════════════════════ */
+function switchTab(id, btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+let toastTimer;
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 2200);
+}
+
+/* ════════════════════════════════
+   START
+════════════════════════════════ */
+init();
+</script>
+</body>
+</html>
