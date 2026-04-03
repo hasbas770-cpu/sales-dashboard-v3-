@@ -1104,14 +1104,20 @@ function renderOrders(el){
     <div class="fade-up">
       <div class="stats-row" id="ord-stats"></div>
       <div class="filter-bar">
-        <select id="f-rep" onchange="applyOrderFilters()"><option value="">كل المندوبين</option></select>
-        <select id="f-ph" onchange="applyOrderFilters()"><option value="">كل الصيدليات</option></select>
+        <select id="f-rep" onchange="applyOrderFilters()"><option value="">All Reps</option></select>
+        <select id="f-ph" onchange="applyOrderFilters()"><option value="">All Pharmacies</option></select>
         <select id="f-line" onchange="applyOrderFilters()">
-          <option value="">كل اللاينات</option>
+          <option value="">All Lines</option>
           <option>Derma</option><option>Optha</option><option>General Line</option><option>CM Line</option>
         </select>
-        <input type="month" id="f-month" onchange="applyOrderFilters()">
-        <button class="btn btn-ghost btn-sm" onclick="clearOrdFilters()">✕ مسح</button>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="date" id="f-date-from" onchange="applyOrderFilters()"
+            style="background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:10px;font-size:12px;font-family:inherit;outline:none">
+          <span style="color:var(--muted);font-size:12px">→</span>
+          <input type="date" id="f-date-to" onchange="applyOrderFilters()"
+            style="background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:10px;font-size:12px;font-family:inherit;outline:none">
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="clearOrdFilters()">✕ Clear</button>
       </div>
       <div id="ord-list"><div class="loader"><div class="spinner"></div><span style="color:var(--muted);font-size:12px;margin-top:8px">جاري تحميل الأوردرات...</span></div></div>
     </div>
@@ -1140,39 +1146,41 @@ function loadOrders(){
     // Populate filters
     const reps=[...new Set(allOrders.map(o=>o.rep).filter(Boolean))];
     const phs=[...new Set(allOrders.map(o=>o.pharmacy).filter(Boolean))];
-    document.getElementById('f-rep').innerHTML=`<option value="">كل المندوبين</option>`+reps.map(r=>`<option>${r}</option>`).join('');
-    document.getElementById('f-ph').innerHTML=`<option value="">كل الصيدليات</option>`+phs.map(p=>`<option>${p}</option>`).join('');
+    document.getElementById('f-rep').innerHTML=`<option value="">All Reps</option>`+reps.map(r=>`<option>${r}</option>`).join('');
+    document.getElementById('f-ph').innerHTML=`<option value="">All Pharmacies</option>`+phs.map(p=>`<option>${p}</option>`).join('');
 
     applyOrderFilters();
   });
 }
 
 function applyOrderFilters(){
-  const repF=document.getElementById('f-rep')?.value||'';
-  const phF=document.getElementById('f-ph')?.value||'';
-  const lineF=document.getElementById('f-line')?.value||'';
-  const monthF=document.getElementById('f-month')?.value||'';
+  const repF   = document.getElementById('f-rep')?.value||'';
+  const phF    = document.getElementById('f-ph')?.value||'';
+  const lineF  = document.getElementById('f-line')?.value||'';
+  const dateFrom = document.getElementById('f-date-from')?.value||'';
+  const dateTo   = document.getElementById('f-date-to')?.value||'';
 
   const filtered=allOrders.filter(o=>{
     if(repF   && o.rep!==repF) return false;
     if(phF    && o.pharmacy!==phF) return false;
     if(lineF  && !o.items.some(i=>i.line===lineF)) return false;
-    if(monthF && !o.date.startsWith(monthF)) return false;
+    if(dateFrom && o.date < dateFrom) return false;
+    if(dateTo   && o.date > dateTo)   return false;
     return true;
   });
 
-  const tQty=filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+i.qty,0)+s,0);
-  const tBon=filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+i.bonusQty,0)+s,0);
-  const tOrd=filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+(i.qty*i.price),0)+s,0);
+  const tQty =filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+i.qty,0)+s,0);
+  const tBon =filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+i.bonusQty,0)+s,0);
+  const tOrd =filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+(i.qty*i.price),0)+s,0);
   const tBonV=filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+(i.bonusQty*i.price),0)+s,0);
 
   document.getElementById('ord-stats').innerHTML=`
-    <div class="stat-mini">الأوردرات <span>${filtered.length}</span></div>
-    <div class="stat-mini">الكميات <span>${fmt(tQty)}</span></div>
-    <div class="stat-mini">البونص <span>${fmt(tBon)}</span></div>
-    <div class="stat-mini">قيمة الطلبيات <span>${fmtV(tOrd)}</span></div>
-    <div class="stat-mini">قيمة البونص <span>${fmtV(tBonV)}</span></div>
-    <div class="stat-mini">الإجمالي <span>${fmtV(tOrd+tBonV)}</span></div>
+    <div class="stat-mini">Orders <span>${filtered.length}</span></div>
+    <div class="stat-mini">Qty <span>${fmt(tQty)}</span></div>
+    <div class="stat-mini">Bonus Qty <span>${fmt(tBon)}</span></div>
+    <div class="stat-mini">Order Value <span>${fmtV(tOrd)}</span></div>
+    <div class="stat-mini">Bonus Value <span>${fmtV(tBonV)}</span></div>
+    <div class="stat-mini">Total <span>${fmtV(tOrd+tBonV)}</span></div>
   `;
 
   const container=document.getElementById('ord-list');
@@ -1237,7 +1245,7 @@ function applyOrderFilters(){
 }
 
 function clearOrdFilters(){
-  ['f-rep','f-ph','f-line','f-month'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['f-rep','f-ph','f-line','f-date-from','f-date-to'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   applyOrderFilters();
 }
 
