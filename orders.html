@@ -102,8 +102,12 @@
   .stat-mini span{color:#dbe7ff;font-weight:700;font-size:20px;display:block;margin-top:6px}
   .filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;background:var(--surface);
     border:1px solid var(--border);border-radius:16px;padding:12px;box-shadow:var(--shadow-soft)}
-  .filter-bar select,.filter-bar input{background:rgba(255,255,255,.04);border:1px solid var(--border);
-    color:var(--text);padding:10px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none;min-width:160px}
+  .filter-bar select,.filter-bar input{
+    background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text);
+    padding:10px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none;min-width:160px;
+    -webkit-appearance:none;appearance:none;
+  }
+  .filter-bar select option { background:#1a2035; color:var(--text); }
   .order-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;
     margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow-soft);transition:all .2s ease;animation:fadeUp .42s ease both}
   .order-card:hover{transform:translateY(-3px);box-shadow:0 18px 38px rgba(0,0,0,.24)}
@@ -257,7 +261,17 @@ function fmtV(n){return Number(n||0).toLocaleString('en',{minimumFractionDigits:
 function uid(){return 'ORD-'+Date.now().toString(36).toUpperCase();}
 function lc(line){const m={Derma:'#4f8ef7',Optha:'#34d399','General Line':'#f59e0b','CM Line':'#a78bfa'};return m[line]||'#64748b';}
 
-function getLineByProduct(productName){
+function formatOrderDate(dateStr){
+  if(!dateStr) return '—';
+  // لو التاريخ فيه GMT يحوله لـ yyyy-MM-dd
+  if(dateStr.includes('GMT') || dateStr.includes('00:00:00')){
+    try{
+      const d = new Date(dateStr);
+      return d.toISOString().split('T')[0];
+    }catch(e){ return dateStr; }
+  }
+  return dateStr;
+}
   const prods=DB.get('products');
   const p=prods.find(x=>x.name===productName);
   if(p?.line) return p.line;
@@ -302,8 +316,9 @@ function loadOrdersFromSheets(){
     }
     const grouped={};
     data.orders.forEach(o=>{
-      const key=`${o.date}__${o.pharmacy}__${o.rep}__${o.warehouse}`;
-      if(!grouped[key]) grouped[key]={id:key,date:o.date,rep:o.rep,pharmacy:o.pharmacy,warehouse:o.warehouse,items:[],total:0};
+      const cleanDate = formatOrderDate(o.date);
+      const key=`${cleanDate}__${o.pharmacy}__${o.rep}__${o.warehouse}`;
+      if(!grouped[key]) grouped[key]={id:key,date:cleanDate,rep:o.rep,pharmacy:o.pharmacy,warehouse:o.warehouse,items:[],total:0};
       const line=o.line||getLineByProduct(o.product);
       grouped[key].items.push({
         product:o.product,line,
@@ -431,10 +446,19 @@ function renderOrdersFromSheets(orders){
 
   const reps=[...new Set(orders.map(o=>o.rep).filter(Boolean))];
   const phs =[...new Set(orders.map(o=>o.pharmacy).filter(Boolean))];
+
+  // حفظ الاختيار الحالي
+  const prevRep = document.getElementById('filter-rep').value;
+  const prevPh  = document.getElementById('filter-pharmacy').value;
+
   document.getElementById('filter-rep').innerHTML=
     `<option value="">كل المندوبين</option>`+reps.map(r=>`<option>${r}</option>`).join('');
   document.getElementById('filter-pharmacy').innerHTML=
     `<option value="">كل الصيدليات</option>`+phs.map(p=>`<option>${p}</option>`).join('');
+
+  // استعادة الاختيار
+  if(prevRep) document.getElementById('filter-rep').value=prevRep;
+  if(prevPh)  document.getElementById('filter-pharmacy').value=prevPh;
 }
 
 function populatePharmacies(){
