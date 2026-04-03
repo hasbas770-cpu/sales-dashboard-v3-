@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales Dashboard — v3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#080e1e;
+  --bg2:#0d1428;
+  --sidebar:#0c1226;
+  --sidebar-w:260px;
+  --surface:rgba(18,26,50,.9);
+  --surface2:rgba(26,38,68,.8);
+  --border:rgba(148,163,184,.12);
+  --border-strong:rgba(148,163,184,.22);
+  --accent:#4f8ef7;
+  --accent2:#34d399;
+  --accent3:#a78bfa;
+  --warn:#f59e0b;
+  --danger:#ef4444;
+  --text:#e5edf8;
+  --muted:#7489a8;
+  --radius:16px;
+  --shadow:0 8px 32px rgba(0,0,0,.32);
+  --grad-main:linear-gradient(135deg,#4f8ef7,#7c3aed);
+  --grad-green:linear-gradient(135deg,#059669,#34d399);
+  --grad-warn:linear-gradient(135deg,#d97706,#fbbf24);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'IBM Plex Sans Arabic',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  overflow:hidden;
+}
+
+/* ═══ SIDEBAR ═══ */
+.sidebar{
+  width:var(--sidebar-w);
+  height:100vh;
+  background:var(--sidebar);
+  border-left:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  flex-shrink:0;
+  position:fixed;
+  right:0;
+  top:0;
+  z-index:100;
+  overflow-y:auto;
+  overflow-x:hidden;
+}
+
+.sidebar-logo{
+  padding:20px 18px 16px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.logo-icon{
+  width:40px;height:40px;
+  border-radius:12px;
+  background:var(--grad-main);
+  display:grid;place-items:center;
+  font-size:20px;
+  flex-shrink:0;
+  box-shadow:0 8px 20px rgba(79,142,247,.3);
+}
+
+.logo-text h2{font-size:15px;font-weight:700;color:#fff}
+.logo-text p{font-size:10px;color:var(--muted);margin-top:2px}
+
+.sidebar-nav{flex:1;padding:12px 10px;display:flex;flex-direction:column;gap:2px}
+
+.nav-item{
+  border-radius:12px;
+  overflow:hidden;
+}
+
+.nav-link{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 12px;
+  border-radius:12px;
+  cursor:pointer;
+  font-size:13px;
+  font-weight:500;
+  color:var(--muted);
+  transition:all .2s ease;
+  border:none;background:none;
+  width:100%;text-align:right;
+  font-family:inherit;
+  text-decoration:none;
+}
+
+.nav-link:hover{background:rgba(255,255,255,.05);color:var(--text)}
+
+.nav-link.active{
+  background:rgba(79,142,247,.12);
+  color:var(--accent);
+  font-weight:600;
+}
+
+.nav-link .icon{
+  width:32px;height:32px;
+  border-radius:9px;
+  display:grid;place-items:center;
+  font-size:16px;
+  flex-shrink:0;
+  background:rgba(255,255,255,.04);
+  transition:all .2s;
+}
+
+.nav-link.active .icon{
+  background:rgba(79,142,247,.18);
+}
+
+.nav-link .arrow{
+  margin-right:auto;
+  font-size:10px;
+  transition:transform .2s;
+  color:var(--muted);
+}
+
+.nav-link.open .arrow{transform:rotate(90deg)}
+
+.sub-menu{
+  display:none;
+  padding:4px 0 4px 8px;
+}
+
+.sub-menu.open{display:block}
+
+.sub-link{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 12px 9px 14px;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:12px;
+  color:var(--muted);
+  transition:all .2s;
+  border:none;background:none;
+  width:100%;text-align:right;
+  font-family:inherit;
+}
+
+.sub-link:hover{background:rgba(255,255,255,.04);color:var(--text)}
+.sub-link.active{color:var(--accent2);font-weight:600}
+.sub-link::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;opacity:.5}
+.sub-link.active::before{opacity:1}
+
+.sidebar-footer{
+  padding:14px;
+  border-top:1px solid var(--border);
+}
+
+.user-chip{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;
+  background:rgba(255,255,255,.04);
+  border-radius:12px;
+  border:1px solid var(--border);
+}
+
+.user-avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--grad-main);
+  display:grid;place-items:center;
+  font-size:14px;flex-shrink:0;
+}
+
+.user-info p{font-size:12px;font-weight:600;color:var(--text)}
+.user-info span{font-size:10px;color:var(--muted)}
+
+/* ═══ MAIN ═══ */
+.main{
+  margin-right:var(--sidebar-w);
+  flex:1;
+  height:100vh;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+}
+
+.topbar{
+  position:sticky;top:0;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 20px;
+  background:rgba(8,14,30,.85);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  gap:12px;
+}
+
+.page-title{font-size:16px;font-weight:700;color:#fff}
+.page-subtitle{font-size:11px;color:var(--muted);margin-top:2px}
+
+.topbar-actions{display:flex;align-items:center;gap:10px}
+
+.topbar-btn{
+  padding:8px 14px;font-size:12px;font-family:inherit;
+  border-radius:999px;border:1px solid var(--border);
+  background:rgba(255,255,255,.04);color:var(--text);
+  cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;gap:6px;
+}
+.topbar-btn:hover{border-color:var(--border-strong);background:rgba(255,255,255,.07)}
+.topbar-btn.primary{background:var(--grad-main);border-color:transparent;color:#fff;box-shadow:0 8px 20px rgba(79,142,247,.24)}
+
+.content{flex:1;padding:20px}
+
+/* ═══ PAGE VIEWS ═══ */
+.page{display:none}
+.page.active{display:block}
+
+/* ═══ CARDS ═══ */
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:18px;
+  margin-bottom:16px;
+  backdrop-filter:blur(14px);
+  box-shadow:var(--shadow);
+  position:relative;overflow:hidden;
+  transition:all .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(0,0,0,.28)}
+.card::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);pointer-events:none}
+
+.card h2{font-size:14px;font-weight:700;color:#dbe7ff;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+
+/* ═══ KPI GRID ═══ */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+
+.kpi-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:16px;
+  backdrop-filter:blur(14px);
+  transition:all .2s;
+  cursor:default;
+}
+.kpi-card:hover{transform:translateY(-3px);border-color:var(--border-strong)}
+.kpi-label{font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:500}
+.kpi-value{font-size:24px;font-weight:700;color:#fff;letter-spacing:.3px}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:4px}
+.kpi-up{color:var(--accent2)}.kpi-down{color:var(--danger)}
+
+/* ═══ TABLE ═══ */
+.table-wrap{overflow:auto;border:1px solid var(--border);border-radius:14px}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:600px}
+th,td{padding:10px 12px;text-align:center;border-bottom:1px solid var(--border)}
+th{background:rgba(255,255,255,.04);color:var(--muted);font-weight:600;position:sticky;top:0;z-index:1}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:rgba(79,142,247,.04)}
+
+/* ═══ FORM ═══ */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:14px}
+.form-group label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px}
+.form-group select,.form-group input,.form-group textarea{
+  width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);
+  color:var(--text);padding:11px 12px;border-radius:12px;font-size:13px;
+  font-family:inherit;outline:none;transition:all .18s;
+}
+.form-group select option{background:#0d1428;color:var(--text)}
+.form-group select:focus,.form-group input:focus{
+  border-color:var(--accent);background:rgba(255,255,255,.07);
+  box-shadow:0 0 0 3px rgba(79,142,247,.14);
+}
+
+/* ═══ BUTTONS ═══ */
+.btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:10px 18px;font-size:13px;font-family:inherit;
+  border-radius:12px;border:none;cursor:pointer;font-weight:600;
+  transition:all .2s;text-decoration:none;
+}
+.btn:hover{transform:translateY(-2px)}.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--grad-main);color:#fff;box-shadow:0 10px 22px rgba(79,142,247,.22)}
+.btn-success{background:var(--grad-green);color:#fff}
+.btn-danger{background:linear-gradient(135deg,#ef4444,#f87171);color:#fff;padding:6px 12px;font-size:11px}
+.btn-ghost{background:rgba(255,255,255,.04);color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{background:rgba(255,255,255,.07);border-color:var(--border-strong)}
+.btn-sm{padding:7px 12px;font-size:11px}
+.btn-warn{background:var(--grad-warn);color:#000}
+
+/* ═══ STATS ═══ */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.stat-mini{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:14px;font-size:11px;color:var(--muted);transition:all .2s}
+.stat-mini:hover{transform:translateY(-2px)}
+.stat-mini span{color:#dbe7ff;font-weight:700;font-size:20px;display:block;margin-top:5px}
+
+/* ═══ FILTER BAR ═══ */
+.filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px}
+.filter-bar select,.filter-bar input{
+  background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);
+  padding:9px 12px;border-radius:10px;font-size:12px;font-family:inherit;outline:none;min-width:150px;
+}
+.filter-bar select option{background:#0d1428}
+
+/* ═══ CHIPS ═══ */
+.chip{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:999px;
+  padding:5px 11px;font-size:11px;display:inline-flex;align-items:center;gap:5px}
+.chip.blue{border-color:rgba(79,142,247,.3);color:#93c5fd;background:rgba(79,142,247,.08)}
+.chip.green{border-color:rgba(52,211,153,.25);color:#86efac;background:rgba(52,211,153,.08)}
+
+/* ═══ ORDER CARDS ═══ */
+.order-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;
+  margin-bottom:10px;overflow:hidden;transition:all .2s}
+.order-card:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.22)}
+.order-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;
+  cursor:pointer;gap:12px;transition:.15s}
+.order-head:hover{background:rgba(255,255,255,.03)}
+.order-info{display:flex;flex-wrap:wrap;gap:8px;align-items:center;flex:1}
+.pill{font-size:11px;color:var(--muted);background:rgba(255,255,255,.04);
+  padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.04)}
+.order-body{display:none;border-top:1px solid var(--border);padding:14px 16px;background:rgba(0,0,0,.1)}
+.order-body.open{display:block}
+
+/* ═══ EMPTY ═══ */
+.empty{color:var(--muted);font-size:13px;padding:40px 0;text-align:center;
+  background:var(--surface);border:1px dashed var(--border-strong);border-radius:16px}
+
+/* ═══ TOAST ═══ */
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(90px);
+  background:var(--grad-green);color:#fff;padding:12px 24px;border-radius:999px;
+  font-size:13px;font-weight:700;transition:transform .3s;z-index:999;
+  box-shadow:0 12px 28px rgba(16,185,129,.28)}
+#toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ═══ LOADING ═══ */
+.loader{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:60px 0;gap:16px}
+.spinner{width:44px;height:44px;border:4px solid rgba(79,142,247,.15);
+  border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+
+/* ═══ ANIMATIONS ═══ */
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp .35s ease both}
+
+/* ═══ MOBILE ═══ */
+.sidebar-toggle{display:none}
+
+@media(max-width:900px){
+  .sidebar{transform:translateX(100%);transition:transform .3s ease}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-right:0}
+  .sidebar-toggle{
+    display:flex;align-items:center;justify-content:center;
+    width:40px;height:40px;border-radius:12px;
+    background:rgba(255,255,255,.06);border:1px solid var(--border);
+    cursor:pointer;font-size:18px;
+  }
+  .sidebar-overlay{
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;
+  }
+  .sidebar-overlay.open{display:block}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">📊</div>
+    <div class="logo-text">
+      <h2>Sales Dashboard</h2>
+      <p>Basra Region • v3</p>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <!-- Dashboard -->
+    <div class="nav-item">
+      <button class="nav-link active" onclick="navigate('dashboard',this)">
+        <div class="icon">📈</div>
+        <span>Dashboard</span>
+      </button>
+    </div>
+
+    <!-- Master Data -->
+    <div class="nav-item">
+      <button class="nav-link" onclick="toggleMenu('menu-master',this)">
+        <div class="icon">🗂</div>
+        <span>Master Data</span>
+        <span class="arrow">›</span>
+      </button>
+      <div class="sub-menu" id="menu-master">
+        <button class="sub-link" onclick="navigate('products',this)">المنتجات</button>
+        <button class="sub-link" onclick="navigate('pharmacies',this)">الصيدليات</button>
+        <button class="sub-link" onclick="navigate('doctors',this)">الأطباء</button>
+        <button class="sub-link" onclick="navigate('reps',this)">المندوبين</button>
+        <button class="sub-link" onclick="navigate('regions',this)">المناطق</button>
+      </div>
+    </div>
+
+    <!-- Sales -->
+    <div class="nav-item">
+      <button class="nav-link" onclick="toggleMenu('menu-sales',this)">
+        <div class="icon">💰</div>
+        <span>Sales</span>
+        <span class="arrow">›</span>
+      </button>
+      <div class="sub-menu" id="menu-sales">
+        <button class="sub-link" onclick="navigate('primary',this)">Primary Sales</button>
+        <button class="sub-link" onclick="navigate('secondary',this)">Secondary Sales</button>
+        <button class="sub-link" onclick="navigate('orders',this)">Pharmacy Orders</button>
+      </div>
+    </div>
+
+    <!-- Targets -->
+    <div class="nav-item">
+      <button class="nav-link" onclick="toggleMenu('menu-targets',this)">
+        <div class="icon">🎯</div>
+        <span>Targets & Performance</span>
+        <span class="arrow">›</span>
+      </button>
+      <div class="sub-menu" id="menu-targets">
+        <button class="sub-link" onclick="navigate('targets',this)">الأهداف</button>
+        <button class="sub-link" onclick="navigate('performance',this)">الأداء</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <div class="user-avatar">👤</div>
+      <div class="user-info">
+        <p>Area Manager</p>
+        <span>Basra Region</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR OVERLAY (mobile) -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="topbar-title">Dashboard</div>
+      <div class="page-subtitle" id="topbar-sub">نظرة عامة على الأداء</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="topbar-btn sidebar-toggle" onclick="openSidebar()">☰</button>
+    </div>
+  </div>
+
+  <div class="content" id="content">
+    <!-- Pages render here -->
+  </div>
+</div>
+
+<div id="toast">✓ تم الحفظ</div>
+
+<script>
+/* ══════════════════════════════
+   STORAGE
+══════════════════════════════ */
+const DB={
+  get:k=>{try{return JSON.parse(localStorage.getItem(k))||[];}catch{return [];}},
+  getObj:k=>{try{return JSON.parse(localStorage.getItem(k))||{};}catch{return {};}},
+  set:(k,v)=>localStorage.setItem(k,JSON.stringify(v)),
+  setObj:(k,v)=>localStorage.setItem(k,JSON.stringify(v)),
+};
+
+const SHEETS_URL='https://script.google.com/macros/s/AKfycby75MvmFGFgbJlvSbVp1_f3OvFnvgNzyR5MuLkZx3SQG_AqegkH-0BUPMd8vbjR6r6iqg/exec';
+
+/* ══════════════════════════════
+   HELPERS
+══════════════════════════════ */
+function fmt(n){return Number(n||0).toLocaleString('en');}
+function fmtV(n){return Number(n||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function lc(line){const m={Derma:'#4f8ef7',Optha:'#34d399','General Line':'#f59e0b','CM Line':'#a78bfa'};return m[line]||'#64748b';}
+
+function getLineByProduct(name){
+  name=String(name).toLowerCase();
+  if(['acretin','elica','fusibact','hi-quin','lamifen','lican','promax','surecure','elicasal'].some(k=>name.includes(k))) return 'Derma';
+  if(['arox','brimo','brofix','fluca','hyfresh','latano','loxtra','olopat','optidex','optiflox','optifresh','optilone','optipred','tymer','xola','xolamol'].some(k=>name.includes(k))) return 'Optha';
+  if(['azi-once','feroton','maxim','prima','fast-flam','relaxon','dompy','fixit','meva','zoron'].some(k=>name.includes(k))) return 'General Line';
+  if(['vittoria','dapazin','sitagen','sitavic','vildus','lintra'].some(k=>name.includes(k))) return 'CM Line';
+  return '';
+}
+
+function formatDate(d){
+  if(!d) return '—';
+  if(d.includes('GMT')||d.includes('00:00:00')){
+    try{const x=new Date(d);return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;}catch(e){return d;}
+  }
+  return d;
+}
+
+let toastTimer;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+/* ══════════════════════════════
+   NAVIGATION
+══════════════════════════════ */
+const pages={
+  dashboard:  {title:'Dashboard',sub:'نظرة عامة على الأداء',render:renderDashboard},
+  products:   {title:'المنتجات',sub:'إدارة قائمة المنتجات والأهداف',render:renderProducts},
+  pharmacies: {title:'الصيدليات',sub:'إدارة صيدليات المجمعات',render:renderPharmacies},
+  doctors:    {title:'الأطباء',sub:'إدارة قائمة الأطباء',render:renderDoctors},
+  reps:       {title:'المندوبين',sub:'فريق المبيعات',render:renderReps},
+  regions:    {title:'المناطق',sub:'إدارة المناطق',render:renderRegions},
+  primary:    {title:'Primary Sales',sub:'مبيعات المستودع',render:renderPrimary},
+  secondary:  {title:'Secondary Sales',sub:'مبيعات الصيدليات الكلية',render:renderSecondary},
+  orders:     {title:'Pharmacy Orders',sub:'أوردرات صيدليات المجمعات',render:renderOrders},
+  targets:    {title:'الأهداف',sub:'إدارة الأهداف السنوية',render:renderTargets},
+  performance:{title:'الأداء',sub:'تحليل أداء الفريق',render:renderPerformance},
+};
+
+let currentPage='dashboard';
+
+function navigate(page,el){
+  currentPage=page;
+  const p=pages[page];
+  if(!p) return;
+
+  // Update topbar
+  document.getElementById('topbar-title').textContent=p.title;
+  document.getElementById('topbar-sub').textContent=p.sub;
+
+  // Update nav active state
+  document.querySelectorAll('.nav-link').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.sub-link').forEach(b=>b.classList.remove('active'));
+  if(el) el.classList.add('active');
+
+  // Render page
+  const content=document.getElementById('content');
+  content.innerHTML='';
+  p.render(content);
+
+  // Close sidebar on mobile
+  if(window.innerWidth<=900) closeSidebar();
+}
+
+function toggleMenu(id,btn){
+  const menu=document.getElementById(id);
+  const isOpen=menu.classList.contains('open');
+  // Close all menus
+  document.querySelectorAll('.sub-menu').forEach(m=>m.classList.remove('open'));
+  document.querySelectorAll('.nav-link').forEach(b=>b.classList.remove('open'));
+  if(!isOpen){
+    menu.classList.add('open');
+    btn.classList.add('open');
+  }
+}
+
+function openSidebar(){
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebar-overlay').classList.add('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+
+/* ══════════════════════════════
+   JSONP
+══════════════════════════════ */
+let cbIdx=0;
+function jsonpRequest(url,cb){
+  const name=`__cb_${++cbIdx}`;
+  window[name]=function(d){cb(d);delete window[name];document.getElementById(`s-${name}`)?.remove();};
+  const s=document.createElement('script');
+  s.id=`s-${name}`;s.src=`${url}&callback=${name}`;
+  s.onerror=function(){cb(null);delete window[name];s.remove();};
+  document.head.appendChild(s);
+}
+
+/* ══════════════════════════════════════════════
+   PAGE: DASHBOARD
+══════════════════════════════════════════════ */
+function renderDashboard(el){
+  el.innerHTML=`
+    <div class="fade-up">
+      <div class="kpi-grid" id="dash-kpis">
+        <div class="kpi-card"><div class="kpi-label">Primary Sales YTD</div><div class="kpi-value" id="kpi-primary">—</div></div>
+        <div class="kpi-card"><div class="kpi-label">Secondary Sales YTD</div><div class="kpi-value" id="kpi-secondary">—</div></div>
+        <div class="kpi-card"><div class="kpi-label">أوردرات المجمعات</div><div class="kpi-value" id="kpi-orders">⏳</div></div>
+        <div class="kpi-card"><div class="kpi-label">قيمة الأوردرات</div><div class="kpi-value" id="kpi-orders-val">⏳</div></div>
+      </div>
+      <div class="card">
+        <h2>📦 آخر الأوردرات</h2>
+        <div id="dash-orders"><div class="loader"><div class="spinner"></div><span style="color:var(--muted);font-size:12px">جاري التحميل...</span></div></div>
+      </div>
+    </div>
+  `;
+  // Load orders summary
+  jsonpRequest(`${SHEETS_URL}?action=getOrders`,function(data){
+    if(!data||!data.success) return;
+    const orders=data.orders;
+    document.getElementById('kpi-orders').textContent=fmt(orders.length);
+    const totalVal=orders.reduce((s,o)=>{
+      const qty=Number(o.quantity||0);
+      const bq=Number(o.bonusQty||0);
+      const pr=Number(o.unitPrice||0);
+      return s+(qty*pr)+(bq*pr);
+    },0);
+    document.getElementById('kpi-orders-val').textContent=fmtV(totalVal);
+    // Show last 5 orders grouped
+    const grouped={};
+    orders.forEach(o=>{
+      const d=formatDate(o.date);
+      const key=`${d}__${o.pharmacy}__${o.rep}`;
+      if(!grouped[key]) grouped[key]={date:d,pharmacy:o.pharmacy,rep:o.rep,total:0,lines:new Set()};
+      const line=o.line||getLineByProduct(o.product);
+      grouped[key].lines.add(line);
+      grouped[key].total+=(Number(o.quantity||0)+Number(o.bonusQty||0))*Number(o.unitPrice||0);
+    });
+    const recent=Object.values(grouped).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
+    document.getElementById('dash-orders').innerHTML=recent.map(o=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-weight:600;font-size:13px">${o.pharmacy}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">👤 ${o.rep||'—'} • 📅 ${o.date}</div>
+        </div>
+        <div style="text-align:left">
+          ${[...o.lines].filter(Boolean).map(l=>`<span style="background:${lc(l)}18;color:${lc(l)};border-radius:999px;padding:2px 8px;font-size:10px;font-weight:600;border:1px solid ${lc(l)}30;margin-right:4px">${l}</span>`).join('')}
+          <div style="font-size:13px;font-weight:700;color:var(--accent2);margin-top:4px">${fmtV(o.total)}</div>
+        </div>
+      </div>
+    `).join('')||'<div class="empty">لا توجد بيانات</div>';
+  });
+
+  // Primary/Secondary from localStorage
+  const ps=DB.getObj('primarySales');
+  const sec=DB.getObj('warehouseFlow');
+  const year=new Date().getFullYear();
+  const psTotal=Object.entries(ps).filter(([k])=>k.startsWith(year)).reduce((s,[,v])=>s+Number(v),0);
+  const secTotal=Object.entries(sec).filter(([k])=>k.startsWith(year)).reduce((s,[,v])=>s+Number(v),0);
+  document.getElementById('kpi-primary').textContent=fmt(psTotal);
+  document.getElementById('kpi-secondary').textContent=fmt(secTotal);
+}
+
+/* ══════════════════════════════════════════════
+   PAGE: PRODUCTS
+══════════════════════════════════════════════ */
+function renderProducts(el){
+  const prods=DB.get('products');
+  el.innerHTML=`
+    <div class="fade-up">
+      <div class="card">
+        <h2>💊 المنتجات والأهداف</h2>
+        <div class="form-grid" style="margin-bottom:14px">
+          <div class="form-group"><label>السنة</label><select id="cfg-year" onchange="renderProductsTable()">${[2024,2025,2026,2027,2028].map(y=>`<option${y===2026?' selected':''}>${y}</option>`).join('')}</select></div>
+          <div class="form-group"><label>المنطقة</label><select id="cfg-area" onchange="renderProductsTable()">${DB.get('areas').map(a=>`<option>${a}</option>`).join('')||'<option>Basra</option>'}</select></div>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th style="text-align:right">المنتج</th><th>Line</th><th>الهدف السنوي</th><th>السعر</th><th>إجراء</th>
+          </tr></thead><tbody id="prod-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+  `;
+  renderProductsTable();
+}
+
+function renderProductsTable(){
+  const year=document.getElementById('cfg-year')?.value||2026;
+  const area=document.getElementById('cfg-area')?.value||'Basra';
+  const prods=DB.get('products');
+  const targets=DB.getObj('productTargets');
+  const tbody=document.getElementById('prod-tbody');
+  if(!tbody) return;
+  if(!prods.length){tbody.innerHTML=`<tr><td colspan="5" class="empty">لا توجد منتجات</td></tr>`;return;}
+  tbody.innerHTML=prods.map((p,i)=>{
+    const key=`${year}__${p.name}__${area}`;
+    const target=targets[key]!==undefined?targets[key]:(area==='Basra'&&Number(year)===2026?p.annualTarget||0:0);
+    return `<tr>
+      <td style="text-align:right;font-weight:600">
+        <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${lc(p.line)};margin-left:6px"></span>${p.name}
+      </td>
+      <td><span style="background:${lc(p.line)}18;color:${lc(p.line)};border-radius:999px;padding:2px 8px;font-size:10px;font-weight:600">${p.line}</span></td>
+      <td><input type="number" value="${target}" min="0"
+        style="width:90px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:8px;font-size:12px;text-align:center;font-family:inherit;outline:none"
+        onchange="saveTarget('${p.name.replace(/'/g,"\\'")}','${year}','${area}',this.value)"></td>
+      <td style="color:var(--accent2)">${p.price?Number(p.price).toLocaleString()+' IQD':'—'}</td>
+      <td><button class="btn btn-danger btn-sm" data-idx="${i}" onclick="deleteProd(${i})">🗑</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function saveTarget(product,year,area,val){
+  const targets=DB.getObj('productTargets');
+  targets[`${year}__${product}__${area}`]=Number(val)||0;
+  DB.setObj('productTargets',targets);
+  toast('✓ تم حفظ الهدف');
+}
+
+function deleteProd(i){
+  const prods=DB.get('products');
+  if(!prods[i]||!confirm(`حذف ${prods[i].name}؟`)) return;
+  prods.splice(i,1);DB.set('products',prods);
+  renderProductsTable();toast('✓ تم الحذف');
+}
+
+/* ══════════════════════════════════════════════
+   PAGE: PHARMACIES
+══════════════════════════════════════════════ */
+function renderPharmacies(el){
+  el.innerHTML=`
+    <div class="fade-up">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <h2 style="margin:0">🏪 الصيدليات</h2>
+          <button class="btn btn-primary btn-sm" onclick="showAddPharmacy()">➕ إضافة</button>
+        </div>
+        <div id="ph-form" style="display:none;margin-bottom:14px;padding:14px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px">
+          <div class="form-grid">
+            <div class="form-group"><label>الاسم</label><input type="text" id="ph-name" placeholder="اسم الصيدلية"></div>
+            <div class="form-group"><label>المنطقة</label><select id="ph-area">${DB.get('areas').map(a=>`<option>${a}</option>`).join('')}</select></div>
+            <div class="form-group"><label>الموقع</label><input type="text" id="ph-loc" placeholder="محلة/شارع"></div>
+          </div>
+          <button class="btn btn-success btn-sm" onclick="addPharmacy()">✓ حفظ</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('ph-form').style.display='none'">إلغاء</button>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th style="text-align:right">الصيدلية</th><th>المنطقة</th><th>الموقع</th><th>الأطباء</th><th>حذف</th>
+          </tr></thead><tbody id="ph-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+  `;
+  renderPhTable();
+}
+
+function showAddPharmacy(){document.getElementById('ph-form').style.display='block';}
+
+function addPharmacy(){
+  const name=document.getElementById('ph-name').value.trim();
+  const area=document.getElementById('ph-area').value;
+  const loc=document.getElementById('ph-loc').value.trim();
+  if(!name) return alert('ادخل اسم الصيدلية');
+  const phs=DB.get('pharmacies');
+  if(phs.find(p=>p.name===name)) return alert('الصيدلية موجودة');
+  phs.push({name,area,location:loc,doctors:[]});
+  DB.set('pharmacies',phs);
+  document.getElementById('ph-form').style.display='none';
+  document.getElementById('ph-name').value='';
+  renderPhTable();toast('✓ تم الحفظ');
+}
+
+function renderPhTable(){
+  const phs=DB.get('pharmacies');
+  const tbody=document.getElementById('ph-tbody');
+  if(!phs.length){tbody.innerHTML=`<tr><td colspan="5" class="empty">لا توجد صيدليات</td></tr>`;return;}
+  tbody.innerHTML=phs.map((p,i)=>`<tr>
+    <td style="text-align:right;font-weight:600">${p.name}</td>
+    <td>${p.area||'—'}</td>
+    <td style="color:var(--muted);font-size:11px">${p.location||'—'}</td>
+    <td style="font-size:11px">${(p.doctors||[]).map(d=>`<span class="chip">${d}</span>`).join(' ')||'—'}</td>
+    <td><button class="btn btn-danger btn-sm" onclick="deletePh(${i})">🗑</button></td>
+  </tr>`).join('');
+}
+
+function deletePh(i){
+  const phs=DB.get('pharmacies');
+  if(!confirm(`حذف ${phs[i].name}؟`)) return;
+  phs.splice(i,1);DB.set('pharmacies',phs);renderPhTable();toast('✓ تم الحذف');
+}
+
+/* ══════════════════════════════════════════════
+   PAGE: DOCTORS
+══════════════════════════════════════════════ */
+function renderDoctors(el){
+  const lines=['all','Derma','Optha','General Line','CM Line'];
+  el.innerHTML=`
+    <div class="fade-up">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+          <h2 style="margin:0">👨‍⚕️ الأطباء</h2>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            ${lines.map(l=>`<button class="btn btn-ghost btn-sm" onclick="filterDocs('${l}',this)">${l==='all'?'الكل':l}</button>`).join('')}
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th style="text-align:right">الطبيب</th><th>Line</th><th>المنطقة</th><th>حذف</th>
+          </tr></thead><tbody id="doc-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+  `;
+  renderDocTable('all');
+}
+
+let docFilter='all';
+function filterDocs(line,btn){
+  docFilter=line;
+  document.querySelectorAll('#content .btn-ghost').forEach(b=>b.style.borderColor='');
+  if(btn) btn.style.borderColor='var(--accent)';
+  renderDocTable(line);
+}
+
+function renderDocTable(line){
+  let docs=DB.get('doctors');
+  if(line!=='all') docs=docs.filter(d=>d.line===line);
+  const tbody=document.getElementById('doc-tbody');
+  if(!docs.length){tbody.innerHTML=`<tr><td colspan="4" class="empty">لا توجد بيانات</td></tr>`;return;}
+  tbody.innerHTML=docs.map((d,i)=>`<tr>
+    <td style="text-align:right;font-weight:600">${d.name}</td>
+    <td><span style="background:${lc(d.line)}18;color:${lc(d.line)};border-radius:999px;padding:2px 8px;font-size:10px;font-weight:600">${d.line}</span></td>
+    <td style="color:var(--muted)">${d.area||'—'}</td>
+    <td><button class="btn btn-danger btn-sm" onclick="deleteDoc('${d.name.replace(/'/g,"\\'")}')">🗑</button></td>
+  </tr>`).join('');
+}
+
+function deleteDoc(name){
+  if(!confirm(`حذف ${name}؟`)) return;
+  DB.set('doctors',DB.get('doctors').filter(d=>d.name!==name));
+  renderDocTable(docFilter);toast('✓ تم الحذف');
+}
+
+/* ══════════════════════════════════════════════
+   PAGE: REPS
+══════════════════════════════════════════════ */
+function renderReps(el){
+  el.innerHTML=`
+    <div class="fade-up">
+      <div class="card">
+        <h2>👥 المندوبين</h2>
+        <div id="reps-loading"><div class="loader"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+  `;
+  jsonpRequest(`${SHEETS_URL}?action=getOrders`,function(data){
+    if(!data||!data.success) return;
+    const reps=[...new Set(data.orders.map(o=>o.rep).filter(Boolean))];
+    const repStats={};
+    data.orders.forEach(o=>{
+      if(!repStats[o.rep]) repStats[o.rep]={orders:0,value:0};
+      repStats[o.rep].orders++;
+      repStats[o.rep].value+=(Number(o.quantity||0)*Number(o.unitPrice||0));
+    });
+    document.getElementById('reps-loading').innerHTML=`
+      <div class="table-wrap">
+        <table><thead><tr>
+          <th style="text-align:right">المندوب</th><th>عدد الفواتير</th><th>القيمة الكلية</th>
+        </tr></thead><tbody>
+          ${reps.map(r=>`<tr>
+            <td style="text-align:right;font-weight:600">👤 ${r}</td>
+            <td>${fmt(repStats[r]?.orders||0)}</td>
+            <td style="color:var(--accent2);font-weight:600">${fmtV(repStats[r]?.value||0)}</td>
+          </tr>`).join('')}
+        </tbody></table>
+      </div>
+    `;
+  });
+}
+
+/* ══════════════════════════════════════════════
+   PAGE: REGIONS
+══════════════════════════════════════════════ */
+function renderRegions(el){
+  el.innerHTML=`
+    <div class="fade-up">
+      <div class="card">
+        <h2>📍 المناطق</h2>
+        <div style="display:flex;gap:10px;margin-bottom:14px">
+          <input type="text" id="area-input" placeholder="اسم المنطقة" style="background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:12px;font-size:13px;font-family:inherit;outline:none;flex:1">
+          <button class="btn btn-primary" onclick="addArea()">➕ إضافة</button>
+        </div>
+        <div id="areas-list" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
+    </div>
+  `;
+  renderAreasList();
+}
+
+function renderAreasList(){
+  const areas=DB.get('areas');
+  document.getElementById('areas-list').innerHTML=areas.map((a,i)=>`
+    <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:999px;padding:7px 14px">
+      <span style="font-size:13px">📍 ${a}</span>
+      <button onclick="deleteArea(${i})" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px;padding:0;line-height:1">✕</button>
+    </div>
+  `).join('')||'<span style="color:var(--muted);font-size:12px">لا توجد مناطق</span>';
+}
+
+function addArea(){
+  const val=document.getElementById('area-input').value.trim();
+  if(!val) return;
+  const areas=DB.get('areas');
+  if(areas.includes(val)) return alert('المنطقة موجودة');
+  areas.push(val);DB.set('areas',areas);
+  document.getElementById('area-input').value='';
+  renderAreasList();toast('✓ تم الحفظ');
+}
+
+function deleteArea(i){
+  const areas=DB.get('areas');
+  if(!confirm(`حذف ${areas[i]}؟`)) return;
+  areas.splice(i,1);DB.set('areas',areas);renderAreasList();
+}
+
+/* ══════════════════════════════════════════════
+   PAGE: PRIMARY SALES
+══════════════════════════════════════════════ */
+function renderPrimary(el){
+  const months=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  const cur=new Date();
+  el.innerHTML=`
+    <div class="fade-up">
+      <div class="card">
+        <h2>📥 Primary Sales — إدخال شهري</h2>
+        <div class="form-grid" style="margin-bottom:12px">
+          <div class="form-group"><label>السنة</label>
+            <select id="ps-year" onchange="renderPSGrid()">${[2024,2025,2026,2027,2028].map(y=>`<option${y===cur.getFullYear()?' selected':''}>${y}</option>`).join('')}</select>
+          </div>
+          <div class="form-group"><label>الشهر</label>
+            <select id="ps-month" onchange="renderPSGrid()">${months.map((m,i)=>`<option value="${i+1}"${i===cur.getMonth()?' selected':''}>${m}</option>`).join('')}</select>
+          </div>
+          <div class="form-group"><label>المنطقة</label>
+            <select id="ps-area" onchange="renderPSGrid()">${DB.get('areas').map(a=>`<option>${a}</option>`).join('')||'<option>Basra</option>'}</select>
+          </div>
+          <div class="form-group"><label>Line</label>
+            <select id="ps-line" onchange="renderPSGrid()">
+              <option value="all">الكل</option>
+              <option>Derma</option><option>Optha</option><option>General Line</option><option>CM Line</option>
+            </select>
+          </div>
+        </div>
+        <input type="text" id="ps-search" placeholder="🔍 ابحث عن مادة..." oninput="filterPS()"
+          style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:9px 14px;border-radius:10px;font-size:13px;font-family:inherit;outline:none;margin-bottom:10px">
+        <button class="btn btn-primary btn-sm" onclick="savePSGrid()" style="margin-bottom:12px">💾 حفظ الكل</button>
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th style="text-align:right">المادة</th><th>Line</th><th>الهدف الشهري</th><th>الكمية</th>
+          </tr></thead><tbody id="ps-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+  `;
+  renderPSGrid();
+}
+
+function renderPSGrid(){
+  const year=document.getElementById('ps-year')?.value;
+  const month=document.getElementById('ps-month')?.value;
+  const area=document.getElementById('ps-area')?.value||'Basra';
+  const line=document.getElementById('ps-line')?.value||'all';
+  if(!year||!month) return;
+  const prods=DB.get('products').filter(p=>line==='all'||p.line===line);
+  const ps=DB.getObj('primarySales');
+  const targets=DB.getObj('productTargets');
+  const tbody=document.getElementById('ps-tbody');
+  if(!tbody) return;
+  tbody.innerHTML=prods.map(p=>{
+    const key=`${year}__${p.name}__${area}__${month}`;
+    const val=ps[key]||0;
+    const tKey=`${year}__${p.name}__${area}`;
+    const ann=targets[tKey]!==undefined?targets[tKey]:(area==='Basra'&&Number(year)===2026?p.annualTarget||0:0);
+    const mTarget=Math.round(ann/12);
+    return `<tr>
+      <td style="text-align:right;font-weight:600">
+        <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${lc(p.line)};margin-left:6px"></span>${p.name}
+      </td>
+      <td><span style="background:${lc(p.line)}18;color:${lc(p.line)};border-radius:999px;padding:2px 7px;font-size:10px;font-weight:600">${p.line}</span></td>
+      <td style="color:var(--muted)">${fmt(mTarget)}</td>
+      <td><input type="number" class="ps-input" data-key="${key}" value="${val}" min="0"
+        style="width:90px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:8px;font-size:12px;text-align:center;font-family:inherit;outline:none"
+        placeholder="0"></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterPS(){
+  const q=document.getElementById('ps-search')?.value.toLowerCase()||'';
+  document.querySelectorAll('#ps-tbody tr').forEach(row=>{
+    row.style.display=row.querySelector('td')?.textContent.toLowerCase().includes(q)?'':'none';
+  });
+}
+
+function savePSGrid(){
+  const data=DB.getObj('primarySales');
+  document.querySelectorAll('.ps-input').forEach(inp=>{
+    const val=Number(inp.value||0);
+    if(val>0) data[inp.dataset.key]=val;
+    else delete data[inp.dataset.key];
+  });
+  DB.setObj('primarySales',data);
+  toast('✓ تم حفظ Primary Sales');
+}
+
+/* ══════════════════════════════════════════════
+   PAGE: SECONDARY SALES
+══════════════════════════════════════════════ */
+function renderSecondary(el){
+  const months=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  const cur=new Date();
+  el.innerHTML=`
+    <div class="fade-up">
+      <div class="card">
+        <h2>📤 Secondary Sales — إدخال شهري</h2>
+        <div class="form-grid" style="margin-bottom:12px">
+          <div class="form-group"><label>السنة</label>
+            <select id="wf-year" onchange="renderWFGrid()">${[2024,2025,2026,2027,2028].map(y=>`<option${y===cur.getFullYear()?' selected':''}>${y}</option>`).join('')}</select>
+          </div>
+          <div class="form-group"><label>الشهر</label>
+            <select id="wf-month" onchange="renderWFGrid()">${months.map((m,i)=>`<option value="${i+1}"${i===cur.getMonth()?' selected':''}>${m}</option>`).join('')}</select>
+          </div>
+          <div class="form-group"><label>المنطقة</label>
+            <select id="wf-area" onchange="renderWFGrid()">${DB.get('areas').map(a=>`<option>${a}</option>`).join('')||'<option>Basra</option>'}</select>
+          </div>
+          <div class="form-group"><label>Line</label>
+            <select id="wf-line" onchange="renderWFGrid()">
+              <option value="all">الكل</option>
+              <option>Derma</option><option>Optha</option><option>General Line</option><option>CM Line</option>
+            </select>
+          </div>
+        </div>
+        <input type="text" id="wf-search" placeholder="🔍 ابحث عن مادة..." oninput="filterWF()"
+          style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:9px 14px;border-radius:10px;font-size:13px;font-family:inherit;outline:none;margin-bottom:10px">
+        <button class="btn btn-primary btn-sm" onclick="saveWFGrid()" style="margin-bottom:12px">💾 حفظ الكل</button>
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th style="text-align:right">المادة</th><th>Line</th><th>الهدف الشهري</th><th>الكمية</th>
+          </tr></thead><tbody id="wf-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+  `;
+  renderWFGrid();
+}
+
+function renderWFGrid(){
+  const year=document.getElementById('wf-year')?.value;
+  const month=document.getElementById('wf-month')?.value;
+  const area=document.getElementById('wf-area')?.value||'Basra';
+  const line=document.getElementById('wf-line')?.value||'all';
+  if(!year||!month) return;
+  const prods=DB.get('products').filter(p=>line==='all'||p.line===line);
+  const wf=DB.getObj('warehouseFlow');
+  const targets=DB.getObj('productTargets');
+  const tbody=document.getElementById('wf-tbody');
+  if(!tbody) return;
+  tbody.innerHTML=prods.map(p=>{
+    const key=`${year}__${p.name}__${area}__${month}`;
+    const val=wf[key]||0;
+    const tKey=`${year}__${p.name}__${area}`;
+    const ann=targets[tKey]!==undefined?targets[tKey]:(area==='Basra'&&Number(year)===2026?p.annualTarget||0:0);
+    const mTarget=Math.round(ann/12);
+    return `<tr>
+      <td style="text-align:right;font-weight:600">
+        <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${lc(p.line)};margin-left:6px"></span>${p.name}
+      </td>
+      <td><span style="background:${lc(p.line)}18;color:${lc(p.line)};border-radius:999px;padding:2px 7px;font-size:10px;font-weight:600">${p.line}</span></td>
+      <td style="color:var(--muted)">${fmt(mTarget)}</td>
+      <td><input type="number" class="wf-input" data-key="${key}" value="${val}" min="0"
+        style="width:90px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:8px;font-size:12px;text-align:center;font-family:inherit;outline:none"
+        placeholder="0"></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterWF(){
+  const q=document.getElementById('wf-search')?.value.toLowerCase()||'';
+  document.querySelectorAll('#wf-tbody tr').forEach(row=>{
+    row.style.display=row.querySelector('td')?.textContent.toLowerCase().includes(q)?'':'none';
+  });
+}
+
+function saveWFGrid(){
+  const data=DB.getObj('warehouseFlow');
+  document.querySelectorAll('.wf-input').forEach(inp=>{
+    const val=Number(inp.value||0);
+    if(val>0) data[inp.dataset.key]=val;
+    else delete data[inp.dataset.key];
+  });
+  DB.setObj('warehouseFlow',data);
+  toast('✓ تم حفظ Secondary Sales');
+}
+
+/* ══════════════════════════════════════════════
+   PAGE: ORDERS
+══════════════════════════════════════════════ */
+function renderOrders(el){
+  el.innerHTML=`
+    <div class="fade-up">
+      <div class="stats-row" id="ord-stats"></div>
+      <div class="filter-bar">
+        <select id="f-rep" onchange="applyOrderFilters()"><option value="">كل المندوبين</option></select>
+        <select id="f-ph" onchange="applyOrderFilters()"><option value="">كل الصيدليات</option></select>
+        <select id="f-line" onchange="applyOrderFilters()">
+          <option value="">كل اللاينات</option>
+          <option>Derma</option><option>Optha</option><option>General Line</option><option>CM Line</option>
+        </select>
+        <input type="month" id="f-month" onchange="applyOrderFilters()">
+        <button class="btn btn-ghost btn-sm" onclick="clearOrdFilters()">✕ مسح</button>
+      </div>
+      <div id="ord-list"><div class="loader"><div class="spinner"></div><span style="color:var(--muted);font-size:12px;margin-top:8px">جاري تحميل الأوردرات...</span></div></div>
+    </div>
+  `;
+  loadOrders();
+}
+
+let allOrders=[];
+
+function loadOrders(){
+  jsonpRequest(`${SHEETS_URL}?action=getOrders`,function(data){
+    if(!data||!data.success){
+      document.getElementById('ord-list').innerHTML=`<div class="empty">⚠ تعذر تحميل البيانات</div>`;
+      return;
+    }
+    const grouped={};
+    data.orders.forEach(o=>{
+      const d=formatDate(o.date);
+      const key=`${d}__${o.pharmacy}__${o.rep}__${o.warehouse}`;
+      if(!grouped[key]) grouped[key]={id:key,date:d,rep:o.rep,pharmacy:o.pharmacy,warehouse:o.warehouse,items:[]};
+      const line=o.line||getLineByProduct(o.product);
+      grouped[key].items.push({product:o.product,line,qty:Number(o.quantity||0),bonusPct:o.bonusPct,bonusQty:Number(o.bonusQty||0),price:Number(o.unitPrice||0)});
+    });
+    allOrders=Object.values(grouped).sort((a,b)=>b.date.localeCompare(a.date));
+
+    // Populate filters
+    const reps=[...new Set(allOrders.map(o=>o.rep).filter(Boolean))];
+    const phs=[...new Set(allOrders.map(o=>o.pharmacy).filter(Boolean))];
+    document.getElementById('f-rep').innerHTML=`<option value="">كل المندوبين</option>`+reps.map(r=>`<option>${r}</option>`).join('');
+    document.getElementById('f-ph').innerHTML=`<option value="">كل الصيدليات</option>`+phs.map(p=>`<option>${p}</option>`).join('');
+
+    applyOrderFilters();
+  });
+}
+
+function applyOrderFilters(){
+  const repF=document.getElementById('f-rep')?.value||'';
+  const phF=document.getElementById('f-ph')?.value||'';
+  const lineF=document.getElementById('f-line')?.value||'';
+  const monthF=document.getElementById('f-month')?.value||'';
+
+  const filtered=allOrders.filter(o=>{
+    if(repF   && o.rep!==repF) return false;
+    if(phF    && o.pharmacy!==phF) return false;
+    if(lineF  && !o.items.some(i=>i.line===lineF)) return false;
+    if(monthF && !o.date.startsWith(monthF)) return false;
+    return true;
+  });
+
+  const tQty=filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+i.qty,0)+s,0);
+  const tBon=filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+i.bonusQty,0)+s,0);
+  const tOrd=filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+(i.qty*i.price),0)+s,0);
+  const tBonV=filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+(i.bonusQty*i.price),0)+s,0);
+
+  document.getElementById('ord-stats').innerHTML=`
+    <div class="stat-mini">الأوردرات <span>${filtered.length}</span></div>
+    <div class="stat-mini">الكميات <span>${fmt(tQty)}</span></div>
+    <div class="stat-mini">البونص <span>${fmt(tBon)}</span></div>
+    <div class="stat-mini">قيمة الطلبيات <span>${fmtV(tOrd)}</span></div>
+    <div class="stat-mini">قيمة البونص <span>${fmtV(tBonV)}</span></div>
+    <div class="stat-mini">الإجمالي <span>${fmtV(tOrd+tBonV)}</span></div>
+  `;
+
+  const container=document.getElementById('ord-list');
+  if(!filtered.length){container.innerHTML='<div class="empty">لا توجد أوردرات</div>';return;}
+
+  container.innerHTML=filtered.map((o,oi)=>{
+    const lines=[...new Set(o.items.map(i=>i.line).filter(Boolean))];
+    const ordVal=o.items.reduce((s,i)=>s+(i.qty*i.price),0);
+    const bonVal=o.items.reduce((s,i)=>s+(i.bonusQty*i.price),0);
+    const id=`ord_${oi}`;
+    return `<div class="order-card">
+      <div class="order-head" onclick="document.getElementById('ob-${id}').classList.toggle('open')">
+        <div class="order-info">
+          <span style="font-size:14px;font-weight:700;color:#fff">${o.pharmacy}</span>
+          ${o.rep?`<span class="pill">👤 ${o.rep}</span>`:''}
+          ${o.warehouse?`<span class="pill">🏭 ${o.warehouse}</span>`:''}
+          <span class="pill">📅 ${o.date}</span>
+          ${lines.map(l=>`<span style="background:${lc(l)}18;color:${lc(l)};border:1px solid ${lc(l)}33;border-radius:999px;padding:3px 8px;font-size:10px;font-weight:700">${l}</span>`).join('')}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">
+          <span style="font-size:11px;color:var(--accent2)">طلبية: <strong>${fmtV(ordVal)}</strong></span>
+          <span style="font-size:11px;color:var(--warn)">بونص: <strong>${fmtV(bonVal)}</strong></span>
+          <span style="font-size:12px;color:#fff;font-weight:700">الإجمالي: ${fmtV(ordVal+bonVal)}</span>
+        </div>
+      </div>
+      <div class="order-body" id="ob-${id}">
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th style="text-align:right">المادة</th><th>Line</th><th>الكمية</th><th>السعر</th>
+              <th>قيمة الطلبية</th><th>البونص%</th><th>كمية البونص</th><th>قيمة البونص</th><th>الإجمالي</th>
+            </tr></thead>
+            <tbody>
+              ${o.items.map(i=>{
+                const iOrd=i.qty*i.price;const iBon=i.bonusQty*i.price;
+                return `<tr>
+                  <td style="text-align:right;font-weight:600;white-space:nowrap">${i.product}</td>
+                  <td>${i.line?`<span style="background:${lc(i.line)}18;color:${lc(i.line)};border-radius:999px;padding:2px 7px;font-size:10px;font-weight:600">${i.line}</span>`:'-'}</td>
+                  <td style="font-weight:700">${fmt(i.qty)}</td>
+                  <td>${fmtV(i.price)}</td>
+                  <td style="color:var(--accent2);font-weight:700">${fmtV(iOrd)}</td>
+                  <td style="color:var(--muted)">${i.bonusPct||0}%</td>
+                  <td style="color:var(--warn);font-weight:700">${fmt(i.bonusQty||0)}</td>
+                  <td style="color:var(--warn);font-weight:700">${fmtV(iBon)}</td>
+                  <td style="color:#fff;font-weight:700;background:rgba(255,255,255,.04)">${fmtV(iOrd+iBon)}</td>
+                </tr>`;
+              }).join('')}
+              <tr style="background:rgba(255,255,255,.04);font-weight:700">
+                <td colspan="4" style="text-align:right;color:var(--muted)">الإجمالي</td>
+                <td style="color:var(--accent2)">${fmtV(ordVal)}</td>
+                <td></td>
+                <td style="color:var(--warn)">${fmt(o.items.reduce((s,i)=>s+i.bonusQty,0))}</td>
+                <td style="color:var(--warn)">${fmtV(bonVal)}</td>
+                <td style="color:#fff">${fmtV(ordVal+bonVal)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function clearOrdFilters(){
+  ['f-rep','f-ph','f-line','f-month'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  applyOrderFilters();
+}
+
+/* ══════════════════════════════════════════════
+   PAGE: TARGETS
+══════════════════════════════════════════════ */
+function renderTargets(el){
+  el.innerHTML=`<div class="fade-up"><div class="card"><h2>🎯 الأهداف</h2><p style="color:var(--muted)">قريباً — ستُربط بصفحة الأهداف التفصيلية</p></div></div>`;
+}
+
+/* ══════════════════════════════════════════════
+   PAGE: PERFORMANCE
+══════════════════════════════════════════════ */
+function renderPerformance(el){
+  el.innerHTML=`<div class="fade-up"><div class="card"><h2>📊 الأداء</h2><p style="color:var(--muted)">قريباً — تحليل أداء الفريق</p></div></div>`;
+}
+
+/* ══════════════════════════════
+   INIT
+══════════════════════════════ */
+navigate('dashboard', document.querySelector('.nav-link.active'));
+</script>
+</body>
+</html>
