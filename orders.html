@@ -169,7 +169,7 @@
 
 <div class="tabs">
   <button class="tab-btn active" onclick="switchTab('tab-new',this)">➕ أوردر جديد</button>
-  <button class="tab-btn" onclick="switchTab('tab-list',this);renderOrderList()">📋 سجل الأوردرات</button>
+  <button class="tab-btn" onclick="switchTab('tab-list',this);loadOrdersFromSheets()">📋 سجل الأوردرات</button>
 </div>
 
 <!-- NEW ORDER -->
@@ -303,7 +303,6 @@ function init(){
   populateRepList();
   populateFilterDropdowns();
   addItemRow();
-  loadOrdersFromSheets();
 }
 
 function loadOrdersFromSheets(){
