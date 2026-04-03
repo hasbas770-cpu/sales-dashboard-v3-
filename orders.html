@@ -263,11 +263,14 @@ function lc(line){const m={Derma:'#4f8ef7',Optha:'#34d399','General Line':'#f59e
 
 function formatOrderDate(dateStr){
   if(!dateStr) return '—';
-  // لو التاريخ فيه GMT يحوله لـ yyyy-MM-dd
   if(dateStr.includes('GMT') || dateStr.includes('00:00:00')){
     try{
       const d = new Date(dateStr);
-      return d.toISOString().split('T')[0];
+      // استخدم local date بدل UTC لتجنب مشكلة الـ timezone
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const day = String(d.getDate()).padStart(2,'0');
+      return `${y}-${m}-${day}`;
     }catch(e){ return dateStr; }
   }
   return dateStr;
