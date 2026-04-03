@@ -6,60 +6,157 @@
 <title>أوردرات الصيدليات — v3</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
-  :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#222636;--border:#2e3347;--accent:#4f8ef7;--accent2:#6ee7b7;--warn:#f59e0b;--danger:#ef4444;--text:#e2e8f0;--muted:#64748b;--radius:10px}
+  :root{
+    --bg:#0b1020;--bg2:#11182d;
+    --surface:rgba(20,27,47,.82);--surface-strong:#18213a;--surface-soft:#202b48;
+    --border:rgba(148,163,184,.16);--border-strong:rgba(148,163,184,.28);
+    --accent:#4f8ef7;--accent2:#34d399;--accent3:#8b5cf6;
+    --warn:#f59e0b;--danger:#ef4444;--text:#e5edf8;--muted:#94a3b8;
+    --radius:18px;--radius-sm:12px;
+    --shadow:0 10px 35px rgba(0,0,0,.28);--shadow-soft:0 6px 18px rgba(0,0,0,.18);
+    --grad-main:linear-gradient(135deg,#4f8ef7 0%,#8b5cf6 100%);
+    --grad-green:linear-gradient(135deg,#10b981 0%,#34d399 100%);
+  }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:16px 14px 80px}
-  .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)}
-  .header h1{font-size:17px;font-weight:600}.header h1 span{color:var(--accent)}
-  .nav-links{display:flex;gap:8px}
-  .nav-btn{font-size:12px;padding:6px 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface2);color:var(--text);text-decoration:none;font-family:inherit}
-  .nav-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-  .tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
-  .tab-btn{padding:7px 16px;font-size:12px;font-family:inherit;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer}
-  .tab-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  body{font-family:'IBM Plex Sans Arabic',sans-serif;color:var(--text);min-height:100vh;padding:18px 14px 90px;
+    background:radial-gradient(circle at top right,rgba(79,142,247,.18),transparent 28%),
+    radial-gradient(circle at top left,rgba(139,92,246,.16),transparent 25%),
+    linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%);}
+  .app-shell{max-width:1280px;margin:0 auto}
+  .header{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:14px;
+    margin-bottom:18px;padding:16px 18px;background:rgba(11,16,32,.82);backdrop-filter:blur(16px);
+    border:1px solid var(--border);border-radius:22px;box-shadow:var(--shadow-soft)}
+  .header-left{display:flex;align-items:center;gap:14px}
+  .logo-box{width:46px;height:46px;border-radius:16px;display:grid;place-items:center;font-size:22px;
+    background:var(--grad-main);color:#fff;box-shadow:0 10px 22px rgba(79,142,247,.35);flex-shrink:0}
+  .title-wrap h1{font-size:20px;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .title-wrap h1 span{background:rgba(79,142,247,.14);color:#93c5fd;padding:3px 10px;
+    border:1px solid rgba(79,142,247,.28);border-radius:999px;font-size:11px;font-weight:600}
+  .title-wrap p{margin-top:4px;font-size:12px;color:var(--muted)}
+  .nav-links{display:flex;gap:10px;flex-wrap:wrap}
+  .nav-btn{font-size:12px;padding:10px 14px;border-radius:999px;border:1px solid var(--border);
+    background:rgba(255,255,255,.03);color:var(--text);text-decoration:none;font-family:inherit;
+    transition:all .2s ease}
+  .nav-btn:hover{border-color:var(--border-strong);background:rgba(255,255,255,.06);transform:translateY(-2px)}
+  .nav-btn.primary{background:var(--grad-main);color:#fff;border-color:transparent;box-shadow:0 10px 25px rgba(79,142,247,.28)}
+  .tabs{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+  .tab-btn{padding:10px 18px;font-size:13px;font-family:inherit;border-radius:999px;
+    border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--muted);
+    cursor:pointer;font-weight:500;transition:all .2s ease}
+  .tab-btn:hover{color:var(--text);border-color:var(--border-strong);transform:translateY(-2px)}
+  .tab-btn.active{background:var(--grad-main);color:#fff;border-color:transparent;box-shadow:0 10px 20px rgba(79,142,247,.25)}
   .section{display:none}.section.active{display:block}
-  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px}
-  .card h2{font-size:13px;font-weight:600;color:var(--accent);margin-bottom:14px}
-  .form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:12px}
-  .form-group label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px}
-  .form-group select,.form-group input{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;font-family:inherit;outline:none}
-  .form-group select:focus,.form-group input:focus{border-color:var(--accent)}
+  .card{background:var(--surface);backdrop-filter:blur(14px);border:1px solid var(--border);
+    border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);margin-bottom:16px;
+    position:relative;overflow:hidden;transition:all .22s ease;animation:fadeUp .42s ease both}
+  .card:hover{transform:translateY(-3px);box-shadow:0 18px 38px rgba(0,0,0,.24)}
+  .card::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);pointer-events:none}
+  .card-header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px}
+  .card h2{font-size:14px;font-weight:700;color:#dbe7ff;display:flex;align-items:center;gap:8px}
+  .card-sub{font-size:11px;color:var(--muted);margin-top:3px}
+  .mini-badge{background:rgba(79,142,247,.12);border:1px solid rgba(79,142,247,.24);color:#93c5fd;
+    font-size:10px;padding:4px 10px;border-radius:999px;font-weight:600;white-space:nowrap}
+  .form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:14px}
+  .form-group label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px}
+  .form-group select,.form-group input{width:100%;background:rgba(255,255,255,.04);
+    border:1px solid var(--border);color:var(--text);padding:12px;border-radius:12px;
+    font-size:13px;font-family:inherit;outline:none;transition:all .18s ease}
+  .form-group select:focus,.form-group input:focus{border-color:var(--accent);
+    box-shadow:0 0 0 4px rgba(79,142,247,.16);background:rgba(255,255,255,.07)}
   .auto-info{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;min-height:24px}
-  .chip{background:var(--surface2);border:1px solid var(--border);border-radius:999px;padding:3px 10px;font-size:11px;display:flex;align-items:center;gap:5px}
-  .chip.blue{border-color:var(--accent);color:var(--accent)}.chip.green{border-color:var(--accent2);color:var(--accent2)}
-  .items-header{display:grid;grid-template-columns:2.2fr 75px 75px 80px 75px 85px 30px;gap:5px;font-size:10px;color:var(--muted);padding:0 2px 6px;border-bottom:1px solid var(--border);margin-bottom:6px}
-  .item-row{display:grid;grid-template-columns:2.2fr 75px 75px 80px 75px 85px 30px;gap:5px;margin-bottom:6px;align-items:center}
-  .item-row select,.item-row input{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 7px;border-radius:6px;font-size:12px;font-family:inherit;outline:none;width:100%}
-  .item-row input[readonly]{color:var(--accent2);border-color:transparent;background:transparent;font-weight:600}
-  .remove-btn{background:none;border:none;color:var(--danger);font-size:16px;cursor:pointer;padding:0}
-  .total-bar{background:var(--surface2);border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin:10px 0;font-size:12px}
-  .total-bar strong{font-size:16px;color:var(--accent2)}
-  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;font-size:12px;font-family:inherit;border-radius:6px;border:none;cursor:pointer;font-weight:500}
-  .btn-primary{background:var(--accent);color:#fff}.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border)}.btn-danger{background:var(--danger);color:#fff;font-size:11px;padding:4px 10px}.btn-sm{padding:5px 12px;font-size:11px}
-  .order-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden}
-  .order-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;gap:10px}
-  .order-head:hover{background:var(--surface2)}
+  .chip{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:999px;
+    padding:7px 12px;font-size:11px;display:flex;align-items:center;gap:6px;color:#d9e6f7}
+  .chip.blue{border-color:rgba(79,142,247,.3);color:#93c5fd;background:rgba(79,142,247,.08)}
+  .items-wrap{background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:16px;padding:12px}
+  .items-header{display:grid;grid-template-columns:2.4fr 90px 90px 100px 90px 110px 38px;gap:8px;
+    font-size:10px;color:var(--muted);padding:0 4px 8px;border-bottom:1px solid var(--border);margin-bottom:10px;font-weight:600}
+  .item-row{display:grid;grid-template-columns:2.4fr 90px 90px 100px 90px 110px 38px;gap:8px;
+    margin-bottom:8px;align-items:center;transition:all .2s ease}
+  .item-row:hover{background:rgba(255,255,255,.035);border-radius:14px}
+  .item-row select,.item-row input{background:rgba(255,255,255,.04);border:1px solid var(--border);
+    color:var(--text);padding:10px;border-radius:12px;font-size:12px;font-family:inherit;outline:none;width:100%}
+  .item-row input[readonly]{color:#86efac;border-color:rgba(52,211,153,.12);
+    background:rgba(16,185,129,.08);font-weight:700;text-align:center}
+  .remove-btn{width:34px;height:34px;border:none;border-radius:10px;background:rgba(239,68,68,.12);
+    color:#fca5a5;font-size:16px;cursor:pointer;transition:all .2s ease}
+  .remove-btn:hover{background:rgba(239,68,68,.2);transform:scale(1.05)}
+  .toolbar-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+  .total-bar{background:linear-gradient(135deg,rgba(52,211,153,.12),rgba(79,142,247,.08));
+    border:1px solid rgba(52,211,153,.18);border-radius:16px;padding:14px 16px;
+    display:flex;justify-content:space-between;align-items:center;font-size:12px;gap:10px;min-width:220px}
+  .total-bar strong{font-size:22px;color:#86efac}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 16px;
+    font-size:12px;font-family:inherit;border-radius:12px;border:none;cursor:pointer;
+    font-weight:600;text-decoration:none;white-space:nowrap;transition:all .2s ease}
+  .btn:hover{transform:translateY(-2px)}.btn:active{transform:scale(.98)}
+  .btn-primary{background:var(--grad-main);color:#fff;box-shadow:0 12px 24px rgba(79,142,247,.24)}
+  .btn-ghost{background:rgba(255,255,255,.04);color:var(--text);border:1px solid var(--border)}
+  .btn-ghost:hover{background:rgba(255,255,255,.07);border-color:var(--border-strong)}
+  .btn-danger{background:linear-gradient(135deg,#ef4444,#f87171);color:#fff;font-size:11px;padding:7px 12px}
+  .btn-sm{padding:8px 13px;font-size:11px}
+  .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+  .stat-mini{background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    padding:14px;font-size:11px;box-shadow:var(--shadow-soft);transition:all .2s ease;color:var(--muted)}
+  .stat-mini:hover{transform:translateY(-3px)}
+  .stat-mini span{color:#dbe7ff;font-weight:700;font-size:20px;display:block;margin-top:6px}
+  .filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;background:var(--surface);
+    border:1px solid var(--border);border-radius:16px;padding:12px;box-shadow:var(--shadow-soft)}
+  .filter-bar select,.filter-bar input{background:rgba(255,255,255,.04);border:1px solid var(--border);
+    color:var(--text);padding:10px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none;min-width:160px}
+  .order-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;
+    margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow-soft);transition:all .2s ease;animation:fadeUp .42s ease both}
+  .order-card:hover{transform:translateY(-3px);box-shadow:0 18px 38px rgba(0,0,0,.24)}
+  .order-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;
+    cursor:pointer;gap:14px;transition:.18s ease}
+  .order-head:hover{background:rgba(255,255,255,.03)}
   .order-info{display:flex;flex-wrap:wrap;gap:8px;align-items:center;flex:1}
-  .order-body{display:none;border-top:1px solid var(--border);padding:12px 14px}
+  .pill{font-size:11px;color:var(--muted);background:rgba(255,255,255,.04);
+    padding:5px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.04)}
+  .order-body{display:none;border-top:1px solid var(--border);padding:14px 16px 16px;background:rgba(255,255,255,.015)}
   .order-body.open{display:block}
-  .detail-table{width:100%;border-collapse:collapse;font-size:11px}
-  .detail-table th,.detail-table td{padding:6px 8px;text-align:center;border-bottom:1px solid var(--border)}
-  .detail-table th{background:var(--surface2);color:var(--muted);font-weight:500}
+  .table-wrap{overflow:auto;border:1px solid var(--border);border-radius:16px}
+  .detail-table{width:100%;border-collapse:collapse;font-size:11px;min-width:900px}
+  .detail-table th,.detail-table td{padding:10px 8px;text-align:center;border-bottom:1px solid var(--border)}
+  .detail-table th{background:rgba(255,255,255,.045);color:var(--muted);font-weight:600;position:sticky;top:0;z-index:1}
   .detail-table tr:last-child td{border-bottom:none}
-  .stats-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-  .stat-mini{background:var(--surface2);border-radius:8px;padding:8px 14px;font-size:11px;border:1px solid var(--border)}
-  .stat-mini span{color:var(--accent);font-weight:600;font-size:14px;display:block}
-  .filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-  .filter-bar select,.filter-bar input{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:12px;font-family:inherit;outline:none}
-  .empty{color:var(--muted);font-size:12px;padding:30px 0;text-align:center}
-  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:#059669;color:#fff;padding:10px 22px;border-radius:999px;font-size:13px;transition:transform .3s;z-index:999}
+  .detail-table tbody tr:hover{background:rgba(255,255,255,.025)}
+  .empty{color:var(--muted);font-size:13px;padding:40px 0;text-align:center;
+    background:var(--surface);border:1px dashed var(--border-strong);border-radius:18px}
+  #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(90px);
+    background:var(--grad-green);color:#fff;padding:12px 22px;border-radius:999px;
+    font-size:13px;font-weight:700;transition:transform .3s ease;z-index:999;
+    box-shadow:0 14px 28px rgba(16,185,129,.28)}
   #toast.show{transform:translateX(-50%) translateY(0)}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  @media(max-width:860px){
+    .items-header,.item-row{grid-template-columns:1fr 1fr}
+    .items-header{display:none}
+    .item-row{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:16px;padding:10px;margin-bottom:10px}
+    .item-row>*:first-child{grid-column:1/-1}
+  }
+  @media(max-width:640px){
+    body{padding:14px 10px 90px}
+    .header{flex-direction:column;align-items:stretch;padding:14px}
+    .form-grid{grid-template-columns:1fr}
+    .filter-bar{flex-direction:column}
+    .filter-bar select,.filter-bar input,.btn{width:100%}
+    .toolbar-row{flex-direction:column;align-items:stretch}
+    .total-bar{width:100%}
+  }
 </style>
 </head>
 <body>
+<div class="app-shell">
 
 <div class="header">
-  <h1>📦 أوردرات الصيدليات <span>v3</span></h1>
+  <div class="header-left">
+    <div class="logo-box">📦</div>
+    <div class="title-wrap">
+      <h1>أوردرات الصيدليات <span>v3</span></h1>
+      <p>مرتبط مع Google Sheets — تحديث تلقائي</p>
+    </div>
+  </div>
   <div class="nav-links">
     <a href="data-entry.html" class="nav-btn">إدخال بيانات</a>
     <a href="dashboard-v3-full.html" class="nav-btn primary">الداشبورد ←</a>
@@ -74,29 +171,25 @@
 <!-- NEW ORDER -->
 <div id="tab-new" class="section active">
   <div class="card">
-    <h2>📋 معلومات الأوردر</h2>
+    <div class="card-header">
+      <div><h2>📋 معلومات الأوردر</h2><div class="card-sub">أدخل البيانات الأساسية</div></div>
+      <div class="mini-badge">New Order</div>
+    </div>
     <div class="form-grid">
-      <div class="form-group">
-        <label>المندوب (Rep)</label>
+      <div class="form-group"><label>المندوب (Rep)</label>
         <input type="text" id="ord-rep" placeholder="اسم المندوب" list="rep-list">
         <datalist id="rep-list"></datalist>
       </div>
-      <div class="form-group">
-        <label>الصيدلية</label>
-        <select id="ord-pharmacy" onchange="onPharmacyChange()">
-          <option value="">— اختر —</option>
-        </select>
+      <div class="form-group"><label>الصيدلية</label>
+        <select id="ord-pharmacy" onchange="onPharmacyChange()"><option value="">— اختر —</option></select>
       </div>
-      <div class="form-group">
-        <label>المخزن</label>
+      <div class="form-group"><label>المخزن</label>
         <input type="text" id="ord-warehouse" placeholder="اسم المخزن">
       </div>
-      <div class="form-group">
-        <label>التاريخ</label>
+      <div class="form-group"><label>التاريخ</label>
         <input type="date" id="ord-date">
       </div>
-      <div class="form-group">
-        <label>ملاحظة</label>
+      <div class="form-group"><label>ملاحظة</label>
         <input type="text" id="ord-note" placeholder="اختياري">
       </div>
     </div>
@@ -104,23 +197,33 @@
   </div>
 
   <div class="card">
-    <h2>💊 المواد</h2>
-    <div class="items-header">
-      <span>المادة</span>
-      <span style="text-align:center">الكمية</span>
-      <span style="text-align:center">البونص%</span>
-      <span style="text-align:center">كمية البونص</span>
-      <span style="text-align:center">السعر</span>
-      <span style="text-align:center">القيمة</span>
-      <span></span>
+    <div class="card-header">
+      <div><h2>💊 المواد</h2><div class="card-sub">أضف المواد والكميات والبونص</div></div>
+      <div class="mini-badge">Items</div>
     </div>
-    <div id="items-container"></div>
-    <button class="btn btn-ghost btn-sm" onclick="addItemRow()" style="margin-top:6px">➕ مادة</button>
-    <div class="total-bar">
-      <span>إجمالي الأوردر</span>
-      <strong id="order-total">0.00</strong>
+    <div class="items-wrap">
+      <div class="items-header">
+        <span>المادة</span>
+        <span style="text-align:center">الكمية</span>
+        <span style="text-align:center">البونص%</span>
+        <span style="text-align:center">كمية البونص</span>
+        <span style="text-align:center">السعر</span>
+        <span style="text-align:center">القيمة</span>
+        <span></span>
+      </div>
+      <div id="items-container"></div>
+      <div class="toolbar-row">
+        <button class="btn btn-ghost btn-sm" onclick="addItemRow()">➕ إضافة مادة</button>
+        <div class="total-bar">
+          <span style="color:var(--muted)">إجمالي الأوردر</span>
+          <strong id="order-total">0.00</strong>
+        </div>
+      </div>
     </div>
-    <button class="btn btn-primary" onclick="saveOrder()">💾 حفظ الأوردر</button>
+    <div class="toolbar-row" style="margin-top:14px">
+      <button class="btn btn-primary" onclick="saveOrder()">💾 حفظ الأوردر</button>
+      <button class="btn btn-ghost" onclick="resetForm()">↺ إعادة تعيين</button>
+    </div>
   </div>
 </div>
 
@@ -137,6 +240,7 @@
   <div id="order-list"></div>
 </div>
 
+</div>
 <div id="toast">✓ تم الحفظ</div>
 
 <script>
@@ -146,243 +250,190 @@ const DB={
   set:(k,v)=>localStorage.setItem(k,JSON.stringify(v)),
 };
 
-const SHEETS_URL = 'https://script.google.com/macros/s/AKfycby75MvmFGFgbJlvSbVp1_f3OvFnvgNzyR5MuLkZx3SQG_AqegkH-0BUPMd8vbjR6r6iqg/exec';
-
-async function pushOrderToSheets(order){
-  try {
-    await fetch(SHEETS_URL, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'addOrder', order }),
-    });
-  } catch(e){
-    console.warn('Sheets push failed:', e);
-  }
-}
+const SHEETS_URL='https://script.google.com/macros/s/AKfycby75MvmFGFgbJlvSbVp1_f3OvFnvgNzyR5MuLkZx3SQG_AqegkH-0BUPMd8vbjR6r6iqg/exec';
 
 function fmt(n){return Number(n||0).toLocaleString('en');}
 function fmtV(n){return Number(n||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function uid(){return 'ORD-'+Date.now().toString(36).toUpperCase();}
-function lc(line){const m={Derma:'#4f8ef7',Optha:'#6ee7b7','General Line':'#f59e0b','CM Line':'#a78bfa'};return m[line]||'#64748b';}
+function lc(line){const m={Derma:'#4f8ef7',Optha:'#34d399','General Line':'#f59e0b','CM Line':'#a78bfa'};return m[line]||'#64748b';}
 
-function getDoctorByLine(pharmacyName, line){
-  const ph = DB.get('pharmacies').find(p=>p.name===pharmacyName);
-  if (!ph) return '—';
-  const doctors = ph.doctors||(ph.doctor?[ph.doctor]:[]);
-  if (!doctors.length) return '—';
-  const allDocs = DB.get('doctors');
-  const matched = doctors.filter(n=>{const d=allDocs.find(x=>x.name===n);return d&&d.line===line;});
-  return matched.length ? matched.join(' / ') : doctors[0];
+function getLineByProduct(productName){
+  const prods=DB.get('products');
+  const p=prods.find(x=>x.name===productName);
+  if(p?.line) return p.line;
+  const name=String(productName).toLowerCase();
+  const derma  =['acretin','elica','fusibact','hi-quin','hiquin','lamifen','lican','promax','surecure','elicasal'];
+  const optha  =['arox','brimo','brofix','fluca','hyfresh','latano','loxtra','olopat','optidex','optiflox','optifresh','optilone','optipred','tymer','uni fresh','unifresh','xola','xolamol'];
+  const general=['azi-once','azionce','feroton','maxim','prima','fast-flam','fastflam','relaxon','dompy','fixit','meva','zoron'];
+  const cm     =['vittoria','dapazin','sitagen','sitavic','vildus','lintra'];
+  if(derma.some(k=>name.includes(k)))   return 'Derma';
+  if(optha.some(k=>name.includes(k)))   return 'Optha';
+  if(general.some(k=>name.includes(k))) return 'General Line';
+  if(cm.some(k=>name.includes(k)))      return 'CM Line';
+  return '';
+}
+
+function getDoctorByLine(pharmacyName,line){
+  const ph=DB.get('pharmacies').find(p=>p.name===pharmacyName);
+  if(!ph) return '—';
+  const doctors=ph.doctors||(ph.doctor?[ph.doctor]:[]);
+  if(!doctors.length) return '—';
+  const allDocs=DB.get('doctors');
+  const matched=doctors.filter(n=>{const d=allDocs.find(x=>x.name===n);return d&&d.line===line;});
+  return matched.length?matched.join(' / '):doctors[0];
 }
 
 function init(){
-  document.getElementById('ord-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('ord-date').value=new Date().toISOString().split('T')[0];
   populatePharmacies();
   populateRepList();
   populateFilterDropdowns();
   addItemRow();
-  // تحميل الأوردرات من Google Sheets
   loadOrdersFromSheets();
 }
 
-async function loadOrdersFromSheets(){
-  const container = document.getElementById('order-list');
-  const stats     = document.getElementById('list-stats');
-  if(stats) stats.innerHTML = `<div class="stat-mini">الأوردرات <span>⏳</span></div>`;
-
-  jsonpRequest(`${SHEETS_URL}?action=getOrders`, function(data){
-    if (!data || !data.success){
-      if(container) container.innerHTML = `<div class="empty">⚠ تعذر تحميل البيانات</div>`;
+function loadOrdersFromSheets(){
+  const stats=document.getElementById('list-stats');
+  if(stats) stats.innerHTML=`<div class="stat-mini">الأوردرات <span>⏳</span></div>`;
+  jsonpRequest(`${SHEETS_URL}?action=getOrders`,function(data){
+    if(!data||!data.success){
+      document.getElementById('order-list').innerHTML=`<div class="empty">⚠ تعذر تحميل البيانات</div>`;
       return;
     }
-
-    const grouped = {};
-    data.orders.forEach(o => {
-      const key = `${o.date}__${o.pharmacy}__${o.rep}__${o.warehouse}`;
-      if (!grouped[key]){
-        grouped[key] = {
-          id: key, date: o.date, rep: o.rep,
-          pharmacy: o.pharmacy, warehouse: o.warehouse,
-          area: '', items: [], total: 0,
-        };
-      }
+    const grouped={};
+    data.orders.forEach(o=>{
+      const key=`${o.date}__${o.pharmacy}__${o.rep}__${o.warehouse}`;
+      if(!grouped[key]) grouped[key]={id:key,date:o.date,rep:o.rep,pharmacy:o.pharmacy,warehouse:o.warehouse,items:[],total:0};
+      const line=o.line||getLineByProduct(o.product);
       grouped[key].items.push({
-        product:    o.product,
-        line:       o.line || getLineByProduct(o.product),
-        qty:        o.quantity,
-        bonusPct:   o.bonusPct,
-        bonusQty:   o.bonusQty,
-        price:      o.unitPrice,
-        orderValue: o.orderValue || o.quantity * o.unitPrice,
-        bonusValue: o.bonusValue || o.bonusQty * o.unitPrice,
-        value:      o.totalValue,
-        totalValue: o.totalValue,
-        doctor:     getDoctorByLine(o.pharmacy, o.line || getLineByProduct(o.product)),
+        product:o.product,line,
+        qty:o.quantity,bonusPct:o.bonusPct,bonusQty:o.bonusQty,
+        price:o.unitPrice,
+        doctor:getDoctorByLine(o.pharmacy,line),
       });
-      grouped[key].total += o.totalValue;
+      grouped[key].total+=(o.quantity*o.unitPrice)+(o.bonusQty*o.unitPrice);
     });
-
-    const orders = Object.values(grouped).sort((a,b)=>b.date.localeCompare(a.date));
+    const orders=Object.values(grouped).sort((a,b)=>b.date.localeCompare(a.date));
     renderOrdersFromSheets(orders);
   });
 }
 
-// JSONP — يحل مشكلة CORS مع file://
-let jsonpCallbackIdx = 0;
-function jsonpRequest(url, callback){
-  const cbName = `__jsonp_cb_${++jsonpCallbackIdx}`;
-  window[cbName] = function(data){
-    callback(data);
-    delete window[cbName];
-    document.getElementById(`script-${cbName}`)?.remove();
-  };
-  const script = document.createElement('script');
-  script.id  = `script-${cbName}`;
-  script.src = `${url}&callback=${cbName}`;
-  script.onerror = function(){
-    callback(null);
-    delete window[cbName];
-    script.remove();
-  };
-  document.head.appendChild(script);
-}
-
-function getLineByProduct(productName){
-  const prods = DB.get('products');
-  const p = prods.find(x=>x.name===productName);
-  if(p?.line) return p.line;
-
-  const name = String(productName).toLowerCase();
-  const derma   = ['acretin','elica','fusibact','hi-quin','hiquin','lamifen','lican','promax','surecure','elicasal'];
-  const optha   = ['arox','brimo','brofix','fluca','hyfresh','latano','loxtra','olopat','optidex','optiflox','optifresh','optilone','optipred','tymer','uni fresh','unifresh','xola','xolamol','optha'];
-  const general = ['azi-once','azionce','feroton','maxim','prima','fast-flam','fastflam','relaxon','dompy','fixit','meva','zoron','azi once'];
-  const cm      = ['vittoria','dapazin','sitagen','sitavic','vildus','lintra'];
-
-  if (derma.some(k   => name.includes(k))) return 'Derma';
-  if (optha.some(k   => name.includes(k))) return 'Optha';
-  if (general.some(k => name.includes(k))) return 'General Line';
-  if (cm.some(k      => name.includes(k))) return 'CM Line';
-  return '';
+let jsonpIdx=0;
+function jsonpRequest(url,cb){
+  const name=`__cb_${++jsonpIdx}`;
+  window[name]=function(d){cb(d);delete window[name];document.getElementById(`s-${name}`)?.remove();};
+  const s=document.createElement('script');
+  s.id=`s-${name}`;s.src=`${url}&callback=${name}`;
+  s.onerror=function(){cb(null);delete window[name];s.remove();};
+  document.head.appendChild(s);
 }
 
 function renderOrdersFromSheets(orders){
-  const repF   = document.getElementById('filter-rep')?.value      || '';
-  const phF    = document.getElementById('filter-pharmacy')?.value  || '';
-  const lineF  = document.getElementById('filter-line')?.value      || '';
-  const monthF = document.getElementById('filter-month')?.value     || '';
+  const repF  =document.getElementById('filter-rep')?.value||'';
+  const phF   =document.getElementById('filter-pharmacy')?.value||'';
+  const lineF =document.getElementById('filter-line')?.value||'';
+  const monthF=document.getElementById('filter-month')?.value||'';
 
-  const filtered = orders.filter(o=>{
-    if(repF   && o.rep!==repF)                         return false;
-    if(phF    && o.pharmacy!==phF)                     return false;
-    if(lineF  && !o.items.some(i=>i.line===lineF))     return false;
-    if(monthF && !o.date.startsWith(monthF))           return false;
+  const filtered=orders.filter(o=>{
+    if(repF   && o.rep!==repF)                       return false;
+    if(phF    && o.pharmacy!==phF)                   return false;
+    if(lineF  && !o.items.some(i=>i.line===lineF))   return false;
+    if(monthF && !o.date.startsWith(monthF))         return false;
     return true;
   });
 
-  // حسابات صحيحة
-  const totalOrders    = filtered.length;
-  const totalQty       = filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+i.qty,0)+s,0);
-  const totalBonusQty  = filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+(i.bonusQty||0),0)+s,0);
-  const totalOrderVal  = filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+(i.qty*i.price),0)+s,0);
-  const totalBonusVal  = filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+(i.bonusQty*i.price),0)+s,0);
-  const totalGrand     = totalOrderVal + totalBonusVal;
+  const tQty     =filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+i.qty,0)+s,0);
+  const tBonusQty=filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+(i.bonusQty||0),0)+s,0);
+  const tOrdVal  =filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+(i.qty*i.price),0)+s,0);
+  const tBonVal  =filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+(i.bonusQty*i.price),0)+s,0);
 
-  const stats = document.getElementById('list-stats');
+  const stats=document.getElementById('list-stats');
   if(stats) stats.innerHTML=`
-    <div class="stat-mini">الأوردرات <span>${totalOrders}</span></div>
-    <div class="stat-mini">إجمالي الكميات <span>${fmt(totalQty)}</span></div>
-    <div class="stat-mini">إجمالي البونص <span>${fmt(totalBonusQty)}</span></div>
-    <div class="stat-mini">قيمة الطلبيات <span>${fmtV(totalOrderVal)}</span></div>
-    <div class="stat-mini">قيمة البونص <span>${fmtV(totalBonusVal)}</span></div>
-    <div class="stat-mini">الإجمالي الكلي <span>${fmtV(totalGrand)}</span></div>
+    <div class="stat-mini">الأوردرات <span>${filtered.length}</span></div>
+    <div class="stat-mini">إجمالي الكميات <span>${fmt(tQty)}</span></div>
+    <div class="stat-mini">إجمالي البونص <span>${fmt(tBonusQty)}</span></div>
+    <div class="stat-mini">قيمة الطلبيات <span>${fmtV(tOrdVal)}</span></div>
+    <div class="stat-mini">قيمة البونص <span>${fmtV(tBonVal)}</span></div>
+    <div class="stat-mini">الإجمالي الكلي <span>${fmtV(tOrdVal+tBonVal)}</span></div>
   `;
 
-  const container = document.getElementById('order-list');
+  const container=document.getElementById('order-list');
   if(!container) return;
-  if(!filtered.length){ container.innerHTML='<div class="empty">لا توجد أوردرات</div>'; return; }
+  if(!filtered.length){container.innerHTML='<div class="empty">لا توجد أوردرات</div>';return;}
 
-  container.innerHTML = filtered.map((o,oi)=>{
-    const lines   = [...new Set(o.items.map(i=>i.line).filter(Boolean))];
-    const doctors = [...new Set(o.items.map(i=>i.doctor).filter(d=>d&&d!=='—'))];
-    const ordVal  = o.items.reduce((s,i)=>s+(i.qty*i.price),0);
-    const bonVal  = o.items.reduce((s,i)=>s+(i.bonusQty*i.price),0);
-    const grand   = ordVal + bonVal;
-    const safeId  = `ord_${oi}`;
+  container.innerHTML=filtered.map((o,oi)=>{
+    const lines  =[...new Set(o.items.map(i=>i.line).filter(Boolean))];
+    const doctors=[...new Set(o.items.map(i=>i.doctor).filter(d=>d&&d!=='—'))];
+    const ordVal =o.items.reduce((s,i)=>s+(i.qty*i.price),0);
+    const bonVal =o.items.reduce((s,i)=>s+(i.bonusQty*i.price),0);
+    const grand  =ordVal+bonVal;
+    const id=`ord_${oi}`;
 
-    const lineChips = lines.map(l=>
-      `<span style="background:${lc(l)}22;color:${lc(l)};border:1px solid ${lc(l)}44;border-radius:999px;padding:2px 8px;font-size:10px;font-weight:600">${l}</span>`
+    const lineChips=lines.map(l=>
+      `<span style="background:${lc(l)}18;color:${lc(l)};border:1px solid ${lc(l)}33;border-radius:999px;padding:4px 9px;font-size:10px;font-weight:700">${l}</span>`
     ).join('');
 
-    return `
-    <div class="order-card">
-      <div class="order-head" onclick="toggleOrder('${safeId}')">
+    return `<div class="order-card">
+      <div class="order-head" onclick="toggleOrder('${id}')">
         <div class="order-info">
-          <span style="font-size:14px;font-weight:700">${o.pharmacy}</span>
-          ${o.rep    ?`<span style="font-size:11px;color:var(--muted);background:var(--surface2);padding:2px 8px;border-radius:999px">👤 ${o.rep}</span>`:''}
-          ${o.warehouse?`<span style="font-size:11px;color:var(--muted);background:var(--surface2);padding:2px 8px;border-radius:999px">🏭 ${o.warehouse}</span>`:''}
-          <span style="font-size:11px;color:var(--muted)">📅 ${o.date}</span>
+          <span style="font-size:15px;font-weight:700;color:#fff">${o.pharmacy}</span>
+          ${o.rep?`<span class="pill">👤 ${o.rep}</span>`:''}
+          ${o.warehouse?`<span class="pill">🏭 ${o.warehouse}</span>`:''}
+          <span class="pill">📅 ${o.date}</span>
           ${lineChips}
-          ${doctors.map(d=>`<span style="font-size:10px;color:var(--accent);background:rgba(79,142,247,.1);padding:2px 8px;border-radius:999px">👨‍⚕️ ${d}</span>`).join('')}
+          ${doctors.map(d=>`<span style="font-size:10px;color:#93c5fd;background:rgba(79,142,247,.12);padding:4px 9px;border-radius:999px;border:1px solid rgba(79,142,247,.18)">👨‍⚕️ ${d}</span>`).join('')}
         </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">
-          <span style="font-size:12px;color:var(--accent2)">طلبية: <strong>${fmtV(ordVal)}</strong></span>
-          <span style="font-size:12px;color:var(--warn)">بونص: <strong>${fmtV(bonVal)}</strong></span>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+          <span style="font-size:12px;color:#86efac">طلبية: <strong>${fmtV(ordVal)}</strong></span>
+          <span style="font-size:12px;color:#fbbf24">بونص: <strong>${fmtV(bonVal)}</strong></span>
           <span style="font-size:13px;color:#fff;font-weight:700">الإجمالي: ${fmtV(grand)}</span>
         </div>
       </div>
-      <div class="order-body" id="body-${safeId}">
-        <div style="overflow-x:auto">
-        <table class="detail-table">
-          <thead><tr>
-            <th style="text-align:right">المادة</th>
-            <th>اللاين</th>
-            <th>الطبيب</th>
-            <th>الكمية</th>
-            <th>السعر</th>
-            <th>قيمة الطلبية</th>
-            <th>البونص%</th>
-            <th>كمية البونص</th>
-            <th>قيمة البونص</th>
-            <th>الإجمالي</th>
-          </tr></thead>
-          <tbody>
-            ${o.items.map(i=>{
-              const iOrdVal  = i.qty      * i.price;
-              const iBonVal  = i.bonusQty * i.price;
-              const iGrand   = iOrdVal + iBonVal;
-              return `<tr>
-                <td style="text-align:right;font-weight:600;white-space:nowrap">${i.product}</td>
-                <td>${i.line?`<span style="background:${lc(i.line)}22;color:${lc(i.line)};border-radius:999px;padding:1px 8px;font-size:10px;font-weight:600">${i.line}</span>`:'-'}</td>
-                <td style="font-size:10px;color:var(--accent);white-space:nowrap">${i.doctor||'—'}</td>
-                <td style="font-weight:600">${fmt(i.qty)}</td>
-                <td>${fmtV(i.price)}</td>
-                <td style="color:var(--accent2);font-weight:600">${fmtV(iOrdVal)}</td>
-                <td style="color:var(--muted)">${i.bonusPct||0}%</td>
-                <td style="color:var(--warn);font-weight:600">${fmt(i.bonusQty||0)}</td>
-                <td style="color:var(--warn);font-weight:600">${fmtV(iBonVal)}</td>
-                <td style="color:#fff;font-weight:700;background:rgba(255,255,255,.05)">${fmtV(iGrand)}</td>
-              </tr>`;
-            }).join('')}
-            <tr style="background:var(--surface2);font-weight:700">
-              <td colspan="5" style="text-align:right;color:var(--muted)">الإجمالي</td>
-              <td style="color:var(--accent2)">${fmtV(ordVal)}</td>
-              <td></td>
-              <td style="color:var(--warn)">${fmt(o.items.reduce((s,i)=>s+(i.bonusQty||0),0))}</td>
-              <td style="color:var(--warn)">${fmtV(bonVal)}</td>
-              <td style="color:#fff">${fmtV(grand)}</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="order-body" id="body-${id}">
+        <div class="table-wrap">
+          <table class="detail-table">
+            <thead><tr>
+              <th style="text-align:right">المادة</th><th>اللاين</th><th>الطبيب</th>
+              <th>الكمية</th><th>السعر</th><th>قيمة الطلبية</th>
+              <th>البونص%</th><th>كمية البونص</th><th>قيمة البونص</th><th>الإجمالي</th>
+            </tr></thead>
+            <tbody>
+              ${o.items.map(i=>{
+                const iOrd=i.qty*i.price;
+                const iBon=i.bonusQty*i.price;
+                return `<tr>
+                  <td style="text-align:right;font-weight:700;white-space:nowrap">${i.product}</td>
+                  <td>${i.line?`<span style="background:${lc(i.line)}18;color:${lc(i.line)};border-radius:999px;padding:3px 8px;font-size:10px;font-weight:700;border:1px solid ${lc(i.line)}30">${i.line}</span>`:'-'}</td>
+                  <td style="font-size:10px;color:#93c5fd;white-space:nowrap">${i.doctor||'—'}</td>
+                  <td style="font-weight:700">${fmt(i.qty)}</td>
+                  <td>${fmtV(i.price)}</td>
+                  <td style="color:#86efac;font-weight:700">${fmtV(iOrd)}</td>
+                  <td style="color:var(--muted)">${i.bonusPct||0}%</td>
+                  <td style="color:#fbbf24;font-weight:700">${fmt(i.bonusQty||0)}</td>
+                  <td style="color:#fbbf24;font-weight:700">${fmtV(iBon)}</td>
+                  <td style="color:#fff;font-weight:700;background:rgba(255,255,255,.04)">${fmtV(iOrd+iBon)}</td>
+                </tr>`;
+              }).join('')}
+              <tr style="background:rgba(255,255,255,.04);font-weight:700">
+                <td colspan="5" style="text-align:right;color:var(--muted)">الإجمالي</td>
+                <td style="color:#86efac">${fmtV(ordVal)}</td>
+                <td></td>
+                <td style="color:#fbbf24">${fmt(o.items.reduce((s,i)=>s+(i.bonusQty||0),0))}</td>
+                <td style="color:#fbbf24">${fmtV(bonVal)}</td>
+                <td style="color:#fff">${fmtV(grand)}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>`;
   }).join('');
 
-  // Update filter dropdowns
-  const reps = [...new Set(orders.map(o=>o.rep).filter(Boolean))];
-  const phs  = [...new Set(orders.map(o=>o.pharmacy).filter(Boolean))];
-  document.getElementById('filter-rep').innerHTML =
+  const reps=[...new Set(orders.map(o=>o.rep).filter(Boolean))];
+  const phs =[...new Set(orders.map(o=>o.pharmacy).filter(Boolean))];
+  document.getElementById('filter-rep').innerHTML=
     `<option value="">كل المندوبين</option>`+reps.map(r=>`<option>${r}</option>`).join('');
-  document.getElementById('filter-pharmacy').innerHTML =
+  document.getElementById('filter-pharmacy').innerHTML=
     `<option value="">كل الصيدليات</option>`+phs.map(p=>`<option>${p}</option>`).join('');
 }
 
@@ -400,12 +451,9 @@ function populateRepList(){
 
 function populateFilterDropdowns(){
   const phs=DB.get('pharmacies');
-  const orders=DB.get('orders');
-  const reps=[...new Set(orders.map(o=>o.rep).filter(Boolean))];
   document.getElementById('filter-pharmacy').innerHTML=
     `<option value="">كل الصيدليات</option>`+phs.map(p=>`<option>${p.name}</option>`).join('');
-  document.getElementById('filter-rep').innerHTML=
-    `<option value="">كل المندوبين</option>`+reps.map(r=>`<option>${r}</option>`).join('');
+  document.getElementById('filter-rep').innerHTML=`<option value="">كل المندوبين</option>`;
   document.getElementById('filter-line').innerHTML=
     `<option value="">كل اللاينات</option>`+
     ['Derma','Optha','General Line','CM Line'].map(l=>`<option>${l}</option>`).join('');
@@ -426,22 +474,18 @@ function onPharmacyChange(){
 }
 
 let itemCount=0;
-
 function addItemRow(){
   const id=++itemCount;
   const prods=DB.get('products');
   const opts=prods.map(p=>`<option value="${p.name}" data-price="${p.price||0}" data-line="${p.line}">${p.name}</option>`).join('');
   const row=document.createElement('div');
-  row.className='item-row';
-  row.id=`item-${id}`;
+  row.className='item-row';row.id=`item-${id}`;
   row.innerHTML=`
-    <select id="ip-${id}" onchange="onProductChange(${id})">
-      <option value="">— اختر مادة —</option>${opts}
-    </select>
-    <input type="number" id="iq-${id}" min="0" placeholder="0" oninput="calcBonusQty(${id});calcItem(${id})">
-    <input type="number" id="ib-${id}" min="0" max="100" placeholder="0" step="0.1" oninput="calcBonusQty(${id})">
-    <input type="number" id="ibq-${id}" min="0" placeholder="0" readonly>
-    <input type="number" id="ipr-${id}" min="0" placeholder="0" oninput="calcItem(${id})">
+    <select id="ip-${id}" onchange="onProductChange(${id})"><option value="">— اختر مادة —</option>${opts}</select>
+    <input type="number" id="iq-${id}" min="0" placeholder="الكمية" oninput="calcBonusQty(${id});calcItem(${id})">
+    <input type="number" id="ib-${id}" min="0" max="100" placeholder="البونص%" step="0.1" oninput="calcBonusQty(${id})">
+    <input type="number" id="ibq-${id}" min="0" placeholder="كمية البونص" readonly>
+    <input type="number" id="ipr-${id}" min="0" placeholder="السعر" oninput="calcItem(${id})">
     <input type="text"   id="iv-${id}"  readonly placeholder="0.00">
     <button class="remove-btn" onclick="removeItem(${id})">✕</button>
   `;
@@ -513,25 +557,14 @@ function saveOrder(){
   const items=getItems();
   if(!items.length) return alert('أضف مادة واحدة على الأقل');
   const ph=DB.get('pharmacies').find(p=>p.name===pharmacy)||{};
-  const order={
-    id:uid(),date,rep,pharmacy,
-    area:ph.area||'',location:ph.location||'',
-    doctors:ph.doctors||(ph.doctor?[ph.doctor]:[]),
-    warehouse,note,items,
-    total:items.reduce((s,i)=>s+i.value,0),
-    createdAt:Date.now()
-  };
+  const order={id:uid(),date,rep,pharmacy,area:ph.area||'',warehouse,note,items,
+    total:items.reduce((s,i)=>s+i.value,0),createdAt:Date.now()};
   const orders=DB.get('orders');
   orders.unshift(order);
   DB.set('orders',orders);
-
-  // إرسال للشيت تلقائياً
-  pushOrderToSheets(order);
-
+  try{fetch(SHEETS_URL,{method:'POST',body:JSON.stringify({action:'addOrder',order})});}catch(e){}
   toast('✓ تم حفظ الأوردر');
-  resetForm();
-  populateRepList();
-  populateFilterDropdowns();
+  resetForm();populateRepList();populateFilterDropdowns();
 }
 
 function resetForm(){
@@ -541,23 +574,11 @@ function resetForm(){
   document.getElementById('pharmacy-info').innerHTML='';
   document.getElementById('items-container').innerHTML='';
   document.getElementById('order-total').textContent='0.00';
-  itemCount=0;
-  addItemRow();
+  itemCount=0;addItemRow();
 }
 
-function renderOrderList(){ loadOrdersFromSheets(); }
-
-function toggleOrder(id){
-  const el = document.getElementById(`body-${id}`);
-  if(el) el.classList.toggle('open');
-}
-
-function deleteOrder(id){
-  if(!confirm('حذف هذا الأوردر؟')) return;
-  DB.set('orders',DB.get('orders').filter(o=>o.id!==id));
-  renderOrderList();
-  populateFilterDropdowns();
-}
+function renderOrderList(){loadOrdersFromSheets();}
+function toggleOrder(id){document.getElementById(`body-${id}`)?.classList.toggle('open');}
 
 function clearFilters(){
   ['filter-rep','filter-pharmacy','filter-line','filter-month'].forEach(id=>document.getElementById(id).value='');
