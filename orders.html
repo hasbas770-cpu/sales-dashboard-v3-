@@ -244,7 +244,7 @@
   <div id="order-list"></div>
 </div>
 
-</div>
+</div><!-- end app-shell -->
 <div id="toast">✓ تم الحفظ</div>
 
 <script>
@@ -272,6 +272,8 @@ function formatOrderDate(dateStr){
   }
   return dateStr;
 }
+
+function getLineByProduct(productName){
   const prods=DB.get('products');
   const p=prods.find(x=>x.name===productName);
   if(p?.line) return p.line;
