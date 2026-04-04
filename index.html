@@ -1748,7 +1748,7 @@ function renderStock(el){
               <th style="text-align:right">Product</th>
               <th>Line</th>
               <th>Opening Stock</th>
-              <th>Primary Sales</th>
+              <th>Primary (اختياري)</th>
               <th>Closing Stock</th>
               <th style="color:var(--accent2)">Secondary (Auto)</th>
             </tr></thead>
@@ -1786,47 +1786,77 @@ function renderStockGrid(){
     const stKey    = warehouse
       ? `${year}__${p.name}__${area}__${month}__${warehouse}`
       : `${year}__${p.name}__${area}__${month}`;
-    const saved    = stock[stKey]||{open:'',close:''};
-    const open     = saved.open!==''?Number(saved.open):0;
-    const close    = saved.close!==''?Number(saved.close):0;
-    const secondary= saved.open!==''&&saved.close!==''
-      ? Math.max(0, open + primary - close) : '—';
+    const saved    = stock[stKey]||{open:null,close:null};
 
-    return `<tr data-key="${stKey}" data-pskey="${psKey}">
+    // لو ما في opening مدخل — اجلب closing الشهر السابق تلقائياً
+    let autoOpen = null;
+    if(saved.open==null){
+      const prevMonth = Number(month)===1 ? 12 : Number(month)-1;
+      const prevYear  = Number(month)===1 ? Number(year)-1 : year;
+      const prevKey   = warehouse
+        ? `${prevYear}__${p.name}__${area}__${prevMonth}__${warehouse}`
+        : `${prevYear}__${p.name}__${area}__${prevMonth}`;
+      const prevSaved = stock[prevKey];
+      if(prevSaved?.close!=null) autoOpen = prevSaved.close;
+    }
+
+    const open     = saved.open!=null ? saved.open : autoOpen;
+    const close    = saved.close!=null ? saved.close : null;
+    const secondary= open!=null&&close!=null ? open - close : '—';
+
+    // Primary: اختياري لكل مخزن، أو يأخذ من primarySales تلقائياً
+    const primStKey = `${stKey}__prim`;
+    const savedPrim  = stock[primStKey]!=null ? stock[primStKey] : null;
+
+    // Secondary = Opening + Primary(مخزن أو كلي) - Closing
+    const effPrimary = savedPrim!=null ? savedPrim : primary;
+    const secondary2 = open!=null&&close!=null ? open + effPrimary - close : '—';
+
+    return `<tr data-key="${stKey}" data-pskey="${psKey}" data-primstkey="${primStKey}">
       <td style="text-align:right;font-weight:600">
         <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${lc(p.line)};margin-left:6px"></span>${p.name}
       </td>
       <td><span style="background:${lc(p.line)}18;color:${lc(p.line)};border-radius:999px;padding:2px 7px;font-size:10px;font-weight:600">${p.line}</span></td>
       <td>
-        <input type="number" class="st-open" data-key="${stKey}" value="${saved.open}" min="0"
-          style="width:90px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:8px;font-size:12px;text-align:center;font-family:inherit;outline:none"
-          placeholder="0" oninput="calcSecondary(this,'${stKey}','${psKey}')">
+        <input type="number" class="st-open" value="${open!=null?open:''}" min="0"
+          style="width:80px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:8px;font-size:12px;text-align:center;font-family:inherit;outline:none"
+          placeholder="0" oninput="calcSec2(this,'${stKey}','${psKey}','${primStKey}')">
       </td>
-      <td style="font-weight:600;color:var(--muted)">${fmt(primary)}</td>
       <td>
-        <input type="number" class="st-close" data-key="${stKey}" value="${saved.close}" min="0"
-          style="width:90px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:8px;font-size:12px;text-align:center;font-family:inherit;outline:none"
-          placeholder="0" oninput="calcSecondary(this,'${stKey}','${psKey}')">
+        <input type="number" class="st-primary" value="${savedPrim!=null?savedPrim:''}" min="0"
+          style="width:80px;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.2);color:var(--text);padding:6px 8px;border-radius:8px;font-size:12px;text-align:center;font-family:inherit;outline:none"
+          placeholder="${fmt(primary)}" oninput="calcSec2(this,'${stKey}','${psKey}','${primStKey}')">
       </td>
-      <td id="sec-${stKey.replace(/[^a-zA-Z0-9]/g,'_')}" style="color:var(--accent2);font-weight:700;font-size:14px">${secondary==='—'?'—':fmt(secondary)}</td>
+      <td>
+        <input type="number" class="st-close" value="${close!=null?close:''}" min="0"
+          style="width:80px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:8px;font-size:12px;text-align:center;font-family:inherit;outline:none"
+          placeholder="0" oninput="calcSec2(this,'${stKey}','${psKey}','${primStKey}')">
+      </td>
+      <td id="sec-${stKey.replace(/[^a-zA-Z0-9]/g,'_')}" style="font-weight:700;font-size:14px;color:${secondary2==='—'?'var(--muted)':secondary2<0?'var(--danger)':secondary2>0?'var(--accent2)':'var(--muted)'}">
+        ${secondary2==='—'?'—':(secondary2<0?'-':'')+fmt(Math.abs(secondary2))}
+      </td>
     </tr>`;
   }).join('');
 }
 
-function calcSecondary(inp, stKey, psKey){
-  const row    = inp.closest('tr');
-  const open   = Number(row.querySelector('.st-open')?.value||0);
-  const close  = Number(row.querySelector('.st-close')?.value||0);
-  const ps     = DB.getObj('primarySales');
-  const primary= Number(ps[psKey]||0);
-  const safeId = stKey.replace(/[^a-zA-Z0-9]/g,'_');
-  const el     = document.getElementById(`sec-${safeId}`);
-  if(el && inp.value!==''){
-    const sec = Math.max(0, open + primary - close);
-    el.textContent = fmt(sec);
-    el.style.color = sec>0 ? 'var(--accent2)' : 'var(--muted)';
-  }
+function calcSec2(inp, stKey, psKey, primStKey){
+  const row      = inp.closest('tr');
+  const openVal  = row.querySelector('.st-open')?.value;
+  const closeVal = row.querySelector('.st-close')?.value;
+  const primVal  = row.querySelector('.st-primary')?.value;
+  const safeId   = stKey.replace(/[^a-zA-Z0-9]/g,'_');
+  const el       = document.getElementById(`sec-${safeId}`);
+  if(!el) return;
+  if(openVal===''||closeVal===''){el.textContent='—';el.style.color='var(--muted)';return;}
+  const ps      = DB.getObj('primarySales');
+  const primary = Number(ps[psKey]||0);
+  const effPrim = primVal!=='' ? Number(primVal) : primary;
+  const sec     = Number(openVal) + effPrim - Number(closeVal);
+  el.textContent = (sec<0?'-':'')+fmt(Math.abs(sec));
+  el.style.color = sec>0?'var(--accent2)':sec<0?'var(--danger)':'var(--muted)';
 }
+
+function calcSecondary(inp, stKey, psKey){ calcSec2(inp, stKey, psKey, ''); }
 
 function filterStock(){
   const q=document.getElementById('st-search')?.value.toLowerCase()||'';
@@ -1850,46 +1880,43 @@ function saveStockGrid(){
     const stKey = row.dataset.key;
     const psKey = row.dataset.pskey;
     if(!stKey) return;
-    const open  = row.querySelector('.st-open')?.value;
-    const close = row.querySelector('.st-close')?.value;
-    if(open===''&&close==='') return;
+    const openVal  = row.querySelector('.st-open')?.value;
+    const closeVal = row.querySelector('.st-close')?.value;
+    const primVal  = row.querySelector('.st-primary')?.value;
+    if((openVal===''||openVal==null)&&(closeVal===''||closeVal==null)) return;
 
-    const primary  = Number(ps[psKey]||0);
-    const secondary= Math.max(0, Number(open||0) + primary - Number(close||0));
+    const openNum  = openVal!==''&&openVal!=null ? Number(openVal) : null;
+    const closeNum = closeVal!==''&&closeVal!=null ? Number(closeVal) : null;
+    const primNum  = primVal!==''&&primVal!=null ? Number(primVal) : null;
 
-    // حفظ localStorage
-    stock[stKey] = {open:Number(open||0), close:Number(close||0)};
+    // حفظ primary المخزن لو مدخل
+    const primStKey = `${stKey}__prim`;
+    if(primNum!=null) stock[primStKey]=primNum;
+    else delete stock[primStKey];
 
-    // حساب Secondary الكلي — يجمع كل المخازن في نفس المجموعة
-    const warehouses = DB.get('warehouses')||[];
-    const thisWh     = warehouses.find(w=>w.name===wh);
-    const group      = thisWh?.group||'';
+    const defPrimary = Number(ps[psKey]||0);
+    const effPrimary = primNum!=null ? primNum : defPrimary;
+    const secondary  = openNum!=null&&closeNum!=null ? openNum + effPrimary - closeNum : 0;
 
-    // إيجاد كل المخازن في نفس المجموعة
-    const siblingWhs = group
-      ? warehouses.filter(w=>w.group===group).map(w=>w.name)
-      : [wh];
+    stock[stKey] = {open:openNum, close:closeNum};
 
-    let totalSec = 0;
-    siblingWhs.forEach(whName=>{
-      const sKey = whName
-        ? `${year}__${row.querySelector('td')?.textContent?.trim().replace(/^\W+/,'').trim()||''}__${area}__${month}__${whName}`
-        : psKey;
-      const s = {...stock, [stKey]:{open:Number(open||0),close:Number(close||0)}}[sKey]||{open:0,close:0};
-      totalSec += Math.max(0, Number(s.open||0) + primary - Number(s.close||0));
-    });
-
-    if(totalSec>0) wf[psKey]=totalSec; else delete wf[psKey];
+    // Secondary لهذا المخزن يُضاف للـ warehouseFlow
+    // psKey = year__product__area__month (بدون مخزن)
+    const prevSec = Number(wf[psKey]||0);
+    // نحذف contribution القديم ونضيف الجديد
+    wf[psKey] = prevSec + secondary;
+    if(wf[psKey]===0) delete wf[psKey];
 
     // تجهيز للإرسال للشيت
-    const productName = row.querySelector('td')?.textContent?.trim().replace(/^\W+/,'').trim()||'';
+    const productName = row.cells[row.cells.length-1]?.textContent?.trim().replace(/^\W+/,'').trim()||'';
+    const primary = Number(DB.getObj('primarySales')[psKey]||0);
     entries.push({
       year, month, area,
       warehouse: wh,
       product:   productName,
       line:      row.querySelector('span[style*="border-radius"]')?.textContent||'',
-      opening:   Number(open||0),
-      closing:   Number(close||0),
+      opening:   openNum||0,
+      closing:   closeNum||0,
       primary,
       secondary,
     });
