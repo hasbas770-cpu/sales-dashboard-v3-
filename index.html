@@ -481,7 +481,7 @@ const DB={
   setObj:(k,v)=>localStorage.setItem(k,JSON.stringify(v)),
 };
 
-const SHEETS_URL='https://script.google.com/macros/s/AKfycby75MvmFGFgbJlvSbVp1_f3OvFnvgNzyR5MuLkZx3SQG_AqegkH-0BUPMd8vbjR6r6iqg/exec';
+const SHEETS_URL='https://script.google.com/macros/s/AKfycbw7YjGAtOfM9bxe2epFWHiuKaxo1qVupIH9GEkMl2BUGZQVYA6CmS_KPM_AtWEbkpMeUA/exec';
 
 /* ══════════════════════════════
    HELPERS
@@ -1383,6 +1383,10 @@ function renderStock(el){
           <div class="form-group"><label>Region</label>
             <select id="st-area" onchange="renderStockGrid()">${DB.get('areas').map(a=>`<option>${a}</option>`).join('')||'<option>Basra</option>'}</select>
           </div>
+          <div class="form-group"><label>Warehouse</label>
+            <input type="text" id="st-warehouse" placeholder="اسم المخزن"
+              style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:12px;font-size:13px;font-family:inherit;outline:none">
+          </div>
           <div class="form-group"><label>Line</label>
             <select id="st-line" onchange="renderStockGrid()">
               <option value="all">All Lines</option>
@@ -1392,6 +1396,9 @@ function renderStock(el){
         </div>
         <input type="text" id="st-search" placeholder="🔍 Search product..." oninput="filterStock()"
           style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:9px 14px;border-radius:10px;font-size:13px;font-family:inherit;outline:none;margin-bottom:10px">
+        <div id="st-warn" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:8px 14px;font-size:12px;color:var(--warn);margin-bottom:10px">
+          ⚠ ادخل اسم المخزن حتى تحفظ الأرصدة بشكل منفصل لكل مخزن
+        </div>
         <button class="btn btn-primary btn-sm" onclick="saveStockGrid()" style="margin-bottom:12px">💾 Save & Calculate</button>
         <div class="table-wrap">
           <table>
@@ -1413,28 +1420,37 @@ function renderStock(el){
 }
 
 function renderStockGrid(){
-  const year  = document.getElementById('st-year')?.value;
-  const month = document.getElementById('st-month')?.value;
-  const area  = document.getElementById('st-area')?.value||'Basra';
-  const line  = document.getElementById('st-line')?.value||'all';
+  const year      = document.getElementById('st-year')?.value;
+  const month     = document.getElementById('st-month')?.value;
+  const area      = document.getElementById('st-area')?.value||'Basra';
+  const warehouse = document.getElementById('st-warehouse')?.value.trim()||'';
+  const line      = document.getElementById('st-line')?.value||'all';
   if(!year||!month) return;
 
-  const prods   = DB.get('products').filter(p=>line==='all'||p.line===line);
-  const ps      = DB.getObj('primarySales');
-  const stock   = DB.getObj('stockEntry'); // {year__product__area__month: {open, close}}
-  const tbody   = document.getElementById('st-tbody');
+  const prods = DB.get('products').filter(p=>line==='all'||p.line===line);
+  const ps    = DB.getObj('primarySales');
+  const stock = DB.getObj('stockEntry');
+  const tbody = document.getElementById('st-tbody');
   if(!tbody) return;
+
+  // عرض تحذير لو ما في مخزن
+  const warnEl = document.getElementById('st-warn');
+  if(warnEl) warnEl.style.display = warehouse ? 'none' : 'block';
 
   tbody.innerHTML = prods.map(p=>{
     const psKey    = `${year}__${p.name}__${area}__${month}`;
     const primary  = Number(ps[psKey]||0);
-    const stKey    = `${year}__${p.name}__${area}__${month}`;
+    // الـ key يتضمن المخزن
+    const stKey    = warehouse
+      ? `${year}__${p.name}__${area}__${month}__${warehouse}`
+      : `${year}__${p.name}__${area}__${month}`;
     const saved    = stock[stKey]||{open:'',close:''};
-    const secondary = saved.open!==''&&saved.close!==''
-      ? Math.max(0, Number(saved.open)+primary-Number(saved.close))
-      : '—';
+    const open     = saved.open!==''?Number(saved.open):0;
+    const close    = saved.close!==''?Number(saved.close):0;
+    const secondary= saved.open!==''&&saved.close!==''
+      ? Math.max(0, open + primary - close) : '—';
 
-    return `<tr data-key="${stKey}">
+    return `<tr data-key="${stKey}" data-pskey="${psKey}">
       <td style="text-align:right;font-weight:600">
         <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${lc(p.line)};margin-left:6px"></span>${p.name}
       </td>
@@ -1442,27 +1458,26 @@ function renderStockGrid(){
       <td>
         <input type="number" class="st-open" data-key="${stKey}" value="${saved.open}" min="0"
           style="width:90px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:8px;font-size:12px;text-align:center;font-family:inherit;outline:none"
-          placeholder="0" oninput="calcSecondary(this,'${stKey}')">
+          placeholder="0" oninput="calcSecondary(this,'${stKey}','${psKey}')">
       </td>
       <td style="font-weight:600;color:var(--muted)">${fmt(primary)}</td>
       <td>
         <input type="number" class="st-close" data-key="${stKey}" value="${saved.close}" min="0"
           style="width:90px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:8px;font-size:12px;text-align:center;font-family:inherit;outline:none"
-          placeholder="0" oninput="calcSecondary(this,'${stKey}')">
+          placeholder="0" oninput="calcSecondary(this,'${stKey}','${psKey}')">
       </td>
-      <td id="sec-${stKey.replace(/__/g,'_')}" style="color:var(--accent2);font-weight:700;font-size:14px">${secondary==='—'?'—':fmt(secondary)}</td>
+      <td id="sec-${stKey.replace(/[^a-zA-Z0-9]/g,'_')}" style="color:var(--accent2);font-weight:700;font-size:14px">${secondary==='—'?'—':fmt(secondary)}</td>
     </tr>`;
   }).join('');
 }
 
-function calcSecondary(inp, stKey){
+function calcSecondary(inp, stKey, psKey){
   const row    = inp.closest('tr');
-  const open   = Number(row.querySelector('.st-open')?.value||'');
-  const close  = Number(row.querySelector('.st-close')?.value||'');
-  const psKey  = stKey;
+  const open   = Number(row.querySelector('.st-open')?.value||0);
+  const close  = Number(row.querySelector('.st-close')?.value||0);
   const ps     = DB.getObj('primarySales');
   const primary= Number(ps[psKey]||0);
-  const safeId = stKey.replace(/__/g,'_');
+  const safeId = stKey.replace(/[^a-zA-Z0-9]/g,'_');
   const el     = document.getElementById(`sec-${safeId}`);
   if(el && inp.value!==''){
     const sec = Math.max(0, open + primary - close);
@@ -1479,30 +1494,69 @@ function filterStock(){
 }
 
 function saveStockGrid(){
-  const stock  = DB.getObj('stockEntry');
-  const wf     = DB.getObj('warehouseFlow');
+  const stock = DB.getObj('stockEntry');
+  const wf    = DB.getObj('warehouseFlow');
+  const ps    = DB.getObj('primarySales');
+  const year  = document.getElementById('st-year')?.value;
+  const month = document.getElementById('st-month')?.value;
+  const area  = document.getElementById('st-area')?.value||'Basra';
+  const wh    = document.getElementById('st-warehouse')?.value.trim()||'';
+
+  const entries = [];
 
   document.querySelectorAll('#st-tbody tr').forEach(row=>{
-    const key   = row.dataset.key;
-    if(!key) return;
+    const stKey = row.dataset.key;
+    const psKey = row.dataset.pskey;
+    if(!stKey) return;
     const open  = row.querySelector('.st-open')?.value;
     const close = row.querySelector('.st-close')?.value;
     if(open===''&&close==='') return;
 
-    // حفظ الأرصدة
-    stock[key] = {open:Number(open||0), close:Number(close||0)};
+    const primary  = Number(ps[psKey]||0);
+    const secondary= Math.max(0, Number(open||0) + primary - Number(close||0));
 
-    // حساب Secondary وحفظه في warehouseFlow
-    const ps      = DB.getObj('primarySales');
-    const primary = Number(ps[key]||0);
-    const sec     = Math.max(0, Number(open||0) + primary - Number(close||0));
-    if(sec>0) wf[key]=sec;
-    else delete wf[key];
+    // حفظ localStorage
+    stock[stKey] = {open:Number(open||0), close:Number(close||0)};
+
+    // حساب Secondary الكلي من كل المخازن
+    const allKeys = Object.keys({...stock, [stKey]:{open:Number(open||0),close:Number(close||0)}})
+      .filter(k => k.startsWith(psKey+'__')||k===psKey);
+    let totalSec = 0;
+    allKeys.forEach(k=>{
+      const s=stock[k]||{open:0,close:0};
+      totalSec += Math.max(0, Number(s.open||0) + primary - Number(s.close||0));
+    });
+    if(totalSec>0) wf[psKey]=totalSec; else delete wf[psKey];
+
+    // تجهيز للإرسال للشيت
+    const productName = row.querySelector('td')?.textContent?.trim().replace(/^\W+/,'').trim()||'';
+    entries.push({
+      year, month, area,
+      warehouse: wh,
+      product:   productName,
+      line:      row.querySelector('span[style*="border-radius"]')?.textContent||'',
+      opening:   Number(open||0),
+      closing:   Number(close||0),
+      primary,
+      secondary,
+    });
   });
 
   DB.setObj('stockEntry', stock);
   DB.setObj('warehouseFlow', wf);
-  toast('✓ Saved — Secondary Sales updated');
+
+  // إرسال للشيت
+  if(entries.length){
+    fetch(SHEETS_URL, {
+      method:'POST',
+      body: JSON.stringify({action:'saveStock', entries}),
+    }).then(r=>r.json()).then(d=>{
+      if(d.success) toast(`✓ Saved — ${d.rowsAdded} added, ${d.rowsUpdated} updated`);
+      else toast('⚠ Sheets error: '+d.error);
+    }).catch(()=>toast('✓ Saved locally (Sheets offline)'));
+  }
+
+  toast('✓ Saved — Secondary updated');
   renderStockGrid();
 }
 function renderTargets(el){
