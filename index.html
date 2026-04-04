@@ -1216,14 +1216,16 @@ function applyOrderFilters(){
   `;
 
   const container=document.getElementById('ord-list');
-  if(!filtered.length){container.innerHTML='<div class="empty">لا توجد أوردرات</div>';return;}
+  if(!filtered.length){container.innerHTML='<div class="empty">No orders found</div>';return;}
 
-  // لو صيدلية واحدة مختارة — عرض جدول موحد
-  if(phF){
+  // جدول موحد لما تختار صيدلية أو مخزن
+  if(phF || warehouseF){
+    const label = phF || warehouseF;
+    const icon  = phF ? '🏪' : '🏭';
     const allItems=[];
     filtered.forEach(o=>{
       o.items.forEach(i=>{
-        allItems.push({...i, date:o.date, rep:o.rep, warehouse:o.warehouse});
+        allItems.push({...i, date:o.date, rep:o.rep, pharmacy:o.pharmacy, warehouse:o.warehouse});
       });
     });
     const totalOrd=allItems.reduce((s,i)=>s+(i.qty*i.price),0);
@@ -1232,8 +1234,8 @@ function applyOrderFilters(){
     container.innerHTML=`
       <div class="card fade-up">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-          <h2 style="margin:0">🏪 ${phF}</h2>
-          <div style="display:flex;gap:12px;font-size:12px">
+          <h2 style="margin:0">${icon} ${label}</h2>
+          <div style="display:flex;gap:14px;font-size:12px;flex-wrap:wrap">
             <span style="color:var(--accent2)">Order Value: <strong>${fmtV(totalOrd)}</strong></span>
             <span style="color:var(--warn)">Bonus: <strong>${fmtV(totalBon)}</strong></span>
             <span style="color:#fff;font-weight:700">Total: ${fmtV(totalOrd+totalBon)}</span>
@@ -1243,9 +1245,11 @@ function applyOrderFilters(){
           <table>
             <thead><tr>
               <th>Date</th>
+              ${!phF?'<th style="text-align:right">Pharmacy</th>':''}
               <th style="text-align:right">Product</th>
               <th>Line</th>
               <th>Rep</th>
+              ${!warehouseF?'<th>Warehouse</th>':''}
               <th>Qty</th>
               <th>Price</th>
               <th>Order Value</th>
@@ -1260,9 +1264,11 @@ function applyOrderFilters(){
                 const iBon=i.bonusQty*i.price;
                 return `<tr>
                   <td style="color:var(--muted);white-space:nowrap">${i.date}</td>
+                  ${!phF?`<td style="text-align:right;font-weight:600;white-space:nowrap">${i.pharmacy}</td>`:''}
                   <td style="text-align:right;font-weight:600;white-space:nowrap">${i.product}</td>
                   <td>${i.line?`<span style="background:${lc(i.line)}18;color:${lc(i.line)};border-radius:999px;padding:2px 7px;font-size:10px;font-weight:600">${i.line}</span>`:'-'}</td>
                   <td style="color:var(--muted);font-size:11px">${i.rep||'—'}</td>
+                  ${!warehouseF?`<td style="color:var(--muted);font-size:11px">${i.warehouse||'—'}</td>`:''}
                   <td style="font-weight:700">${fmt(i.qty)}</td>
                   <td>${fmtV(i.price)}</td>
                   <td style="color:var(--accent2);font-weight:700">${fmtV(iOrd)}</td>
@@ -1273,7 +1279,7 @@ function applyOrderFilters(){
                 </tr>`;
               }).join('')}
               <tr style="background:rgba(255,255,255,.06);font-weight:700">
-                <td colspan="6" style="text-align:right;color:var(--muted)">Total</td>
+                <td colspan="${phF&&warehouseF?4:5}" style="text-align:right;color:var(--muted)">Total</td>
                 <td style="color:var(--accent2)">${fmtV(totalOrd)}</td>
                 <td></td>
                 <td style="color:var(--warn)">${fmt(allItems.reduce((s,i)=>s+i.bonusQty,0))}</td>
