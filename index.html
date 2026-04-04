@@ -1739,6 +1739,22 @@ function renderPerformance(el){
 /* ══════════════════════════════
    INIT
 ══════════════════════════════ */
+// Seed default warehouses if empty
+if(!(DB.get('warehouses')||[]).length){
+  DB.set('warehouses',[
+    // مجموعة سيادة
+    {name:'سيادة',    type:'branch', group:'سيادة Group', area:'Basra'},
+    {name:'خضراء',    type:'branch', group:'سيادة Group', area:'Basra'},
+    {name:'لافندر',   type:'branch', group:'سيادة Group', area:'Basra'},
+    // مستقلة
+    {name:'منهل',     type:'standalone', group:'', area:'Basra'},
+    {name:'اندلس',    type:'standalone', group:'', area:'Basra'},
+    {name:'ساوة',     type:'standalone', group:'', area:'Basra'},
+    {name:'لافقدر',   type:'standalone', group:'', area:'Basra'},
+    {name:'ركن الرافدين', type:'standalone', group:'', area:'Basra'},
+  ]);
+}
+
 navigate('dashboard', document.querySelector('.nav-link.active'));
 </script>
 </body>
