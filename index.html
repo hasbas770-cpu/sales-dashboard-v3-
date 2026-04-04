@@ -418,6 +418,7 @@ tbody tr:hover{background:rgba(79,142,247,.04)}
       <div class="sub-menu" id="menu-sales">
         <button class="sub-link" onclick="navigate('primary',this)">Primary Sales</button>
         <button class="sub-link" onclick="navigate('secondary',this)">Secondary Sales</button>
+        <button class="sub-link" onclick="navigate('stock',this)">Stock Entry</button>
         <button class="sub-link" onclick="navigate('orders',this)">Pharmacy Orders</button>
       </div>
     </div>
@@ -527,7 +528,7 @@ const pages={
   primary:    {title:'Primary Sales',sub:'مبيعات المستودع',render:renderPrimary},
   secondary:  {title:'Secondary Sales',sub:'مبيعات الصيدليات الكلية',render:renderSecondary},
   orders:     {title:'Pharmacy Orders',sub:'أوردرات صيدليات المجمعات',render:renderOrders},
-  targets:    {title:'الأهداف',sub:'إدارة الأهداف السنوية',render:renderTargets},
+  stock:      {title:'Stock Entry',sub:'إدخال أرصدة المخازن — يحسب Secondary تلقائياً',render:renderStock},
   performance:{title:'الأداء',sub:'تحليل أداء الفريق',render:renderPerformance},
 };
 
@@ -1360,8 +1361,150 @@ function clearOrdFilters(){
 }
 
 /* ══════════════════════════════════════════════
-   PAGE: TARGETS
+   PAGE: STOCK ENTRY
 ══════════════════════════════════════════════ */
+function renderStock(el){
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const cur=new Date();
+  el.innerHTML=`
+    <div class="fade-up">
+      <div class="card">
+        <h2>📦 Stock Entry</h2>
+        <p style="color:var(--muted);font-size:12px;margin-bottom:14px">
+          Secondary = Opening Stock + Primary Sales − Closing Stock
+        </p>
+        <div class="form-grid" style="margin-bottom:12px">
+          <div class="form-group"><label>Year</label>
+            <select id="st-year" onchange="renderStockGrid()">${[2024,2025,2026,2027,2028].map(y=>`<option${y===cur.getFullYear()?' selected':''}>${y}</option>`).join('')}</select>
+          </div>
+          <div class="form-group"><label>Month</label>
+            <select id="st-month" onchange="renderStockGrid()">${months.map((m,i)=>`<option value="${i+1}"${i===cur.getMonth()?' selected':''}>${m}</option>`).join('')}</select>
+          </div>
+          <div class="form-group"><label>Region</label>
+            <select id="st-area" onchange="renderStockGrid()">${DB.get('areas').map(a=>`<option>${a}</option>`).join('')||'<option>Basra</option>'}</select>
+          </div>
+          <div class="form-group"><label>Line</label>
+            <select id="st-line" onchange="renderStockGrid()">
+              <option value="all">All Lines</option>
+              <option>Derma</option><option>Optha</option><option>General Line</option><option>CM Line</option>
+            </select>
+          </div>
+        </div>
+        <input type="text" id="st-search" placeholder="🔍 Search product..." oninput="filterStock()"
+          style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:9px 14px;border-radius:10px;font-size:13px;font-family:inherit;outline:none;margin-bottom:10px">
+        <button class="btn btn-primary btn-sm" onclick="saveStockGrid()" style="margin-bottom:12px">💾 Save & Calculate</button>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th style="text-align:right">Product</th>
+              <th>Line</th>
+              <th>Opening Stock</th>
+              <th>Primary Sales</th>
+              <th>Closing Stock</th>
+              <th style="color:var(--accent2)">Secondary (Auto)</th>
+            </tr></thead>
+            <tbody id="st-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+  renderStockGrid();
+}
+
+function renderStockGrid(){
+  const year  = document.getElementById('st-year')?.value;
+  const month = document.getElementById('st-month')?.value;
+  const area  = document.getElementById('st-area')?.value||'Basra';
+  const line  = document.getElementById('st-line')?.value||'all';
+  if(!year||!month) return;
+
+  const prods   = DB.get('products').filter(p=>line==='all'||p.line===line);
+  const ps      = DB.getObj('primarySales');
+  const stock   = DB.getObj('stockEntry'); // {year__product__area__month: {open, close}}
+  const tbody   = document.getElementById('st-tbody');
+  if(!tbody) return;
+
+  tbody.innerHTML = prods.map(p=>{
+    const psKey    = `${year}__${p.name}__${area}__${month}`;
+    const primary  = Number(ps[psKey]||0);
+    const stKey    = `${year}__${p.name}__${area}__${month}`;
+    const saved    = stock[stKey]||{open:'',close:''};
+    const secondary = saved.open!==''&&saved.close!==''
+      ? Math.max(0, Number(saved.open)+primary-Number(saved.close))
+      : '—';
+
+    return `<tr data-key="${stKey}">
+      <td style="text-align:right;font-weight:600">
+        <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${lc(p.line)};margin-left:6px"></span>${p.name}
+      </td>
+      <td><span style="background:${lc(p.line)}18;color:${lc(p.line)};border-radius:999px;padding:2px 7px;font-size:10px;font-weight:600">${p.line}</span></td>
+      <td>
+        <input type="number" class="st-open" data-key="${stKey}" value="${saved.open}" min="0"
+          style="width:90px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:8px;font-size:12px;text-align:center;font-family:inherit;outline:none"
+          placeholder="0" oninput="calcSecondary(this,'${stKey}')">
+      </td>
+      <td style="font-weight:600;color:var(--muted)">${fmt(primary)}</td>
+      <td>
+        <input type="number" class="st-close" data-key="${stKey}" value="${saved.close}" min="0"
+          style="width:90px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:8px;font-size:12px;text-align:center;font-family:inherit;outline:none"
+          placeholder="0" oninput="calcSecondary(this,'${stKey}')">
+      </td>
+      <td id="sec-${stKey.replace(/__/g,'_')}" style="color:var(--accent2);font-weight:700;font-size:14px">${secondary==='—'?'—':fmt(secondary)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function calcSecondary(inp, stKey){
+  const row    = inp.closest('tr');
+  const open   = Number(row.querySelector('.st-open')?.value||'');
+  const close  = Number(row.querySelector('.st-close')?.value||'');
+  const psKey  = stKey;
+  const ps     = DB.getObj('primarySales');
+  const primary= Number(ps[psKey]||0);
+  const safeId = stKey.replace(/__/g,'_');
+  const el     = document.getElementById(`sec-${safeId}`);
+  if(el && inp.value!==''){
+    const sec = Math.max(0, open + primary - close);
+    el.textContent = fmt(sec);
+    el.style.color = sec>0 ? 'var(--accent2)' : 'var(--muted)';
+  }
+}
+
+function filterStock(){
+  const q=document.getElementById('st-search')?.value.toLowerCase()||'';
+  document.querySelectorAll('#st-tbody tr').forEach(row=>{
+    row.style.display=row.querySelector('td')?.textContent.toLowerCase().includes(q)?'':'none';
+  });
+}
+
+function saveStockGrid(){
+  const stock  = DB.getObj('stockEntry');
+  const wf     = DB.getObj('warehouseFlow');
+
+  document.querySelectorAll('#st-tbody tr').forEach(row=>{
+    const key   = row.dataset.key;
+    if(!key) return;
+    const open  = row.querySelector('.st-open')?.value;
+    const close = row.querySelector('.st-close')?.value;
+    if(open===''&&close==='') return;
+
+    // حفظ الأرصدة
+    stock[key] = {open:Number(open||0), close:Number(close||0)};
+
+    // حساب Secondary وحفظه في warehouseFlow
+    const ps      = DB.getObj('primarySales');
+    const primary = Number(ps[key]||0);
+    const sec     = Math.max(0, Number(open||0) + primary - Number(close||0));
+    if(sec>0) wf[key]=sec;
+    else delete wf[key];
+  });
+
+  DB.setObj('stockEntry', stock);
+  DB.setObj('warehouseFlow', wf);
+  toast('✓ Saved — Secondary Sales updated');
+  renderStockGrid();
+}
 function renderTargets(el){
   el.innerHTML=`<div class="fade-up"><div class="card"><h2>🎯 الأهداف</h2><p style="color:var(--muted)">قريباً — ستُربط بصفحة الأهداف التفصيلية</p></div></div>`;
 }
