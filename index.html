@@ -1103,21 +1103,45 @@ function renderOrders(el){
   el.innerHTML=`
     <div class="fade-up">
       <div class="stats-row" id="ord-stats"></div>
-      <div class="filter-bar">
-        <select id="f-rep" onchange="applyOrderFilters()"><option value="">All Reps</option></select>
-        <select id="f-ph" onchange="applyOrderFilters()"><option value="">All Pharmacies</option></select>
-        <select id="f-line" onchange="applyOrderFilters()">
-          <option value="">All Lines</option>
-          <option>Derma</option><option>Optha</option><option>General Line</option><option>CM Line</option>
-        </select>
-        <div style="display:flex;align-items:center;gap:6px">
-          <input type="date" id="f-date-from" onchange="applyOrderFilters()"
-            style="background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:10px;font-size:12px;font-family:inherit;outline:none">
-          <span style="color:var(--muted);font-size:12px">→</span>
-          <input type="date" id="f-date-to" onchange="applyOrderFilters()"
-            style="background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:10px;font-size:12px;font-family:inherit;outline:none">
+      <div class="card fade-up" style="margin-bottom:14px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:14px">
+          <div class="form-group"><label>From</label>
+            <input type="date" id="f-date-from" style="background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none;width:100%">
+          </div>
+          <div class="form-group"><label>To</label>
+            <input type="date" id="f-date-to" style="background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none;width:100%">
+          </div>
+          <div class="form-group"><label>Rep</label>
+            <select id="f-rep" style="background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none;width:100%">
+              <option value="">All Reps</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Pharmacy</label>
+            <select id="f-ph" style="background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none;width:100%">
+              <option value="">All Pharmacies</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Line</label>
+            <select id="f-line" style="background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none;width:100%">
+              <option value="">All Lines</option>
+              <option>Derma</option><option>Optha</option><option>General Line</option><option>CM Line</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Region</label>
+            <select id="f-region" style="background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none;width:100%">
+              <option value="">All Regions</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Warehouse</label>
+            <select id="f-warehouse" style="background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none;width:100%">
+              <option value="">All Warehouses</option>
+            </select>
+          </div>
         </div>
-        <button class="btn btn-ghost btn-sm" onclick="clearOrdFilters()">✕ Clear</button>
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+          <button class="btn btn-ghost btn-sm" onclick="clearOrdFilters()">Clear</button>
+          <button class="btn btn-primary" onclick="applyOrderFilters()">Apply Filters</button>
+        </div>
       </div>
       <div id="ord-list"><div class="loader"><div class="spinner"></div><span style="color:var(--muted);font-size:12px;margin-top:8px">جاري تحميل الأوردرات...</span></div></div>
     </div>
@@ -1146,26 +1170,34 @@ function loadOrders(){
     // Populate filters
     const reps=[...new Set(allOrders.map(o=>o.rep).filter(Boolean))];
     const phs=[...new Set(allOrders.map(o=>o.pharmacy).filter(Boolean))];
+    const warehouses=[...new Set(allOrders.map(o=>o.warehouse).filter(Boolean))];
+    const regions=DB.get('areas');
+
     document.getElementById('f-rep').innerHTML=`<option value="">All Reps</option>`+reps.map(r=>`<option>${r}</option>`).join('');
     document.getElementById('f-ph').innerHTML=`<option value="">All Pharmacies</option>`+phs.map(p=>`<option>${p}</option>`).join('');
+    document.getElementById('f-warehouse').innerHTML=`<option value="">All Warehouses</option>`+warehouses.map(w=>`<option>${w}</option>`).join('');
+    document.getElementById('f-region').innerHTML=`<option value="">All Regions</option>`+regions.map(r=>`<option>${r}</option>`).join('');
 
     applyOrderFilters();
   });
 }
 
 function applyOrderFilters(){
-  const repF   = document.getElementById('f-rep')?.value||'';
-  const phF    = document.getElementById('f-ph')?.value||'';
-  const lineF  = document.getElementById('f-line')?.value||'';
-  const dateFrom = document.getElementById('f-date-from')?.value||'';
-  const dateTo   = document.getElementById('f-date-to')?.value||'';
+  const repF      = document.getElementById('f-rep')?.value||'';
+  const phF       = document.getElementById('f-ph')?.value||'';
+  const lineF     = document.getElementById('f-line')?.value||'';
+  const regionF   = document.getElementById('f-region')?.value||'';
+  const warehouseF= document.getElementById('f-warehouse')?.value||'';
+  const dateFrom  = document.getElementById('f-date-from')?.value||'';
+  const dateTo    = document.getElementById('f-date-to')?.value||'';
 
   const filtered=allOrders.filter(o=>{
-    if(repF   && o.rep!==repF) return false;
-    if(phF    && o.pharmacy!==phF) return false;
-    if(lineF  && !o.items.some(i=>i.line===lineF)) return false;
-    if(dateFrom && o.date < dateFrom) return false;
-    if(dateTo   && o.date > dateTo)   return false;
+    if(repF       && o.rep!==repF)           return false;
+    if(phF        && o.pharmacy!==phF)       return false;
+    if(lineF      && !o.items.some(i=>i.line===lineF)) return false;
+    if(warehouseF && o.warehouse!==warehouseF) return false;
+    if(dateFrom   && o.date < dateFrom)      return false;
+    if(dateTo     && o.date > dateTo)        return false;
     return true;
   });
 
@@ -1185,6 +1217,76 @@ function applyOrderFilters(){
 
   const container=document.getElementById('ord-list');
   if(!filtered.length){container.innerHTML='<div class="empty">لا توجد أوردرات</div>';return;}
+
+  // لو صيدلية واحدة مختارة — عرض جدول موحد
+  if(phF){
+    const allItems=[];
+    filtered.forEach(o=>{
+      o.items.forEach(i=>{
+        allItems.push({...i, date:o.date, rep:o.rep, warehouse:o.warehouse});
+      });
+    });
+    const totalOrd=allItems.reduce((s,i)=>s+(i.qty*i.price),0);
+    const totalBon=allItems.reduce((s,i)=>s+(i.bonusQty*i.price),0);
+
+    container.innerHTML=`
+      <div class="card fade-up">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+          <h2 style="margin:0">🏪 ${phF}</h2>
+          <div style="display:flex;gap:12px;font-size:12px">
+            <span style="color:var(--accent2)">Order Value: <strong>${fmtV(totalOrd)}</strong></span>
+            <span style="color:var(--warn)">Bonus: <strong>${fmtV(totalBon)}</strong></span>
+            <span style="color:#fff;font-weight:700">Total: ${fmtV(totalOrd+totalBon)}</span>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Date</th>
+              <th style="text-align:right">Product</th>
+              <th>Line</th>
+              <th>Rep</th>
+              <th>Qty</th>
+              <th>Price</th>
+              <th>Order Value</th>
+              <th>Bonus%</th>
+              <th>Bonus Qty</th>
+              <th>Bonus Value</th>
+              <th>Total</th>
+            </tr></thead>
+            <tbody>
+              ${allItems.map(i=>{
+                const iOrd=i.qty*i.price;
+                const iBon=i.bonusQty*i.price;
+                return `<tr>
+                  <td style="color:var(--muted);white-space:nowrap">${i.date}</td>
+                  <td style="text-align:right;font-weight:600;white-space:nowrap">${i.product}</td>
+                  <td>${i.line?`<span style="background:${lc(i.line)}18;color:${lc(i.line)};border-radius:999px;padding:2px 7px;font-size:10px;font-weight:600">${i.line}</span>`:'-'}</td>
+                  <td style="color:var(--muted);font-size:11px">${i.rep||'—'}</td>
+                  <td style="font-weight:700">${fmt(i.qty)}</td>
+                  <td>${fmtV(i.price)}</td>
+                  <td style="color:var(--accent2);font-weight:700">${fmtV(iOrd)}</td>
+                  <td style="color:var(--muted)">${i.bonusPct||0}%</td>
+                  <td style="color:var(--warn);font-weight:700">${fmt(i.bonusQty||0)}</td>
+                  <td style="color:var(--warn);font-weight:700">${fmtV(iBon)}</td>
+                  <td style="color:#fff;font-weight:700;background:rgba(255,255,255,.04)">${fmtV(iOrd+iBon)}</td>
+                </tr>`;
+              }).join('')}
+              <tr style="background:rgba(255,255,255,.06);font-weight:700">
+                <td colspan="6" style="text-align:right;color:var(--muted)">Total</td>
+                <td style="color:var(--accent2)">${fmtV(totalOrd)}</td>
+                <td></td>
+                <td style="color:var(--warn)">${fmt(allItems.reduce((s,i)=>s+i.bonusQty,0))}</td>
+                <td style="color:var(--warn)">${fmtV(totalBon)}</td>
+                <td style="color:#fff">${fmtV(totalOrd+totalBon)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+    return;
+  }
 
   container.innerHTML=filtered.map((o,oi)=>{
     const lines=[...new Set(o.items.map(i=>i.line).filter(Boolean))];
@@ -1245,7 +1347,9 @@ function applyOrderFilters(){
 }
 
 function clearOrdFilters(){
-  ['f-rep','f-ph','f-line','f-date-from','f-date-to'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['f-rep','f-ph','f-line','f-region','f-warehouse','f-date-from','f-date-to'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';
+  });
   applyOrderFilters();
 }
 
