@@ -404,6 +404,7 @@ tbody tr:hover{background:rgba(79,142,247,.04)}
         <button class="sub-link" onclick="navigate('pharmacies',this)">الصيدليات</button>
         <button class="sub-link" onclick="navigate('doctors',this)">الأطباء</button>
         <button class="sub-link" onclick="navigate('reps',this)">المندوبين</button>
+        <button class="sub-link" onclick="navigate('warehouses',this)">المخازن</button>
         <button class="sub-link" onclick="navigate('regions',this)">المناطق</button>
       </div>
     </div>
@@ -523,7 +524,7 @@ const pages={
   products:   {title:'المنتجات',sub:'إدارة قائمة المنتجات والأهداف',render:renderProducts},
   pharmacies: {title:'الصيدليات',sub:'إدارة صيدليات المجمعات',render:renderPharmacies},
   doctors:    {title:'الأطباء',sub:'إدارة قائمة الأطباء',render:renderDoctors},
-  reps:       {title:'المندوبين',sub:'فريق المبيعات',render:renderReps},
+  warehouses: {title:'المخازن',sub:'إدارة المخازن والمجموعات',render:renderWarehouses},
   regions:    {title:'المناطق',sub:'إدارة المناطق',render:renderRegions},
   primary:    {title:'Primary Sales',sub:'مبيعات المستودع',render:renderPrimary},
   secondary:  {title:'Secondary Sales',sub:'مبيعات الصيدليات الكلية',render:renderSecondary},
@@ -838,8 +839,160 @@ function deleteDoc(name){
 }
 
 /* ══════════════════════════════════════════════
-   PAGE: REPS
+   PAGE: WAREHOUSES
 ══════════════════════════════════════════════ */
+function renderWarehouses(el){
+  el.innerHTML=`
+    <div class="fade-up">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h2 style="margin:0">🏭 المخازن</h2>
+          <button class="btn btn-primary btn-sm" onclick="showWhForm()">➕ إضافة مخزن</button>
+        </div>
+
+        <!-- Form -->
+        <div id="wh-form" style="display:none;margin-bottom:16px;padding:14px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>اسم المخزن</label>
+              <input type="text" id="wh-name" placeholder="مثال: سيادة">
+            </div>
+            <div class="form-group">
+              <label>النوع</label>
+              <select id="wh-type" onchange="toggleWhGroup()">
+                <option value="standalone">مستقل</option>
+                <option value="branch">فرعي (ضمن مجموعة)</option>
+              </select>
+            </div>
+            <div class="form-group" id="wh-group-wrap" style="display:none">
+              <label>المجموعة</label>
+              <input type="text" id="wh-group" placeholder="اسم المجموعة (مثال: سيادة Group)">
+            </div>
+            <div class="form-group">
+              <label>المنطقة</label>
+              <select id="wh-area">${DB.get('areas').map(a=>`<option>${a}</option>`).join('')||'<option>Basra</option>'}</select>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-success btn-sm" onclick="addWarehouse()">✓ حفظ</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('wh-form').style.display='none'">إلغاء</button>
+          </div>
+        </div>
+
+        <!-- Groups -->
+        <div id="wh-list"></div>
+      </div>
+    </div>
+  `;
+  renderWhList();
+}
+
+function showWhForm(){
+  document.getElementById('wh-form').style.display='block';
+}
+
+function toggleWhGroup(){
+  const type=document.getElementById('wh-type').value;
+  document.getElementById('wh-group-wrap').style.display=type==='branch'?'block':'none';
+}
+
+function addWarehouse(){
+  const name =document.getElementById('wh-name').value.trim();
+  const type =document.getElementById('wh-type').value;
+  const group=document.getElementById('wh-group')?.value.trim()||'';
+  const area =document.getElementById('wh-area').value;
+  if(!name) return alert('ادخل اسم المخزن');
+
+  const warehouses=DB.get('warehouses')||[];
+  if(warehouses.find(w=>w.name===name)) return alert('المخزن موجود');
+  warehouses.push({name, type, group: type==='branch'?group:'', area});
+  DB.set('warehouses', warehouses);
+  document.getElementById('wh-form').style.display='none';
+  document.getElementById('wh-name').value='';
+  renderWhList();
+  toast('✓ تم الحفظ');
+}
+
+function deleteWarehouse(i){
+  const warehouses=DB.get('warehouses')||[];
+  if(!confirm(`حذف ${warehouses[i].name}؟`)) return;
+  warehouses.splice(i,1);
+  DB.set('warehouses', warehouses);
+  renderWhList();
+}
+
+function renderWhList(){
+  const warehouses=DB.get('warehouses')||[];
+  const container=document.getElementById('wh-list');
+  if(!warehouses.length){
+    container.innerHTML=`<div class="empty">لا توجد مخازن — أضف مخزناً جديداً</div>`;
+    return;
+  }
+
+  // تجميع المخازن
+  const groups={};
+  const standalone=[];
+
+  warehouses.forEach((w,i)=>{
+    if(w.type==='branch' && w.group){
+      if(!groups[w.group]) groups[w.group]=[];
+      groups[w.group].push({...w, idx:i});
+    } else {
+      standalone.push({...w, idx:i});
+    }
+  });
+
+  let html='';
+
+  // المجموعات
+  Object.entries(groups).forEach(([groupName, members])=>{
+    const totalMembers=members.length;
+    html+=`
+      <div style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="font-size:12px;font-weight:700;color:var(--accent)">📦 ${groupName}</span>
+          <span style="font-size:10px;color:var(--muted);background:rgba(79,142,247,.1);padding:2px 8px;border-radius:999px">${totalMembers} مخازن</span>
+        </div>
+        <div style="padding-right:16px;border-right:2px solid rgba(79,142,247,.3)">
+          ${members.map(w=>`
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;margin-bottom:6px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:13px">🏭</span>
+                <span style="font-weight:600;font-size:13px">${w.name}</span>
+                <span style="font-size:10px;color:var(--muted)">${w.area||''}</span>
+              </div>
+              <button class="btn btn-danger btn-sm" onclick="deleteWarehouse(${w.idx})">🗑</button>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  });
+
+  // المستقلة
+  if(standalone.length){
+    html+=`
+      <div style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="font-size:12px;font-weight:700;color:var(--accent2)">🏬 مخازن مستقلة</span>
+          <span style="font-size:10px;color:var(--muted);background:rgba(52,211,153,.1);padding:2px 8px;border-radius:999px">${standalone.length} مخازن</span>
+        </div>
+        ${standalone.map(w=>`
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;margin-bottom:6px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:13px">🏬</span>
+              <span style="font-weight:600;font-size:13px">${w.name}</span>
+              <span style="font-size:10px;color:var(--muted)">${w.area||''}</span>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="deleteWarehouse(${w.idx})">🗑</button>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  container.innerHTML=html;
+}
 function renderReps(el){
   el.innerHTML=`
     <div class="fade-up">
@@ -1384,8 +1537,10 @@ function renderStock(el){
             <select id="st-area" onchange="renderStockGrid()">${DB.get('areas').map(a=>`<option>${a}</option>`).join('')||'<option>Basra</option>'}</select>
           </div>
           <div class="form-group"><label>Warehouse</label>
-            <input type="text" id="st-warehouse" placeholder="اسم المخزن"
-              style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:12px;font-size:13px;font-family:inherit;outline:none">
+            <select id="st-warehouse" onchange="renderStockGrid()" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:12px;font-size:13px;font-family:inherit;outline:none">
+              <option value="">— اختر مخزن —</option>
+              ${(DB.get('warehouses')||[]).map(w=>`<option value="${w.name}">${w.name}${w.group?' ('+w.group+')':''}</option>`).join('')}
+            </select>
           </div>
           <div class="form-group"><label>Line</label>
             <select id="st-line" onchange="renderStockGrid()">
@@ -1518,14 +1673,25 @@ function saveStockGrid(){
     // حفظ localStorage
     stock[stKey] = {open:Number(open||0), close:Number(close||0)};
 
-    // حساب Secondary الكلي من كل المخازن
-    const allKeys = Object.keys({...stock, [stKey]:{open:Number(open||0),close:Number(close||0)}})
-      .filter(k => k.startsWith(psKey+'__')||k===psKey);
+    // حساب Secondary الكلي — يجمع كل المخازن في نفس المجموعة
+    const warehouses = DB.get('warehouses')||[];
+    const thisWh     = warehouses.find(w=>w.name===wh);
+    const group      = thisWh?.group||'';
+
+    // إيجاد كل المخازن في نفس المجموعة
+    const siblingWhs = group
+      ? warehouses.filter(w=>w.group===group).map(w=>w.name)
+      : [wh];
+
     let totalSec = 0;
-    allKeys.forEach(k=>{
-      const s=stock[k]||{open:0,close:0};
+    siblingWhs.forEach(whName=>{
+      const sKey = whName
+        ? `${year}__${row.querySelector('td')?.textContent?.trim().replace(/^\W+/,'').trim()||''}__${area}__${month}__${whName}`
+        : psKey;
+      const s = {...stock, [stKey]:{open:Number(open||0),close:Number(close||0)}}[sKey]||{open:0,close:0};
       totalSec += Math.max(0, Number(s.open||0) + primary - Number(s.close||0));
     });
+
     if(totalSec>0) wf[psKey]=totalSec; else delete wf[psKey];
 
     // تجهيز للإرسال للشيت
