@@ -326,85 +326,6 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
 
 <div id="toast">✓ Done</div>
 
-<!-- ═══════════════════ ROUTER ═══════════════════ -->
-<script>
-const PAGES = {
-  dashboard:   { title:'Dashboard',              sub:'نظرة عامة على الأداء',                  render: renderDashboard   },
-  products:    { title:'المنتجات',               sub:'إدارة قائمة المنتجات والأهداف',          render: renderProducts    },
-  pharmacies:  { title:'الصيدليات',              sub:'إدارة صيدليات المجمعات',                 render: renderPharmacies  },
-  doctors:     { title:'الأطباء',                sub:'إدارة قائمة الأطباء',                    render: renderDoctors     },
-  reps:        { title:'المندوبين',              sub:'فريق المبيعات',                           render: renderReps        },
-  warehouses:  { title:'المخازن',                sub:'إدارة المخازن والمجموعات',               render: renderWarehouses  },
-  regions:     { title:'المناطق',                sub:'إدارة المناطق',                           render: renderRegions     },
-  primary:     { title:'Primary Sales',          sub:'مبيعات المستودع الشهرية',                render: renderPrimary     },
-  secondary:   { title:'Secondary Sales',        sub:'مبيعات الصيدليات — محسوبة من Stock',    render: renderSecondary   },
-  stock:       { title:'Stock Entry',            sub:'إدخال أرصدة المخازن — يحسب Secondary',  render: renderStock       },
-  orders:      { title:'Pharmacy Orders',        sub:'أوردرات صيدليات المجمعات',               render: renderOrders      },
-  targets:     { title:'الأهداف',                sub:'إدارة الأهداف السنوية',                  render: el => el.innerHTML='<div class="fade-up"><div class="card"><h2>🎯 الأهداف</h2><p style="color:var(--muted)">قريباً</p></div></div>' },
-  performance: { title:'الأداء',                 sub:'تحليل أداء الفريق',                       render: el => el.innerHTML='<div class="fade-up"><div class="card"><h2>📊 الأداء</h2><p style="color:var(--muted)">قريباً</p></div></div>' },
-};
-
-function navigate(page, el) {
-  // Warehouse detail pages
-  if (page.startsWith('wh_group_')) {
-    const gName = decodeURIComponent(page.replace('wh_group_',''));
-    _setTopbar(gName, 'إجمالي المجموعة + تفاصيل الفروع');
-    _clearActive();
-    renderWhGroupDetail(document.getElementById('content'), gName);
-    if (window.innerWidth <= 900) closeSidebar();
-    return;
-  }
-  if (page.startsWith('wh_')) {
-    const wName = decodeURIComponent(page.replace('wh_',''));
-    _setTopbar(wName, 'تفاصيل المخزن — Stock + Sales + Forecast');
-    _clearActive();
-    renderWhDetail(document.getElementById('content'), wName);
-    if (window.innerWidth <= 900) closeSidebar();
-    return;
-  }
-
-  const p = PAGES[page];
-  if (!p) return;
-
-  _setTopbar(p.title, p.sub);
-  _clearActive();
-  if (el) el.classList.add('active');
-
-  const content = document.getElementById('content');
-  content.innerHTML = '';
-  p.render(content);
-
-  if (window.innerWidth <= 900) closeSidebar();
-}
-
-function _setTopbar(title, sub) {
-  document.getElementById('topbar-title').textContent = title;
-  document.getElementById('topbar-sub').textContent   = sub;
-}
-
-function _clearActive() {
-  document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.sub-link').forEach(b => b.classList.remove('active'));
-}
-
-function toggleMenu(id, btn) {
-  const menu   = document.getElementById(id);
-  const isOpen = menu.classList.contains('open');
-  document.querySelectorAll('.sub-menu').forEach(m => m.classList.remove('open'));
-  document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('open'));
-  if (!isOpen) { menu.classList.add('open'); btn.classList.add('open'); }
-}
-
-function openSidebar()  { document.getElementById('sidebar').classList.add('open');    document.getElementById('sidebar-overlay').classList.add('open'); }
-function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('open'); }
-
-/* ── Init ── */
-document.addEventListener('DOMContentLoaded', function() {
-  seedDefaults();
-  navigate('dashboard', document.querySelector('.nav-link.active'));
-});
-</script>
-
 <script>
 
 /* === JS/DB.JS === */
@@ -1951,6 +1872,84 @@ function clearOrdFilters() {
   applyOrderFilters();
 }
 
+
+/* === ROUTER === */
+
+const PAGES = {
+  dashboard:   { title:'Dashboard',              sub:'نظرة عامة على الأداء',                  render: renderDashboard   },
+  products:    { title:'المنتجات',               sub:'إدارة قائمة المنتجات والأهداف',          render: renderProducts    },
+  pharmacies:  { title:'الصيدليات',              sub:'إدارة صيدليات المجمعات',                 render: renderPharmacies  },
+  doctors:     { title:'الأطباء',                sub:'إدارة قائمة الأطباء',                    render: renderDoctors     },
+  reps:        { title:'المندوبين',              sub:'فريق المبيعات',                           render: renderReps        },
+  warehouses:  { title:'المخازن',                sub:'إدارة المخازن والمجموعات',               render: renderWarehouses  },
+  regions:     { title:'المناطق',                sub:'إدارة المناطق',                           render: renderRegions     },
+  primary:     { title:'Primary Sales',          sub:'مبيعات المستودع الشهرية',                render: renderPrimary     },
+  secondary:   { title:'Secondary Sales',        sub:'مبيعات الصيدليات — محسوبة من Stock',    render: renderSecondary   },
+  stock:       { title:'Stock Entry',            sub:'إدخال أرصدة المخازن — يحسب Secondary',  render: renderStock       },
+  orders:      { title:'Pharmacy Orders',        sub:'أوردرات صيدليات المجمعات',               render: renderOrders      },
+  targets:     { title:'الأهداف',                sub:'إدارة الأهداف السنوية',                  render: el => el.innerHTML='<div class="fade-up"><div class="card"><h2>🎯 الأهداف</h2><p style="color:var(--muted)">قريباً</p></div></div>' },
+  performance: { title:'الأداء',                 sub:'تحليل أداء الفريق',                       render: el => el.innerHTML='<div class="fade-up"><div class="card"><h2>📊 الأداء</h2><p style="color:var(--muted)">قريباً</p></div></div>' },
+};
+
+function navigate(page, el) {
+  // Warehouse detail pages
+  if (page.startsWith('wh_group_')) {
+    const gName = decodeURIComponent(page.replace('wh_group_',''));
+    _setTopbar(gName, 'إجمالي المجموعة + تفاصيل الفروع');
+    _clearActive();
+    renderWhGroupDetail(document.getElementById('content'), gName);
+    if (window.innerWidth <= 900) closeSidebar();
+    return;
+  }
+  if (page.startsWith('wh_')) {
+    const wName = decodeURIComponent(page.replace('wh_',''));
+    _setTopbar(wName, 'تفاصيل المخزن — Stock + Sales + Forecast');
+    _clearActive();
+    renderWhDetail(document.getElementById('content'), wName);
+    if (window.innerWidth <= 900) closeSidebar();
+    return;
+  }
+
+  const p = PAGES[page];
+  if (!p) return;
+
+  _setTopbar(p.title, p.sub);
+  _clearActive();
+  if (el) el.classList.add('active');
+
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+  p.render(content);
+
+  if (window.innerWidth <= 900) closeSidebar();
+}
+
+function _setTopbar(title, sub) {
+  document.getElementById('topbar-title').textContent = title;
+  document.getElementById('topbar-sub').textContent   = sub;
+}
+
+function _clearActive() {
+  document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.sub-link').forEach(b => b.classList.remove('active'));
+}
+
+function toggleMenu(id, btn) {
+  const menu   = document.getElementById(id);
+  const isOpen = menu.classList.contains('open');
+  document.querySelectorAll('.sub-menu').forEach(m => m.classList.remove('open'));
+  document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('open'));
+  if (!isOpen) { menu.classList.add('open'); btn.classList.add('open'); }
+}
+
+function openSidebar()  { document.getElementById('sidebar').classList.add('open');    document.getElementById('sidebar-overlay').classList.add('open'); }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('open'); }
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded', function() {
+  seedDefaults();
+  navigate('dashboard', document.querySelector('.nav-link.active'));
+});
 
 </script>
 </body>
