@@ -1,719 +1,48 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sales Dashboard — v3</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg:#080e1e;
-  --bg2:#0d1428;
-  --sidebar:#0c1226;
-  --sidebar-w:260px;
-  --surface:rgba(18,26,50,.9);
-  --surface2:rgba(26,38,68,.8);
-  --border:rgba(148,163,184,.12);
-  --border-strong:rgba(148,163,184,.22);
-  --accent:#4f8ef7;
-  --accent2:#34d399;
-  --accent3:#a78bfa;
-  --warn:#f59e0b;
-  --danger:#ef4444;
-  --text:#e5edf8;
-  --muted:#7489a8;
-  --radius:16px;
-  --shadow:0 8px 32px rgba(0,0,0,.32);
-  --grad-main:linear-gradient(135deg,#4f8ef7,#7c3aed);
-  --grad-green:linear-gradient(135deg,#059669,#34d399);
-  --grad-warn:linear-gradient(135deg,#d97706,#fbbf24);
-}
-
-*{box-sizing:border-box;margin:0;padding:0}
-body{
-  font-family:'IBM Plex Sans Arabic',sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  min-height:100vh;
-  display:flex;
-  overflow:hidden;
-}
-
-/* ═══ SIDEBAR ═══ */
-.sidebar{
-  width:var(--sidebar-w);
-  height:100vh;
-  background:var(--sidebar);
-  border-left:1px solid var(--border);
-  display:flex;
-  flex-direction:column;
-  flex-shrink:0;
-  position:fixed;
-  right:0;
-  top:0;
-  z-index:100;
-  overflow-y:auto;
-  overflow-x:hidden;
-}
-
-.sidebar-logo{
-  padding:20px 18px 16px;
-  border-bottom:1px solid var(--border);
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-
-.logo-icon{
-  width:40px;height:40px;
-  border-radius:12px;
-  background:var(--grad-main);
-  display:grid;place-items:center;
-  font-size:20px;
-  flex-shrink:0;
-  box-shadow:0 8px 20px rgba(79,142,247,.3);
-}
-
-.logo-text h2{font-size:15px;font-weight:700;color:#fff}
-.logo-text p{font-size:10px;color:var(--muted);margin-top:2px}
-
-.sidebar-nav{flex:1;padding:12px 10px;display:flex;flex-direction:column;gap:2px}
-
-.nav-item{
-  border-radius:12px;
-  overflow:hidden;
-}
-
-.nav-link{
-  display:flex;align-items:center;gap:10px;
-  padding:11px 12px;
-  border-radius:12px;
-  cursor:pointer;
-  font-size:13px;
-  font-weight:500;
-  color:var(--muted);
-  transition:all .2s ease;
-  border:none;background:none;
-  width:100%;text-align:right;
-  font-family:inherit;
-  text-decoration:none;
-}
-
-.nav-link:hover{background:rgba(255,255,255,.05);color:var(--text)}
-
-.nav-link.active{
-  background:rgba(79,142,247,.12);
-  color:var(--accent);
-  font-weight:600;
-}
-
-.nav-link .icon{
-  width:32px;height:32px;
-  border-radius:9px;
-  display:grid;place-items:center;
-  font-size:16px;
-  flex-shrink:0;
-  background:rgba(255,255,255,.04);
-  transition:all .2s;
-}
-
-.nav-link.active .icon{
-  background:rgba(79,142,247,.18);
-}
-
-.nav-link .arrow{
-  margin-right:auto;
-  font-size:10px;
-  transition:transform .2s;
-  color:var(--muted);
-}
-
-.nav-link.open .arrow{transform:rotate(90deg)}
-
-.sub-menu{
-  display:none;
-  padding:4px 0 4px 8px;
-}
-
-.sub-menu.open{display:block}
-
-.sub-link{
-  display:flex;align-items:center;gap:8px;
-  padding:9px 12px 9px 14px;
-  border-radius:10px;
-  cursor:pointer;
-  font-size:12px;
-  color:var(--muted);
-  transition:all .2s;
-  border:none;background:none;
-  width:100%;text-align:right;
-  font-family:inherit;
-}
-
-.sub-link:hover{background:rgba(255,255,255,.04);color:var(--text)}
-.sub-link.active{color:var(--accent2);font-weight:600}
-.sub-link::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;opacity:.5}
-.sub-link.active::before{opacity:1}
-
-.sidebar-footer{
-  padding:14px;
-  border-top:1px solid var(--border);
-}
-
-.user-chip{
-  display:flex;align-items:center;gap:10px;
-  padding:10px 12px;
-  background:rgba(255,255,255,.04);
-  border-radius:12px;
-  border:1px solid var(--border);
-}
-
-.user-avatar{
-  width:32px;height:32px;border-radius:50%;
-  background:var(--grad-main);
-  display:grid;place-items:center;
-  font-size:14px;flex-shrink:0;
-}
-
-.user-info p{font-size:12px;font-weight:600;color:var(--text)}
-.user-info span{font-size:10px;color:var(--muted)}
-
-/* ═══ MAIN ═══ */
-.main{
-  margin-right:var(--sidebar-w);
-  flex:1;
-  height:100vh;
-  overflow-y:auto;
-  display:flex;
-  flex-direction:column;
-}
-
-.topbar{
-  position:sticky;top:0;z-index:50;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:14px 20px;
-  background:rgba(8,14,30,.85);
-  backdrop-filter:blur(16px);
-  border-bottom:1px solid var(--border);
-  gap:12px;
-}
-
-.page-title{font-size:16px;font-weight:700;color:#fff}
-.page-subtitle{font-size:11px;color:var(--muted);margin-top:2px}
-
-.topbar-actions{display:flex;align-items:center;gap:10px}
-
-.topbar-btn{
-  padding:8px 14px;font-size:12px;font-family:inherit;
-  border-radius:999px;border:1px solid var(--border);
-  background:rgba(255,255,255,.04);color:var(--text);
-  cursor:pointer;transition:all .2s;
-  display:flex;align-items:center;gap:6px;
-}
-.topbar-btn:hover{border-color:var(--border-strong);background:rgba(255,255,255,.07)}
-.topbar-btn.primary{background:var(--grad-main);border-color:transparent;color:#fff;box-shadow:0 8px 20px rgba(79,142,247,.24)}
-
-.content{flex:1;padding:20px}
-
-/* ═══ PAGE VIEWS ═══ */
-.page{display:none}
-.page.active{display:block}
-
-/* ═══ CARDS ═══ */
-.card{
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  padding:18px;
-  margin-bottom:16px;
-  backdrop-filter:blur(14px);
-  box-shadow:var(--shadow);
-  position:relative;overflow:hidden;
-  transition:all .2s ease;
-}
-.card:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(0,0,0,.28)}
-.card::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);pointer-events:none}
-
-.card h2{font-size:14px;font-weight:700;color:#dbe7ff;margin-bottom:14px;display:flex;align-items:center;gap:8px}
-
-/* ═══ KPI GRID ═══ */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
-
-.kpi-card{
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  padding:16px;
-  backdrop-filter:blur(14px);
-  transition:all .2s;
-  cursor:default;
-}
-.kpi-card:hover{transform:translateY(-3px);border-color:var(--border-strong)}
-.kpi-label{font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:500}
-.kpi-value{font-size:24px;font-weight:700;color:#fff;letter-spacing:.3px}
-.kpi-sub{font-size:11px;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:4px}
-.kpi-up{color:var(--accent2)}.kpi-down{color:var(--danger)}
-
-/* ═══ TABLE ═══ */
-.table-wrap{overflow:auto;border:1px solid var(--border);border-radius:14px}
-table{width:100%;border-collapse:collapse;font-size:12px;min-width:600px}
-th,td{padding:10px 12px;text-align:center;border-bottom:1px solid var(--border)}
-th{background:rgba(255,255,255,.04);color:var(--muted);font-weight:600;position:sticky;top:0;z-index:1}
-tr:last-child td{border-bottom:none}
-tbody tr:hover{background:rgba(79,142,247,.04)}
-
-/* ═══ FORM ═══ */
-.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:14px}
-.form-group label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px}
-.form-group select,.form-group input,.form-group textarea{
-  width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);
-  color:var(--text);padding:11px 12px;border-radius:12px;font-size:13px;
-  font-family:inherit;outline:none;transition:all .18s;
-}
-.form-group select option{background:#0d1428;color:var(--text)}
-.form-group select:focus,.form-group input:focus{
-  border-color:var(--accent);background:rgba(255,255,255,.07);
-  box-shadow:0 0 0 3px rgba(79,142,247,.14);
-}
-
-/* ═══ BUTTONS ═══ */
-.btn{
-  display:inline-flex;align-items:center;gap:7px;
-  padding:10px 18px;font-size:13px;font-family:inherit;
-  border-radius:12px;border:none;cursor:pointer;font-weight:600;
-  transition:all .2s;text-decoration:none;
-}
-.btn:hover{transform:translateY(-2px)}.btn:active{transform:scale(.98)}
-.btn-primary{background:var(--grad-main);color:#fff;box-shadow:0 10px 22px rgba(79,142,247,.22)}
-.btn-success{background:var(--grad-green);color:#fff}
-.btn-danger{background:linear-gradient(135deg,#ef4444,#f87171);color:#fff;padding:6px 12px;font-size:11px}
-.btn-ghost{background:rgba(255,255,255,.04);color:var(--text);border:1px solid var(--border)}
-.btn-ghost:hover{background:rgba(255,255,255,.07);border-color:var(--border-strong)}
-.btn-sm{padding:7px 12px;font-size:11px}
-.btn-warn{background:var(--grad-warn);color:#000}
-
-/* ═══ STATS ═══ */
-.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
-.stat-mini{background:var(--surface);border:1px solid var(--border);border-radius:14px;
-  padding:14px;font-size:11px;color:var(--muted);transition:all .2s}
-.stat-mini:hover{transform:translateY(-2px)}
-.stat-mini span{color:#dbe7ff;font-weight:700;font-size:20px;display:block;margin-top:5px}
-
-/* ═══ FILTER BAR ═══ */
-.filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;
-  background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px}
-.filter-bar select,.filter-bar input{
-  background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);
-  padding:9px 12px;border-radius:10px;font-size:12px;font-family:inherit;outline:none;min-width:150px;
-}
-.filter-bar select option{background:#0d1428}
-
-/* ═══ CHIPS ═══ */
-.chip{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:999px;
-  padding:5px 11px;font-size:11px;display:inline-flex;align-items:center;gap:5px}
-.chip.blue{border-color:rgba(79,142,247,.3);color:#93c5fd;background:rgba(79,142,247,.08)}
-.chip.green{border-color:rgba(52,211,153,.25);color:#86efac;background:rgba(52,211,153,.08)}
-
-/* ═══ ORDER CARDS ═══ */
-.order-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;
-  margin-bottom:10px;overflow:hidden;transition:all .2s}
-.order-card:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.22)}
-.order-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;
-  cursor:pointer;gap:12px;transition:.15s}
-.order-head:hover{background:rgba(255,255,255,.03)}
-.order-info{display:flex;flex-wrap:wrap;gap:8px;align-items:center;flex:1}
-.pill{font-size:11px;color:var(--muted);background:rgba(255,255,255,.04);
-  padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.04)}
-.order-body{display:none;border-top:1px solid var(--border);padding:14px 16px;background:rgba(0,0,0,.1)}
-.order-body.open{display:block}
-
-/* ═══ EMPTY ═══ */
-.empty{color:var(--muted);font-size:13px;padding:40px 0;text-align:center;
-  background:var(--surface);border:1px dashed var(--border-strong);border-radius:16px}
-
-/* ═══ TOAST ═══ */
-#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(90px);
-  background:var(--grad-green);color:#fff;padding:12px 24px;border-radius:999px;
-  font-size:13px;font-weight:700;transition:transform .3s;z-index:999;
-  box-shadow:0 12px 28px rgba(16,185,129,.28)}
-#toast.show{transform:translateX(-50%) translateY(0)}
-
-/* ═══ LOADING ═══ */
-.loader{display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:60px 0;gap:16px}
-.spinner{width:44px;height:44px;border:4px solid rgba(79,142,247,.15);
-  border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
-
-/* ═══ ANIMATIONS ═══ */
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-.fade-up{animation:fadeUp .35s ease both}
-
-/* ═══ MOBILE ═══ */
-.sidebar-toggle{display:none}
-
-@media(max-width:900px){
-  .sidebar{transform:translateX(100%);transition:transform .3s ease}
-  .sidebar.open{transform:translateX(0)}
-  .main{margin-right:0}
-  .sidebar-toggle{
-    display:flex;align-items:center;justify-content:center;
-    width:40px;height:40px;border-radius:12px;
-    background:rgba(255,255,255,.06);border:1px solid var(--border);
-    cursor:pointer;font-size:18px;
-  }
-  .sidebar-overlay{
-    display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;
-  }
-  .sidebar-overlay.open{display:block}
-}
-</style>
-</head>
-<body>
-
-<!-- SIDEBAR -->
-<div class="sidebar" id="sidebar">
-  <div class="sidebar-logo">
-    <div class="logo-icon">📊</div>
-    <div class="logo-text">
-      <h2>Sales Dashboard</h2>
-      <p>Basra Region • v3</p>
-    </div>
-  </div>
-
-  <nav class="sidebar-nav">
-    <!-- Dashboard -->
-    <div class="nav-item">
-      <button class="nav-link active" onclick="navigate('dashboard',this)">
-        <div class="icon">📈</div>
-        <span>Dashboard</span>
-      </button>
-    </div>
-
-    <!-- Master Data -->
-    <div class="nav-item">
-      <button class="nav-link" onclick="toggleMenu('menu-master',this)">
-        <div class="icon">🗂</div>
-        <span>Master Data</span>
-        <span class="arrow">›</span>
-      </button>
-      <div class="sub-menu" id="menu-master">
-        <button class="sub-link" onclick="navigate('products',this)">المنتجات</button>
-        <button class="sub-link" onclick="navigate('pharmacies',this)">الصيدليات</button>
-        <button class="sub-link" onclick="navigate('doctors',this)">الأطباء</button>
-        <button class="sub-link" onclick="navigate('reps',this)">المندوبين</button>
-        <button class="sub-link" onclick="navigate('warehouses',this)">المخازن</button>
-        <button class="sub-link" onclick="navigate('regions',this)">المناطق</button>
-      </div>
-    </div>
-
-    <!-- Sales -->
-    <div class="nav-item">
-      <button class="nav-link" onclick="toggleMenu('menu-sales',this)">
-        <div class="icon">💰</div>
-        <span>Sales</span>
-        <span class="arrow">›</span>
-      </button>
-      <div class="sub-menu" id="menu-sales">
-        <button class="sub-link" onclick="navigate('primary',this)">Primary Sales</button>
-        <button class="sub-link" onclick="navigate('secondary',this)">Secondary Sales</button>
-        <button class="sub-link" onclick="navigate('stock',this)">Stock Entry</button>
-        <button class="sub-link" onclick="navigate('orders',this)">Pharmacy Orders</button>
-      </div>
-    </div>
-
-    <!-- Targets -->
-    <div class="nav-item">
-      <button class="nav-link" onclick="toggleMenu('menu-targets',this)">
-        <div class="icon">🎯</div>
-        <span>Targets & Performance</span>
-        <span class="arrow">›</span>
-      </button>
-      <div class="sub-menu" id="menu-targets">
-        <button class="sub-link" onclick="navigate('targets',this)">الأهداف</button>
-        <button class="sub-link" onclick="navigate('performance',this)">الأداء</button>
-      </div>
-    </div>
-  </nav>
-
-  <div class="sidebar-footer">
-    <div class="user-chip">
-      <div class="user-avatar">👤</div>
-      <div class="user-info">
-        <p>Area Manager</p>
-        <span>Basra Region</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- SIDEBAR OVERLAY (mobile) -->
-<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
-
-<!-- MAIN -->
-<div class="main">
-  <div class="topbar">
-    <div>
-      <div class="page-title" id="topbar-title">Dashboard</div>
-      <div class="page-subtitle" id="topbar-sub">نظرة عامة على الأداء</div>
-    </div>
-    <div class="topbar-actions">
-      <button class="topbar-btn sidebar-toggle" onclick="openSidebar()">☰</button>
-    </div>
-  </div>
-
-  <div class="content" id="content">
-    <!-- Pages render here -->
-  </div>
-</div>
-
-<div id="toast">✓ تم الحفظ</div>
-
-<script>
-/* ══════════════════════════════
-   STORAGE
-══════════════════════════════ */
-const DB={
-  get:k=>{try{return JSON.parse(localStorage.getItem(k))||[];}catch{return [];}},
-  getObj:k=>{try{return JSON.parse(localStorage.getItem(k))||{};}catch{return {};}},
-  set:(k,v)=>localStorage.setItem(k,JSON.stringify(v)),
-  setObj:(k,v)=>localStorage.setItem(k,JSON.stringify(v)),
-};
-
-const SHEETS_URL='https://script.google.com/macros/s/AKfycbw0aMQZrN7xu19d1_V0p9iCSMrTENUdmhC_qzmnVn3_fGha5ZN2ei4n71AZVmdvAJw3fQ/exec';
-
-/* ══════════════════════════════
-   HELPERS
-══════════════════════════════ */
-function fmt(n){return Number(n||0).toLocaleString('en');}
-function fmtV(n){return Number(n||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function lc(line){const m={Derma:'#4f8ef7',Optha:'#34d399','General Line':'#f59e0b','CM Line':'#a78bfa'};return m[line]||'#64748b';}
-
-function getLineByProduct(name){
-  name=String(name).toLowerCase();
-  if(['acretin','elica','fusibact','hi-quin','lamifen','lican','promax','surecure','elicasal'].some(k=>name.includes(k))) return 'Derma';
-  if(['arox','brimo','brofix','fluca','hyfresh','latano','loxtra','olopat','optidex','optiflox','optifresh','optilone','optipred','tymer','xola','xolamol'].some(k=>name.includes(k))) return 'Optha';
-  if(['azi-once','feroton','maxim','prima','fast-flam','relaxon','dompy','fixit','meva','zoron'].some(k=>name.includes(k))) return 'General Line';
-  if(['vittoria','dapazin','sitagen','sitavic','vildus','lintra'].some(k=>name.includes(k))) return 'CM Line';
-  return '';
-}
-
-function formatDate(d){
-  if(!d) return '—';
-  if(d.includes('GMT')||d.includes('00:00:00')){
-    try{const x=new Date(d);return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;}catch(e){return d;}
-  }
-  return d;
-}
-
-let toastTimer;
-function toast(msg){
-  const el=document.getElementById('toast');
-  el.textContent=msg;el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>el.classList.remove('show'),2500);
-}
-
-/* ══════════════════════════════
-   NAVIGATION
-══════════════════════════════ */
-const pages={
-  dashboard:  {title:'Dashboard',sub:'نظرة عامة على الأداء',render:renderDashboard},
-  products:   {title:'المنتجات',sub:'إدارة قائمة المنتجات والأهداف',render:renderProducts},
-  pharmacies: {title:'الصيدليات',sub:'إدارة صيدليات المجمعات',render:renderPharmacies},
-  doctors:    {title:'الأطباء',sub:'إدارة قائمة الأطباء',render:renderDoctors},
-  warehouses: {title:'المخازن',sub:'إدارة المخازن والمجموعات',render:renderWarehouses},
-  regions:    {title:'المناطق',sub:'إدارة المناطق',render:renderRegions},
-  primary:    {title:'Primary Sales',sub:'مبيعات المستودع',render:renderPrimary},
-  secondary:  {title:'Secondary Sales',sub:'مبيعات الصيدليات الكلية',render:renderSecondary},
-  orders:     {title:'Pharmacy Orders',sub:'أوردرات صيدليات المجمعات',render:renderOrders},
-  stock:      {title:'Stock Entry',sub:'إدخال أرصدة المخازن — يحسب Secondary تلقائياً',render:renderStock},
-  performance:{title:'الأداء',sub:'تحليل أداء الفريق',render:renderPerformance},
-};
-
-let currentPage='dashboard';
-
-function navigate(page,el){
-  currentPage=page;
-
-  // Warehouse detail pages
-  if(page.startsWith('wh_group_')){
-    const groupName=decodeURIComponent(page.replace('wh_group_',''));
-    document.getElementById('topbar-title').textContent=groupName;
-    document.getElementById('topbar-sub').textContent='إجمالي المجموعة + تفاصيل الفروع';
-    document.querySelectorAll('.nav-link').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.sub-link').forEach(b=>b.classList.remove('active'));
-    renderWhGroupDetail(document.getElementById('content'), groupName);
-    if(window.innerWidth<=900) closeSidebar();
-    return;
-  }
-  if(page.startsWith('wh_')){
-    const whName=decodeURIComponent(page.replace('wh_',''));
-    document.getElementById('topbar-title').textContent=whName;
-    document.getElementById('topbar-sub').textContent='تفاصيل المخزن — Stock + Sales + Forecast';
-    document.querySelectorAll('.nav-link').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.sub-link').forEach(b=>b.classList.remove('active'));
-    renderWhDetail(document.getElementById('content'), whName);
-    if(window.innerWidth<=900) closeSidebar();
-    return;
-  }
-  const p=pages[page];
-  if(!p) return;
-
-  // Update topbar
-  document.getElementById('topbar-title').textContent=p.title;
-  document.getElementById('topbar-sub').textContent=p.sub;
-
-  // Update nav active state
-  document.querySelectorAll('.nav-link').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.sub-link').forEach(b=>b.classList.remove('active'));
-  if(el) el.classList.add('active');
-
-  // Render page
-  const content=document.getElementById('content');
-  content.innerHTML='';
-  p.render(content);
-
-  // Close sidebar on mobile
-  if(window.innerWidth<=900) closeSidebar();
-}
-
-function toggleMenu(id,btn){
-  const menu=document.getElementById(id);
-  const isOpen=menu.classList.contains('open');
-  // Close all menus
-  document.querySelectorAll('.sub-menu').forEach(m=>m.classList.remove('open'));
-  document.querySelectorAll('.nav-link').forEach(b=>b.classList.remove('open'));
-  if(!isOpen){
-    menu.classList.add('open');
-    btn.classList.add('open');
-  }
-}
-
-function openSidebar(){
-  document.getElementById('sidebar').classList.add('open');
-  document.getElementById('sidebar-overlay').classList.add('open');
-}
-function closeSidebar(){
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sidebar-overlay').classList.remove('open');
-}
-
-/* ══════════════════════════════
-   JSONP
-══════════════════════════════ */
-let cbIdx=0;
-function jsonpRequest(url,cb){
-  const name=`__cb_${++cbIdx}`;
-  window[name]=function(d){cb(d);delete window[name];document.getElementById(`s-${name}`)?.remove();};
-  const s=document.createElement('script');
-  s.id=`s-${name}`;s.src=`${url}&callback=${name}`;
-  s.onerror=function(){cb(null);delete window[name];s.remove();};
-  document.head.appendChild(s);
-}
-
-/* ══════════════════════════════════════════════
-   PAGE: DASHBOARD
-══════════════════════════════════════════════ */
-function renderDashboard(el){
-  el.innerHTML=`
-    <div class="fade-up">
-      <div class="kpi-grid" id="dash-kpis">
-        <div class="kpi-card"><div class="kpi-label">Primary Sales YTD</div><div class="kpi-value" id="kpi-primary">—</div></div>
-        <div class="kpi-card"><div class="kpi-label">Secondary Sales YTD</div><div class="kpi-value" id="kpi-secondary">—</div></div>
-        <div class="kpi-card"><div class="kpi-label">أوردرات المجمعات</div><div class="kpi-value" id="kpi-orders">⏳</div></div>
-        <div class="kpi-card"><div class="kpi-label">قيمة الأوردرات</div><div class="kpi-value" id="kpi-orders-val">⏳</div></div>
-      </div>
-      <div class="card">
-        <h2>📦 آخر الأوردرات</h2>
-        <div id="dash-orders"><div class="loader"><div class="spinner"></div><span style="color:var(--muted);font-size:12px">جاري التحميل...</span></div></div>
-      </div>
-    </div>
-  `;
-  // Load orders summary
-  jsonpRequest(`${SHEETS_URL}?action=getOrders`,function(data){
-    if(!data||!data.success) return;
-    const orders=data.orders;
-    document.getElementById('kpi-orders').textContent=fmt(orders.length);
-    const totalVal=orders.reduce((s,o)=>{
-      const qty=Number(o.quantity||0);
-      const bq=Number(o.bonusQty||0);
-      const pr=Number(o.unitPrice||0);
-      return s+(qty*pr)+(bq*pr);
-    },0);
-    document.getElementById('kpi-orders-val').textContent=fmtV(totalVal);
-    // Show last 5 orders grouped
-    const grouped={};
-    orders.forEach(o=>{
-      const d=formatDate(o.date);
-      const key=`${d}__${o.pharmacy}__${o.rep}`;
-      if(!grouped[key]) grouped[key]={date:d,pharmacy:o.pharmacy,rep:o.rep,total:0,lines:new Set()};
-      const line=o.line||getLineByProduct(o.product);
-      grouped[key].lines.add(line);
-      grouped[key].total+=(Number(o.quantity||0)+Number(o.bonusQty||0))*Number(o.unitPrice||0);
-    });
-    const recent=Object.values(grouped).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
-    document.getElementById('dash-orders').innerHTML=recent.map(o=>`
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
-        <div>
-          <div style="font-weight:600;font-size:13px">${o.pharmacy}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px">👤 ${o.rep||'—'} • 📅 ${o.date}</div>
-        </div>
-        <div style="text-align:left">
-          ${[...o.lines].filter(Boolean).map(l=>`<span style="background:${lc(l)}18;color:${lc(l)};border-radius:999px;padding:2px 8px;font-size:10px;font-weight:600;border:1px solid ${lc(l)}30;margin-right:4px">${l}</span>`).join('')}
-          <div style="font-size:13px;font-weight:700;color:var(--accent2);margin-top:4px">${fmtV(o.total)}</div>
-        </div>
-      </div>
-    `).join('')||'<div class="empty">لا توجد بيانات</div>';
-  });
-
-  // Primary/Secondary from localStorage
-  const ps=DB.getObj('primarySales');
-  const sec=DB.getObj('warehouseFlow');
-  const year=new Date().getFullYear();
-  const psTotal=Object.entries(ps).filter(([k])=>k.startsWith(year)).reduce((s,[,v])=>s+Number(v),0);
-  const secTotal=Object.entries(sec).filter(([k])=>k.startsWith(year)).reduce((s,[,v])=>s+Number(v),0);
-  document.getElementById('kpi-primary').textContent=fmt(psTotal);
-  document.getElementById('kpi-secondary').textContent=fmt(secTotal);
-}
-
-/* ══════════════════════════════════════════════
-   PAGE: PRODUCTS
-══════════════════════════════════════════════ */
-function renderProducts(el){
-  const prods=DB.get('products');
-  el.innerHTML=`
+/* ═══════════════════════════════════════
+   MASTER.JS — Master Data Pages
+═══════════════════════════════════════ */
+
+/* ──────────────────────────────────────
+   PRODUCTS
+────────────────────────────────────── */
+function renderProducts(el) {
+  el.innerHTML = `
     <div class="fade-up">
       <div class="card">
         <h2>💊 المنتجات والأهداف</h2>
         <div class="form-grid" style="margin-bottom:14px">
-          <div class="form-group"><label>السنة</label><select id="cfg-year" onchange="renderProductsTable()">${[2024,2025,2026,2027,2028].map(y=>`<option${y===2026?' selected':''}>${y}</option>`).join('')}</select></div>
-          <div class="form-group"><label>المنطقة</label><select id="cfg-area" onchange="renderProductsTable()">${DB.get('areas').map(a=>`<option>${a}</option>`).join('')||'<option>Basra</option>'}</select></div>
+          <div class="form-group"><label>السنة</label>
+            <select id="cfg-year" onchange="renderProductsTable()">
+              ${[2024,2025,2026,2027,2028].map(y=>`<option${y===2026?' selected':''}>${y}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>المنطقة</label>
+            <select id="cfg-area" onchange="renderProductsTable()">
+              ${DB.get('areas').map(a=>`<option>${a}</option>`).join('')||'<option>Basra</option>'}
+            </select>
+          </div>
         </div>
         <div class="table-wrap">
           <table><thead><tr>
-            <th style="text-align:right">المنتج</th><th>Line</th><th>الهدف السنوي</th><th>السعر</th><th>إجراء</th>
+            <th style="text-align:right">المنتج</th><th>Line</th><th>الهدف السنوي</th><th>السعر</th><th>حذف</th>
           </tr></thead><tbody id="prod-tbody"></tbody></table>
         </div>
       </div>
-    </div>
-  `;
+    </div>`;
   renderProductsTable();
 }
 
-function renderProductsTable(){
-  const year=document.getElementById('cfg-year')?.value||2026;
-  const area=document.getElementById('cfg-area')?.value||'Basra';
-  const prods=DB.get('products');
-  const targets=DB.getObj('productTargets');
-  const tbody=document.getElementById('prod-tbody');
-  if(!tbody) return;
-  if(!prods.length){tbody.innerHTML=`<tr><td colspan="5" class="empty">لا توجد منتجات</td></tr>`;return;}
-  tbody.innerHTML=prods.map((p,i)=>{
-    const key=`${year}__${p.name}__${area}`;
-    const target=targets[key]!==undefined?targets[key]:(area==='Basra'&&Number(year)===2026?p.annualTarget||0:0);
+function renderProductsTable() {
+  const year    = document.getElementById('cfg-year')?.value || 2026;
+  const area    = document.getElementById('cfg-area')?.value || 'Basra';
+  const prods   = DB.get('products');
+  const targets = DB.getObj('productTargets');
+  const tbody   = document.getElementById('prod-tbody');
+  if (!tbody) return;
+  if (!prods.length) { tbody.innerHTML = `<tr><td colspan="5" class="empty">لا توجد منتجات</td></tr>`; return; }
+  tbody.innerHTML = prods.map((p,i) => {
+    const key    = `${year}__${p.name}__${area}`;
+    const target = targets[key] !== undefined ? targets[key] : (area==='Basra' && Number(year)===2026 ? p.annualTarget||0 : 0);
     return `<tr>
       <td style="text-align:right;font-weight:600">
         <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${lc(p.line)};margin-left:6px"></span>${p.name}
@@ -722,31 +51,33 @@ function renderProductsTable(){
       <td><input type="number" value="${target}" min="0"
         style="width:90px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:8px;font-size:12px;text-align:center;font-family:inherit;outline:none"
         onchange="saveTarget('${p.name.replace(/'/g,"\\'")}','${year}','${area}',this.value)"></td>
-      <td style="color:var(--accent2)">${p.price?Number(p.price).toLocaleString()+' IQD':'—'}</td>
-      <td><button class="btn btn-danger btn-sm" data-idx="${i}" onclick="deleteProd(${i})">🗑</button></td>
+      <td style="color:var(--accent2)">${p.price ? Number(p.price).toLocaleString()+' IQD' : '—'}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteProd(${i})">🗑</button></td>
     </tr>`;
   }).join('');
 }
 
-function saveTarget(product,year,area,val){
-  const targets=DB.getObj('productTargets');
-  targets[`${year}__${product}__${area}`]=Number(val)||0;
-  DB.setObj('productTargets',targets);
+function saveTarget(product, year, area, val) {
+  const targets = DB.getObj('productTargets');
+  targets[`${year}__${product}__${area}`] = Number(val)||0;
+  DB.setObj('productTargets', targets);
   toast('✓ تم حفظ الهدف');
 }
 
-function deleteProd(i){
-  const prods=DB.get('products');
-  if(!prods[i]||!confirm(`حذف ${prods[i].name}؟`)) return;
-  prods.splice(i,1);DB.set('products',prods);
-  renderProductsTable();toast('✓ تم الحذف');
+function deleteProd(i) {
+  const prods = DB.get('products');
+  if (!prods[i] || !confirm(`حذف ${prods[i].name}؟`)) return;
+  prods.splice(i, 1);
+  DB.set('products', prods);
+  renderProductsTable();
+  toast('✓ تم الحذف');
 }
 
-/* ══════════════════════════════════════════════
-   PAGE: PHARMACIES
-══════════════════════════════════════════════ */
-function renderPharmacies(el){
-  el.innerHTML=`
+/* ──────────────────────────────────────
+   PHARMACIES
+────────────────────────────────────── */
+function renderPharmacies(el) {
+  el.innerHTML = `
     <div class="fade-up">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
@@ -756,7 +87,9 @@ function renderPharmacies(el){
         <div id="ph-form" style="display:none;margin-bottom:14px;padding:14px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px">
           <div class="form-grid">
             <div class="form-group"><label>الاسم</label><input type="text" id="ph-name" placeholder="اسم الصيدلية"></div>
-            <div class="form-group"><label>المنطقة</label><select id="ph-area">${DB.get('areas').map(a=>`<option>${a}</option>`).join('')}</select></div>
+            <div class="form-group"><label>المنطقة</label>
+              <select id="ph-area">${DB.get('areas').map(a=>`<option>${a}</option>`).join('')}</select>
+            </div>
             <div class="form-group"><label>الموقع</label><input type="text" id="ph-loc" placeholder="محلة/شارع"></div>
           </div>
           <button class="btn btn-success btn-sm" onclick="addPharmacy()">✓ حفظ</button>
@@ -764,62 +97,66 @@ function renderPharmacies(el){
         </div>
         <div class="table-wrap">
           <table><thead><tr>
-            <th style="text-align:right">الصيدلية</th><th>المنطقة</th><th>الموقع</th><th>الأطباء</th><th>حذف</th>
+            <th style="text-align:right">الصيدلية</th><th>المنطقة</th><th>الموقع</th><th>حذف</th>
           </tr></thead><tbody id="ph-tbody"></tbody></table>
         </div>
       </div>
-    </div>
-  `;
+    </div>`;
   renderPhTable();
 }
 
-function showAddPharmacy(){document.getElementById('ph-form').style.display='block';}
+function showAddPharmacy() { document.getElementById('ph-form').style.display = 'block'; }
 
-function addPharmacy(){
-  const name=document.getElementById('ph-name').value.trim();
-  const area=document.getElementById('ph-area').value;
-  const loc=document.getElementById('ph-loc').value.trim();
-  if(!name) return alert('ادخل اسم الصيدلية');
-  const phs=DB.get('pharmacies');
-  if(phs.find(p=>p.name===name)) return alert('الصيدلية موجودة');
-  phs.push({name,area,location:loc,doctors:[]});
-  DB.set('pharmacies',phs);
-  document.getElementById('ph-form').style.display='none';
-  document.getElementById('ph-name').value='';
-  renderPhTable();toast('✓ تم الحفظ');
+function addPharmacy() {
+  const name = document.getElementById('ph-name').value.trim();
+  const area = document.getElementById('ph-area').value;
+  const loc  = document.getElementById('ph-loc').value.trim();
+  if (!name) return alert('ادخل اسم الصيدلية');
+  const phs = DB.get('pharmacies');
+  if (phs.find(p => p.name === name)) return alert('الصيدلية موجودة');
+  phs.push({ name, area, location:loc, doctors:[] });
+  DB.set('pharmacies', phs);
+  document.getElementById('ph-form').style.display = 'none';
+  document.getElementById('ph-name').value = '';
+  renderPhTable();
+  toast('✓ تم الحفظ');
 }
 
-function renderPhTable(){
-  const phs=DB.get('pharmacies');
-  const tbody=document.getElementById('ph-tbody');
-  if(!phs.length){tbody.innerHTML=`<tr><td colspan="5" class="empty">لا توجد صيدليات</td></tr>`;return;}
-  tbody.innerHTML=phs.map((p,i)=>`<tr>
+function renderPhTable() {
+  const phs   = DB.get('pharmacies');
+  const tbody = document.getElementById('ph-tbody');
+  if (!phs.length) { tbody.innerHTML = `<tr><td colspan="4" class="empty">لا توجد صيدليات</td></tr>`; return; }
+  tbody.innerHTML = phs.map((p,i) => `<tr>
     <td style="text-align:right;font-weight:600">${p.name}</td>
     <td>${p.area||'—'}</td>
     <td style="color:var(--muted);font-size:11px">${p.location||'—'}</td>
-    <td style="font-size:11px">${(p.doctors||[]).map(d=>`<span class="chip">${d}</span>`).join(' ')||'—'}</td>
     <td><button class="btn btn-danger btn-sm" onclick="deletePh(${i})">🗑</button></td>
   </tr>`).join('');
 }
 
-function deletePh(i){
-  const phs=DB.get('pharmacies');
-  if(!confirm(`حذف ${phs[i].name}؟`)) return;
-  phs.splice(i,1);DB.set('pharmacies',phs);renderPhTable();toast('✓ تم الحذف');
+function deletePh(i) {
+  const phs = DB.get('pharmacies');
+  if (!confirm(`حذف ${phs[i].name}؟`)) return;
+  phs.splice(i, 1);
+  DB.set('pharmacies', phs);
+  renderPhTable();
+  toast('✓ تم الحذف');
 }
 
-/* ══════════════════════════════════════════════
-   PAGE: DOCTORS
-══════════════════════════════════════════════ */
-function renderDoctors(el){
-  const lines=['all','Derma','Optha','General Line','CM Line'];
-  el.innerHTML=`
+/* ──────────────────────────────────────
+   DOCTORS
+────────────────────────────────────── */
+let _docFilter = 'all';
+
+function renderDoctors(el) {
+  const lines = ['all','Derma','Optha','General Line','CM Line'];
+  el.innerHTML = `
     <div class="fade-up">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
           <h2 style="margin:0">👨‍⚕️ الأطباء</h2>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            ${lines.map(l=>`<button class="btn btn-ghost btn-sm" onclick="filterDocs('${l}',this)">${l==='all'?'الكل':l}</button>`).join('')}
+            ${lines.map(l => `<button class="btn btn-ghost btn-sm" onclick="filterDocs('${l}',this)">${l==='all'?'الكل':l}</button>`).join('')}
           </div>
         </div>
         <div class="table-wrap">
@@ -828,25 +165,23 @@ function renderDoctors(el){
           </tr></thead><tbody id="doc-tbody"></tbody></table>
         </div>
       </div>
-    </div>
-  `;
+    </div>`;
   renderDocTable('all');
 }
 
-let docFilter='all';
-function filterDocs(line,btn){
-  docFilter=line;
-  document.querySelectorAll('#content .btn-ghost').forEach(b=>b.style.borderColor='');
-  if(btn) btn.style.borderColor='var(--accent)';
+function filterDocs(line, btn) {
+  _docFilter = line;
+  document.querySelectorAll('#content .btn-ghost').forEach(b => b.style.borderColor = '');
+  if (btn) btn.style.borderColor = 'var(--accent)';
   renderDocTable(line);
 }
 
-function renderDocTable(line){
-  let docs=DB.get('doctors');
-  if(line!=='all') docs=docs.filter(d=>d.line===line);
-  const tbody=document.getElementById('doc-tbody');
-  if(!docs.length){tbody.innerHTML=`<tr><td colspan="4" class="empty">لا توجد بيانات</td></tr>`;return;}
-  tbody.innerHTML=docs.map((d,i)=>`<tr>
+function renderDocTable(line) {
+  let docs = DB.get('doctors');
+  if (line !== 'all') docs = docs.filter(d => d.line === line);
+  const tbody = document.getElementById('doc-tbody');
+  if (!docs.length) { tbody.innerHTML = `<tr><td colspan="4" class="empty">لا توجد بيانات</td></tr>`; return; }
+  tbody.innerHTML = docs.map(d => `<tr>
     <td style="text-align:right;font-weight:600">${d.name}</td>
     <td><span style="background:${lc(d.line)}18;color:${lc(d.line)};border-radius:999px;padding:2px 8px;font-size:10px;font-weight:600">${d.line}</span></td>
     <td style="color:var(--muted)">${d.area||'—'}</td>
@@ -854,232 +189,49 @@ function renderDocTable(line){
   </tr>`).join('');
 }
 
-function deleteDoc(name){
-  if(!confirm(`حذف ${name}؟`)) return;
-  DB.set('doctors',DB.get('doctors').filter(d=>d.name!==name));
-  renderDocTable(docFilter);toast('✓ تم الحذف');
+function deleteDoc(name) {
+  if (!confirm(`حذف ${name}؟`)) return;
+  DB.set('doctors', DB.get('doctors').filter(d => d.name !== name));
+  renderDocTable(_docFilter);
+  toast('✓ تم الحذف');
 }
 
-/* ══════════════════════════════════════════════
-   PAGE: WAREHOUSES
-══════════════════════════════════════════════ */
-function renderWarehouses(el){
-  el.innerHTML=`
+/* ──────────────────────────────────────
+   REPS
+────────────────────────────────────── */
+function renderReps(el) {
+  el.innerHTML = `
     <div class="fade-up">
       <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-          <h2 style="margin:0">🏭 المخازن</h2>
-          <button class="btn btn-primary btn-sm" onclick="showWhForm()">➕ إضافة مخزن</button>
-        </div>
-        <div id="wh-form" style="display:none;margin-bottom:16px;padding:14px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px">
-          <div class="form-grid">
-            <div class="form-group"><label>اسم المخزن</label><input type="text" id="wh-name" placeholder="مثال: سيادة"></div>
-            <div class="form-group"><label>النوع</label>
-              <select id="wh-type" onchange="toggleWhGroup()">
-                <option value="standalone">مستقل</option>
-                <option value="branch">فرعي (ضمن مجموعة)</option>
-              </select>
-            </div>
-            <div class="form-group" id="wh-group-wrap" style="display:none"><label>المجموعة</label><input type="text" id="wh-group" placeholder="اسم المجموعة"></div>
-            <div class="form-group"><label>المنطقة</label><select id="wh-area">${DB.get('areas').map(a=>`<option>${a}</option>`).join('')||'<option>Basra</option>'}</select></div>
-          </div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-success btn-sm" onclick="addWarehouse()">✓ حفظ</button>
-            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('wh-form').style.display=\'none\'">إلغاء</button>
-          </div>
-        </div>
-        <div id="wh-list"></div>
-      </div>
-    </div>
-  `;
-  renderWhList();
-}
-
-function showWhForm(){document.getElementById('wh-form').style.display='block';}
-function toggleWhGroup(){
-  document.getElementById('wh-group-wrap').style.display=
-    document.getElementById('wh-type').value==='branch'?'block':'none';
-}
-
-function addWarehouse(){
-  const name=document.getElementById('wh-name').value.trim();
-  const type=document.getElementById('wh-type').value;
-  const group=document.getElementById('wh-group')?.value.trim()||'';
-  const area=document.getElementById('wh-area').value;
-  if(!name) return alert('ادخل اسم المخزن');
-  const warehouses=DB.get('warehouses')||[];
-  if(warehouses.find(w=>w.name===name)) return alert('المخزن موجود');
-  warehouses.push({name,type,group:type==='branch'?group:'',area});
-  DB.set('warehouses',warehouses);
-  document.getElementById('wh-form').style.display='none';
-  document.getElementById('wh-name').value='';
-  renderWhList();toast('✓ تم الحفظ');
-}
-
-function deleteWarehouse(i){
-  const warehouses=DB.get('warehouses')||[];
-  if(!confirm(`حذف ${warehouses[i].name}؟`)) return;
-  warehouses.splice(i,1);DB.set('warehouses',warehouses);renderWhList();
-}
-
-function editWarehouse(i){
-  const warehouses=DB.get('warehouses')||[];
-  const w=warehouses[i];if(!w) return;
-  const newName=prompt('اسم المخزن:',w.name);if(newName===null) return;
-  if(!newName.trim()) return alert('ادخل اسم');
-  const newType=prompt('النوع (standalone / branch):',w.type);if(newType===null) return;
-  let newGroup='';
-  if(newType==='branch') newGroup=prompt('اسم المجموعة:',w.group)||'';
-  const newArea=prompt('المنطقة:',w.area||'Basra');if(newArea===null) return;
-  warehouses[i]={name:newName.trim(),type:newType,group:newGroup,area:newArea};
-  DB.set('warehouses',warehouses);renderWhList();toast('✓ تم التحديث');
-}
-
-// إحصائيات مخزن واحد
-function getWhStats(whName){
-  const stock=DB.getObj('stockEntry');
-  const year=new Date().getFullYear();
-  let latestStock=0,latestMonth=0,secondary=0,primary=0;
-  Object.entries(stock).forEach(([k,v])=>{
-    if(k.includes('__'+whName)){
-      const parts=k.split('__');
-      const m=Number(parts[3]);
-      if(Number(parts[0])===year&&m>=latestMonth){latestMonth=m;latestStock=Number(v.close||0);}
-    }
-  });
-  const wf=DB.getObj('warehouseFlow');
-  Object.entries(wf).forEach(([k,v])=>{if(k.startsWith(year+'__')&&k.includes('__'+whName))secondary+=Number(v||0);});
-  const ps=DB.getObj('primarySales');
-  Object.entries(ps).forEach(([k,v])=>{if(k.startsWith(year+'__'))primary+=Number(v||0);});
-  const flow=primary>0?(secondary/primary*100):0;
-  const avgMonthly=latestMonth>0?secondary/latestMonth:0;
-  const forecast=avgMonthly>0?Math.round(latestStock/avgMonthly*30):0;
-  return {stock:latestStock,secondary,primary,flow,forecast};
-}
-
-function getWhGroupStats(whNames){
-  let stock=0,secondary=0,primary=0;
-  whNames.forEach(n=>{const s=getWhStats(n);stock+=s.stock;secondary+=s.secondary;primary+=s.primary;});
-  const flow=primary>0?(secondary/primary*100):0;
-  return {stock,secondary,primary,flow};
-}
-
-function renderWhList(){
-  const warehouses=DB.get('warehouses')||[];
-  const container=document.getElementById('wh-list');
-  if(!warehouses.length){container.innerHTML=`<div class="empty">لا توجد مخازن</div>`;return;}
-
-  const groups={};const standalone=[];
-  warehouses.forEach((w,i)=>{
-    if(w.type==='branch'&&w.group){if(!groups[w.group])groups[w.group]=[];groups[w.group].push({...w,idx:i});}
-    else standalone.push({...w,idx:i});
-  });
-
-  let html='';
-
-  Object.entries(groups).forEach(([groupName,members])=>{
-    const gs=getWhGroupStats(members.map(m=>m.name));
-    html+=`<div style="margin-bottom:16px">
-      <div onclick="navigate('wh_group_${encodeURIComponent(groupName)}',null)"
-        style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;
-        background:linear-gradient(135deg,rgba(79,142,247,.1),rgba(139,92,246,.08));
-        border:1px solid rgba(79,142,247,.25);border-radius:14px;cursor:pointer;margin-bottom:8px;transition:all .2s"
-        onmouseover="this.style.transform='translateY(-2px)'"
-        onmouseout="this.style.transform=''">
-        <div style="display:flex;align-items:center;gap:10px">
-          <span style="font-size:20px">📦</span>
-          <div>
-            <div style="font-weight:700;font-size:14px;color:#fff">${groupName}</div>
-            <div style="font-size:11px;color:var(--muted)">${members.length} مخازن فرعية</div>
-          </div>
-        </div>
-        <div style="display:flex;gap:16px;align-items:center">
-          <div style="text-align:center"><div style="font-size:10px;color:var(--muted)">Stock</div><div style="font-weight:700;color:var(--accent2)">${gs.stock.toLocaleString()}</div></div>
-          <div style="text-align:center"><div style="font-size:10px;color:var(--muted)">Secondary</div><div style="font-weight:700;color:var(--accent)">${gs.secondary.toLocaleString()}</div></div>
-          <div style="text-align:center"><div style="font-size:10px;color:var(--muted)">Flow%</div><div style="font-weight:700;color:${gs.flow>=80?'var(--accent2)':gs.flow>=50?'var(--warn)':'var(--danger)'}">${gs.flow.toFixed(0)}%</div></div>
-          <span style="color:var(--muted);font-size:18px">›</span>
-        </div>
-      </div>
-      <div style="padding-right:16px;border-right:2px solid rgba(79,142,247,.2)">
-        ${members.map(w=>{
-          const ws=getWhStats(w.name);
-          return `<div style="display:flex;align-items:center;justify-content:space-between;
-            padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid var(--border);
-            border-radius:10px;margin-bottom:6px;cursor:pointer;transition:all .2s"
-            onclick="navigate('wh_${encodeURIComponent(w.name)}',null)"
-            onmouseover="this.style.background='rgba(255,255,255,.06)'"
-            onmouseout="this.style.background='rgba(255,255,255,.03)'">
-            <div style="display:flex;align-items:center;gap:8px">
-              <span>🏭</span><span style="font-weight:600">${w.name}</span>
-              <span style="font-size:10px;color:var(--muted)">${w.area||''}</span>
-            </div>
-            <div style="display:flex;gap:14px;align-items:center">
-              <div style="text-align:center"><div style="font-size:10px;color:var(--muted)">Stock</div><div style="font-weight:700;color:var(--accent2)">${ws.stock.toLocaleString()}</div></div>
-              <div style="text-align:center"><div style="font-size:10px;color:var(--muted)">Secondary</div><div style="font-weight:700;color:var(--accent)">${ws.secondary.toLocaleString()}</div></div>
-              <div style="text-align:center"><div style="font-size:10px;color:var(--muted)">Flow%</div><div style="font-weight:700;color:${ws.flow>=80?'var(--accent2)':ws.flow>=50?'var(--warn)':'var(--danger)'}">${ws.flow.toFixed(0)}%</div></div>
-              <div style="text-align:center"><div style="font-size:10px;color:var(--muted)">Forecast</div><div style="font-weight:700;color:var(--warn)">${ws.forecast}d</div></div>
-              <div style="display:flex;gap:4px">
-                <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editWarehouse(${w.idx})">✏️</button>
-                <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteWarehouse(${w.idx})">🗑</button>
-              </div>
-            </div>
-          </div>`;
-        }).join('')}
+        <h2>👥 المندوبين</h2>
+        <div id="reps-content"><div class="loader"><div class="spinner"></div></div></div>
       </div>
     </div>`;
-  });
-
-  if(standalone.length){
-    html+=`<div style="font-size:12px;font-weight:700;color:var(--accent2);margin-bottom:8px">🏬 مخازن مستقلة</div>`;
-    standalone.forEach(w=>{
-      const ws=getWhStats(w.name);
-      html+=`<div style="display:flex;align-items:center;justify-content:space-between;
-        padding:12px 14px;background:rgba(255,255,255,.03);border:1px solid var(--border);
-        border-radius:12px;margin-bottom:8px;cursor:pointer;transition:all .2s"
-        onclick="navigate('wh_${encodeURIComponent(w.name)}',null)"
-        onmouseover="this.style.background='rgba(255,255,255,.06)'"
-        onmouseout="this.style.background='rgba(255,255,255,.03)'">
-        <div style="display:flex;align-items:center;gap:10px">
-          <span style="font-size:18px">🏬</span>
-          <div><div style="font-weight:700">${w.name}</div><div style="font-size:10px;color:var(--muted)">${w.area||''}</div></div>
-        </div>
-        <div style="display:flex;gap:16px;align-items:center">
-          <div style="text-align:center"><div style="font-size:10px;color:var(--muted)">Stock</div><div style="font-weight:700;color:var(--accent2)">${ws.stock.toLocaleString()}</div></div>
-          <div style="text-align:center"><div style="font-size:10px;color:var(--muted)">Secondary</div><div style="font-weight:700;color:var(--accent)">${ws.secondary.toLocaleString()}</div></div>
-          <div style="text-align:center"><div style="font-size:10px;color:var(--muted)">Flow%</div><div style="font-weight:700;color:${ws.flow>=80?'var(--accent2)':ws.flow>=50?'var(--warn)':'var(--danger)'}">${ws.flow.toFixed(0)}%</div></div>
-          <div style="text-align:center"><div style="font-size:10px;color:var(--muted)">Forecast</div><div style="font-weight:700;color:var(--warn)">${ws.forecast}d</div></div>
-          <div style="display:flex;gap:4px">
-            <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editWarehouse(${w.idx})">✏️</button>
-            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteWarehouse(${w.idx})">🗑</button>
-          </div>
-        </div>
-      </div>`;
+  apiGet('getOrders', {}, function(data) {
+    if (!data || !data.success) {
+      document.getElementById('reps-content').innerHTML = '<div class="empty">تعذر التحميل</div>';
+      return;
+    }
+    const reps = [...new Set(data.orders.map(o => o.rep).filter(Boolean))];
+    const stats = {};
+    data.orders.forEach(o => {
+      if (!stats[o.rep]) stats[o.rep] = { orders:0, value:0 };
+      stats[o.rep].orders++;
+      stats[o.rep].value += Number(o.quantity||0) * Number(o.unitPrice||0);
     });
-  }
-
-  container.innerHTML=html;
-}
-/* ══════════════════════════════════════════════
-   PAGE: REGIONS
-══════════════════════════════════════════════ */
-function renderReps(el){
-  el.innerHTML='<div class="fade-up"><div class="card"><h2>👥 المندوبين</h2><div id="reps-loading"><div class="loader"><div class="spinner"></div></div></div></div></div>';
-  jsonpRequest(SHEETS_URL+'?action=getOrders',function(data){
-    if(!data||!data.success) return;
-    const reps=[...new Set(data.orders.map(o=>o.rep).filter(Boolean))];
-    const repStats={};
-    data.orders.forEach(o=>{
-      if(!repStats[o.rep]) repStats[o.rep]={orders:0,value:0};
-      repStats[o.rep].orders++;
-      repStats[o.rep].value+=Number(o.quantity||0)*Number(o.unitPrice||0);
-    });
-    let rows=reps.map(r=>'<tr><td style="text-align:right;font-weight:600">👤 '+r+'</td><td>'+fmt(repStats[r].orders)+'</td><td style="color:var(--accent2);font-weight:600">'+fmtV(repStats[r].value)+'</td></tr>').join('');
-    document.getElementById('reps-loading').innerHTML='<div class="table-wrap"><table><thead><tr><th style="text-align:right">المندوب</th><th>عدد الفواتير</th><th>القيمة الكلية</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+    let rows = reps.map(r =>
+      '<tr><td style="text-align:right;font-weight:600">👤 '+r+'</td><td>'+fmt(stats[r].orders)+'</td><td style="color:var(--accent2);font-weight:600">'+fmtV(stats[r].value)+'</td></tr>'
+    ).join('');
+    document.getElementById('reps-content').innerHTML =
+      '<div class="table-wrap"><table><thead><tr><th style="text-align:right">المندوب</th><th>الفواتير</th><th>القيمة</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
   });
 }
 
-function renderRegions(el){
-  el.innerHTML=`
+/* ──────────────────────────────────────
+   REGIONS
+────────────────────────────────────── */
+function renderRegions(el) {
+  el.innerHTML = `
     <div class="fade-up">
       <div class="card">
         <h2>📍 المناطق</h2>
@@ -1090,886 +242,35 @@ function renderRegions(el){
         </div>
         <div id="areas-list" style="display:flex;flex-wrap:wrap;gap:8px"></div>
       </div>
-    </div>
-  `;
+    </div>`;
   renderAreasList();
 }
 
-function renderAreasList(){
-  const areas=DB.get('areas');
-  document.getElementById('areas-list').innerHTML=areas.map((a,i)=>`
+function renderAreasList() {
+  const areas = DB.get('areas');
+  document.getElementById('areas-list').innerHTML = areas.map((a,i) => `
     <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:999px;padding:7px 14px">
-      <span style="font-size:13px">📍 ${a}</span>
-      <button onclick="deleteArea(${i})" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px;padding:0;line-height:1">✕</button>
-    </div>
-  `).join('')||'<span style="color:var(--muted);font-size:12px">لا توجد مناطق</span>';
+      <span>📍 ${a}</span>
+      <button onclick="deleteArea(${i})" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px;line-height:1">✕</button>
+    </div>`).join('') || '<span style="color:var(--muted);font-size:12px">لا توجد مناطق</span>';
 }
 
-function addArea(){
-  const val=document.getElementById('area-input').value.trim();
-  if(!val) return;
-  const areas=DB.get('areas');
-  if(areas.includes(val)) return alert('المنطقة موجودة');
-  areas.push(val);DB.set('areas',areas);
-  document.getElementById('area-input').value='';
-  renderAreasList();toast('✓ تم الحفظ');
+function addArea() {
+  const val = document.getElementById('area-input').value.trim();
+  if (!val) return;
+  const areas = DB.get('areas');
+  if (areas.includes(val)) return alert('المنطقة موجودة');
+  areas.push(val);
+  DB.set('areas', areas);
+  document.getElementById('area-input').value = '';
+  renderAreasList();
+  toast('✓ تم الحفظ');
 }
 
-function deleteArea(i){
-  const areas=DB.get('areas');
-  if(!confirm(`حذف ${areas[i]}؟`)) return;
-  areas.splice(i,1);DB.set('areas',areas);renderAreasList();
-}
-/* ══════════════════════════════════════════════
-   WAREHOUSE DETAIL
-══════════════════════════════════════════════ */
-function renderWhDetail(el, whName){
-  const stats = getWhStats(whName);
-  const prods = DB.get('products');
-  const stock = DB.getObj('stockEntry');
-  const wf    = DB.getObj('warehouseFlow');
-  const ps    = DB.getObj('primarySales');
-  const year  = new Date().getFullYear();
-
-  const prodData=prods.map(p=>{
-    let closingStock=0,openingStock=0,lastMonth=0;
-    Object.entries(stock).forEach(([k,v])=>{
-      if(k.includes(`__${p.name}__`)&&k.includes(`__${whName}`)){
-        const m=Number(k.split('__')[3]);
-        if(Number(k.split('__')[0])===year&&m>=lastMonth){lastMonth=m;closingStock=Number(v.close||0);openingStock=Number(v.open||0);}
-      }
-    });
-    let sec=0;
-    Object.entries(wf).forEach(([k,v])=>{if(k.startsWith(`${year}__${p.name}__`)&&k.includes(`__${whName}`))sec+=Number(v||0);});
-    let pri=0;
-    Object.entries(ps).forEach(([k,v])=>{if(k.startsWith(`${year}__${p.name}__`))pri+=Number(v||0);});
-    const flow=pri>0?(sec/pri*100):0;
-    const avgMonthly=lastMonth>0?sec/lastMonth:0;
-    const forecast=avgMonthly>0?Math.round(closingStock/avgMonthly*30):0;
-    return {name:p.name,line:p.line,closingStock,openingStock,sec,pri,flow,forecast};
-  }).filter(p=>p.closingStock>0||p.sec>0||p.pri>0);
-
-  el.innerHTML=`
-    <div class="fade-up">
-      <button class="btn btn-ghost btn-sm" onclick="navigate('warehouses',null)" style="margin-bottom:14px">← رجوع</button>
-      <div class="kpi-grid" style="margin-bottom:16px">
-        <div class="kpi-card"><div class="kpi-label">Current Stock</div><div class="kpi-value">${fmt(stats.stock)}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Secondary YTD</div><div class="kpi-value" style="color:var(--accent)">${fmt(stats.secondary)}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Primary YTD</div><div class="kpi-value" style="color:var(--muted)">${fmt(stats.primary)}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Flow%</div><div class="kpi-value" style="color:${stats.flow>=80?'var(--accent2)':stats.flow>=50?'var(--warn)':'var(--danger)'}">${stats.flow.toFixed(1)}%</div></div>
-        <div class="kpi-card"><div class="kpi-label">Forecast</div><div class="kpi-value" style="color:var(--warn)">${stats.forecast}d</div></div>
-      </div>
-      <div class="card">
-        <h2>💊 تفاصيل المواد</h2>
-        ${prodData.length?`<div class="table-wrap"><table>
-          <thead><tr>
-            <th style="text-align:right">المادة</th><th>Line</th>
-            <th>Opening</th><th>Closing</th><th>Secondary</th><th>Primary</th><th>Flow%</th><th>Forecast</th>
-          </tr></thead><tbody>
-          ${prodData.map(p=>`<tr>
-            <td style="text-align:right;font-weight:600">${p.name}</td>
-            <td><span style="background:${lc(p.line)}18;color:${lc(p.line)};border-radius:999px;padding:2px 7px;font-size:10px;font-weight:600">${p.line}</span></td>
-            <td>${fmt(p.openingStock)}</td>
-            <td style="color:var(--accent2);font-weight:700">${fmt(p.closingStock)}</td>
-            <td style="color:var(--accent)">${fmt(p.sec)}</td>
-            <td style="color:var(--muted)">${fmt(p.pri)}</td>
-            <td style="color:${p.flow>=80?'var(--accent2)':p.flow>=50?'var(--warn)':'var(--danger)'}">${p.flow.toFixed(1)}%</td>
-            <td style="color:var(--warn);font-weight:600">${p.forecast>0?p.forecast+'d':'—'}</td>
-          </tr>`).join('')}
-          </tbody></table></div>`
-        :`<div class="empty">لا توجد بيانات — أدخل Stock Entry لهذا المخزن</div>`}
-      </div>
-    </div>`;
-}
-
-function renderWhGroupDetail(el, groupName){
-  const warehouses=DB.get('warehouses')||[];
-  const members=warehouses.filter(w=>w.group===groupName);
-  const gs=getWhGroupStats(members.map(m=>m.name));
-
-  el.innerHTML=`
-    <div class="fade-up">
-      <button class="btn btn-ghost btn-sm" onclick="navigate('warehouses',null)" style="margin-bottom:14px">← رجوع</button>
-      <div class="kpi-grid" style="margin-bottom:16px">
-        <div class="kpi-card"><div class="kpi-label">إجمالي Stock</div><div class="kpi-value">${fmt(gs.stock)}</div></div>
-        <div class="kpi-card"><div class="kpi-label">إجمالي Secondary</div><div class="kpi-value" style="color:var(--accent)">${fmt(gs.secondary)}</div></div>
-        <div class="kpi-card"><div class="kpi-label">إجمالي Primary</div><div class="kpi-value" style="color:var(--muted)">${fmt(gs.primary)}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Flow%</div><div class="kpi-value" style="color:${gs.flow>=80?'var(--accent2)':gs.flow>=50?'var(--warn)':'var(--danger)'}">${gs.flow.toFixed(1)}%</div></div>
-      </div>
-      <div style="display:grid;gap:12px">
-        ${members.map(w=>{
-          const ws=getWhStats(w.name);
-          return `<div class="card" style="cursor:pointer" onclick="navigate('wh_${encodeURIComponent(w.name)}',null)">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-              <h2 style="margin:0">🏭 ${w.name}</h2>
-              <span style="color:var(--muted)">› تفاصيل</span>
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px">
-              <div><div style="font-size:10px;color:var(--muted)">Stock</div><div style="font-weight:700;font-size:18px;color:var(--accent2)">${fmt(ws.stock)}</div></div>
-              <div><div style="font-size:10px;color:var(--muted)">Secondary</div><div style="font-weight:700;font-size:18px;color:var(--accent)">${fmt(ws.secondary)}</div></div>
-              <div><div style="font-size:10px;color:var(--muted)">Flow%</div><div style="font-weight:700;font-size:18px;color:${ws.flow>=80?'var(--accent2)':ws.flow>=50?'var(--warn)':'var(--danger)'}">${ws.flow.toFixed(1)}%</div></div>
-              <div><div style="font-size:10px;color:var(--muted)">Forecast</div><div style="font-weight:700;font-size:18px;color:var(--warn)">${ws.forecast}d</div></div>
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>`;
-}
-
-/* ══════════════════════════════════════════════
-   PAGE: REGIONS
-  el.innerHTML=`
-    <div class="fade-up">
-      <div class="card">
-        <h2>📍 المناطق</h2>
-        <div style="display:flex;gap:10px;margin-bottom:14px">
-          <input type="text" id="area-input" placeholder="اسم المنطقة" style="background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:12px;font-size:13px;font-family:inherit;outline:none;flex:1">
-          <button class="btn btn-primary" onclick="addArea()">➕ إضافة</button>
-        </div>
-        <div id="areas-list" style="display:flex;flex-wrap:wrap;gap:8px"></div>
-      </div>
-    </div>
-  `;
+function deleteArea(i) {
+  const areas = DB.get('areas');
+  if (!confirm(`حذف ${areas[i]}؟`)) return;
+  areas.splice(i, 1);
+  DB.set('areas', areas);
   renderAreasList();
 }
-
-function renderAreasList(){
-  const areas=DB.get('areas');
-  document.getElementById('areas-list').innerHTML=areas.map((a,i)=>`
-    <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:999px;padding:7px 14px">
-      <span style="font-size:13px">📍 ${a}</span>
-      <button onclick="deleteArea(${i})" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px;padding:0;line-height:1">✕</button>
-    </div>
-  `).join('')||'<span style="color:var(--muted);font-size:12px">لا توجد مناطق</span>';
-}
-
-function addArea(){
-  const val=document.getElementById('area-input').value.trim();
-  if(!val) return;
-  const areas=DB.get('areas');
-  if(areas.includes(val)) return alert('المنطقة موجودة');
-  areas.push(val);DB.set('areas',areas);
-  document.getElementById('area-input').value='';
-  renderAreasList();toast('✓ تم الحفظ');
-}
-
-function deleteArea(i){
-  const areas=DB.get('areas');
-  if(!confirm(`حذف ${areas[i]}؟`)) return;
-  areas.splice(i,1);DB.set('areas',areas);renderAreasList();
-}
-
-/* ══════════════════════════════════════════════
-   PAGE: PRIMARY SALES
-══════════════════════════════════════════════ */
-function renderPrimary(el){
-  const months=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-  const cur=new Date();
-  el.innerHTML=`
-    <div class="fade-up">
-      <div class="card">
-        <h2>📥 Primary Sales — إدخال شهري</h2>
-        <div class="form-grid" style="margin-bottom:12px">
-          <div class="form-group"><label>السنة</label>
-            <select id="ps-year" onchange="renderPSGrid()">${[2024,2025,2026,2027,2028].map(y=>`<option${y===cur.getFullYear()?' selected':''}>${y}</option>`).join('')}</select>
-          </div>
-          <div class="form-group"><label>الشهر</label>
-            <select id="ps-month" onchange="renderPSGrid()">${months.map((m,i)=>`<option value="${i+1}"${i===cur.getMonth()?' selected':''}>${m}</option>`).join('')}</select>
-          </div>
-          <div class="form-group"><label>المنطقة</label>
-            <select id="ps-area" onchange="renderPSGrid()">${DB.get('areas').map(a=>`<option>${a}</option>`).join('')||'<option>Basra</option>'}</select>
-          </div>
-          <div class="form-group"><label>Line</label>
-            <select id="ps-line" onchange="renderPSGrid()">
-              <option value="all">الكل</option>
-              <option>Derma</option><option>Optha</option><option>General Line</option><option>CM Line</option>
-            </select>
-          </div>
-        </div>
-        <input type="text" id="ps-search" placeholder="🔍 ابحث عن مادة..." oninput="filterPS()"
-          style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:9px 14px;border-radius:10px;font-size:13px;font-family:inherit;outline:none;margin-bottom:10px">
-        <button class="btn btn-primary btn-sm" onclick="savePSGrid()" style="margin-bottom:12px">💾 حفظ الكل</button>
-        <div class="table-wrap">
-          <table><thead><tr>
-            <th style="text-align:right">المادة</th><th>Line</th><th>الهدف الشهري</th><th>الكمية</th>
-          </tr></thead><tbody id="ps-tbody"></tbody></table>
-        </div>
-      </div>
-    </div>
-  `;
-  renderPSGrid();
-}
-
-function renderPSGrid(){
-  const year=document.getElementById('ps-year')?.value;
-  const month=document.getElementById('ps-month')?.value;
-  const area=document.getElementById('ps-area')?.value||'Basra';
-  const line=document.getElementById('ps-line')?.value||'all';
-  if(!year||!month) return;
-  const prods=DB.get('products').filter(p=>line==='all'||p.line===line);
-  const ps=DB.getObj('primarySales');
-  const targets=DB.getObj('productTargets');
-  const tbody=document.getElementById('ps-tbody');
-  if(!tbody) return;
-  tbody.innerHTML=prods.map(p=>{
-    const key=`${year}__${p.name}__${area}__${month}`;
-    const val=ps[key]||0;
-    const tKey=`${year}__${p.name}__${area}`;
-    const ann=targets[tKey]!==undefined?targets[tKey]:(area==='Basra'&&Number(year)===2026?p.annualTarget||0:0);
-    const mTarget=Math.round(ann/12);
-    return `<tr>
-      <td style="text-align:right;font-weight:600">
-        <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${lc(p.line)};margin-left:6px"></span>${p.name}
-      </td>
-      <td><span style="background:${lc(p.line)}18;color:${lc(p.line)};border-radius:999px;padding:2px 7px;font-size:10px;font-weight:600">${p.line}</span></td>
-      <td style="color:var(--muted)">${fmt(mTarget)}</td>
-      <td><input type="number" class="ps-input" data-key="${key}" value="${val}" min="0"
-        style="width:90px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:8px;font-size:12px;text-align:center;font-family:inherit;outline:none"
-        placeholder="0"></td>
-    </tr>`;
-  }).join('');
-}
-
-function filterPS(){
-  const q=document.getElementById('ps-search')?.value.toLowerCase()||'';
-  document.querySelectorAll('#ps-tbody tr').forEach(row=>{
-    row.style.display=row.querySelector('td')?.textContent.toLowerCase().includes(q)?'':'none';
-  });
-}
-
-function savePSGrid(){
-  const data=DB.getObj('primarySales');
-  document.querySelectorAll('.ps-input').forEach(inp=>{
-    const val=Number(inp.value||0);
-    if(val>0) data[inp.dataset.key]=val;
-    else delete data[inp.dataset.key];
-  });
-  DB.setObj('primarySales',data);
-  toast('✓ تم حفظ Primary Sales');
-}
-
-/* ══════════════════════════════════════════════
-   PAGE: SECONDARY SALES
-══════════════════════════════════════════════ */
-function renderSecondary(el){
-  const months=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-  const cur=new Date();
-  el.innerHTML=`
-    <div class="fade-up">
-      <div class="card">
-        <h2>📤 Secondary Sales — إدخال شهري</h2>
-        <div class="form-grid" style="margin-bottom:12px">
-          <div class="form-group"><label>السنة</label>
-            <select id="wf-year" onchange="renderWFGrid()">${[2024,2025,2026,2027,2028].map(y=>`<option${y===cur.getFullYear()?' selected':''}>${y}</option>`).join('')}</select>
-          </div>
-          <div class="form-group"><label>الشهر</label>
-            <select id="wf-month" onchange="renderWFGrid()">${months.map((m,i)=>`<option value="${i+1}"${i===cur.getMonth()?' selected':''}>${m}</option>`).join('')}</select>
-          </div>
-          <div class="form-group"><label>المنطقة</label>
-            <select id="wf-area" onchange="renderWFGrid()">${DB.get('areas').map(a=>`<option>${a}</option>`).join('')||'<option>Basra</option>'}</select>
-          </div>
-          <div class="form-group"><label>Line</label>
-            <select id="wf-line" onchange="renderWFGrid()">
-              <option value="all">الكل</option>
-              <option>Derma</option><option>Optha</option><option>General Line</option><option>CM Line</option>
-            </select>
-          </div>
-        </div>
-        <input type="text" id="wf-search" placeholder="🔍 ابحث عن مادة..." oninput="filterWF()"
-          style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:9px 14px;border-radius:10px;font-size:13px;font-family:inherit;outline:none;margin-bottom:10px">
-        <button class="btn btn-primary btn-sm" onclick="saveWFGrid()" style="margin-bottom:12px">💾 حفظ الكل</button>
-        <div class="table-wrap">
-          <table><thead><tr>
-            <th style="text-align:right">المادة</th><th>Line</th><th>الهدف الشهري</th><th>الكمية</th>
-          </tr></thead><tbody id="wf-tbody"></tbody></table>
-        </div>
-      </div>
-    </div>
-  `;
-  renderWFGrid();
-}
-
-function renderWFGrid(){
-  const year=document.getElementById('wf-year')?.value;
-  const month=document.getElementById('wf-month')?.value;
-  const area=document.getElementById('wf-area')?.value||'Basra';
-  const line=document.getElementById('wf-line')?.value||'all';
-  if(!year||!month) return;
-  const prods=DB.get('products').filter(p=>line==='all'||p.line===line);
-  const wf=DB.getObj('warehouseFlow');
-  const targets=DB.getObj('productTargets');
-  const tbody=document.getElementById('wf-tbody');
-  if(!tbody) return;
-  tbody.innerHTML=prods.map(p=>{
-    const key=`${year}__${p.name}__${area}__${month}`;
-    const val=wf[key]||0;
-    const tKey=`${year}__${p.name}__${area}`;
-    const ann=targets[tKey]!==undefined?targets[tKey]:(area==='Basra'&&Number(year)===2026?p.annualTarget||0:0);
-    const mTarget=Math.round(ann/12);
-    return `<tr>
-      <td style="text-align:right;font-weight:600">
-        <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${lc(p.line)};margin-left:6px"></span>${p.name}
-      </td>
-      <td><span style="background:${lc(p.line)}18;color:${lc(p.line)};border-radius:999px;padding:2px 7px;font-size:10px;font-weight:600">${p.line}</span></td>
-      <td style="color:var(--muted)">${fmt(mTarget)}</td>
-      <td><input type="number" class="wf-input" data-key="${key}" value="${val}" min="0"
-        style="width:90px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:8px;font-size:12px;text-align:center;font-family:inherit;outline:none"
-        placeholder="0"></td>
-    </tr>`;
-  }).join('');
-}
-
-function filterWF(){
-  const q=document.getElementById('wf-search')?.value.toLowerCase()||'';
-  document.querySelectorAll('#wf-tbody tr').forEach(row=>{
-    row.style.display=row.querySelector('td')?.textContent.toLowerCase().includes(q)?'':'none';
-  });
-}
-
-function saveWFGrid(){
-  const data=DB.getObj('warehouseFlow');
-  document.querySelectorAll('.wf-input').forEach(inp=>{
-    const val=Number(inp.value||0);
-    if(val>0) data[inp.dataset.key]=val;
-    else delete data[inp.dataset.key];
-  });
-  DB.setObj('warehouseFlow',data);
-  toast('✓ تم حفظ Secondary Sales');
-}
-
-/* ══════════════════════════════════════════════
-   PAGE: ORDERS
-══════════════════════════════════════════════ */
-function renderOrders(el){
-  el.innerHTML=`
-    <div class="fade-up">
-      <div class="stats-row" id="ord-stats"></div>
-      <div class="card fade-up" style="margin-bottom:14px">
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:14px">
-          <div class="form-group"><label>From</label>
-            <input type="date" id="f-date-from" style="background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none;width:100%">
-          </div>
-          <div class="form-group"><label>To</label>
-            <input type="date" id="f-date-to" style="background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none;width:100%">
-          </div>
-          <div class="form-group"><label>Rep</label>
-            <select id="f-rep" style="background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none;width:100%">
-              <option value="">All Reps</option>
-            </select>
-          </div>
-          <div class="form-group"><label>Pharmacy</label>
-            <select id="f-ph" style="background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none;width:100%">
-              <option value="">All Pharmacies</option>
-            </select>
-          </div>
-          <div class="form-group"><label>Line</label>
-            <select id="f-line" style="background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none;width:100%">
-              <option value="">All Lines</option>
-              <option>Derma</option><option>Optha</option><option>General Line</option><option>CM Line</option>
-            </select>
-          </div>
-          <div class="form-group"><label>Region</label>
-            <select id="f-region" style="background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none;width:100%">
-              <option value="">All Regions</option>
-            </select>
-          </div>
-          <div class="form-group"><label>Warehouse</label>
-            <select id="f-warehouse" style="background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none;width:100%">
-              <option value="">All Warehouses</option>
-            </select>
-          </div>
-        </div>
-        <div style="display:flex;gap:10px;justify-content:flex-end">
-          <button class="btn btn-ghost btn-sm" onclick="clearOrdFilters()">Clear</button>
-          <button class="btn btn-primary" onclick="applyOrderFilters()">Apply Filters</button>
-        </div>
-      </div>
-      <div id="ord-list"><div class="loader"><div class="spinner"></div><span style="color:var(--muted);font-size:12px;margin-top:8px">جاري تحميل الأوردرات...</span></div></div>
-    </div>
-  `;
-  loadOrders();
-}
-
-let allOrders=[];
-
-function loadOrders(){
-  jsonpRequest(`${SHEETS_URL}?action=getOrders`,function(data){
-    if(!data||!data.success){
-      document.getElementById('ord-list').innerHTML=`<div class="empty">⚠ تعذر تحميل البيانات</div>`;
-      return;
-    }
-    const grouped={};
-    data.orders.forEach(o=>{
-      const d=formatDate(o.date);
-      const key=`${d}__${o.pharmacy}__${o.rep}__${o.warehouse}`;
-      if(!grouped[key]) grouped[key]={id:key,date:d,rep:o.rep,pharmacy:o.pharmacy,warehouse:o.warehouse,items:[]};
-      const line=o.line||getLineByProduct(o.product);
-      grouped[key].items.push({product:o.product,line,qty:Number(o.quantity||0),bonusPct:o.bonusPct,bonusQty:Number(o.bonusQty||0),price:Number(o.unitPrice||0)});
-    });
-    allOrders=Object.values(grouped).sort((a,b)=>b.date.localeCompare(a.date));
-
-    // Populate filters
-    const reps=[...new Set(allOrders.map(o=>o.rep).filter(Boolean))];
-    const phs=[...new Set(allOrders.map(o=>o.pharmacy).filter(Boolean))];
-    const warehouses=[...new Set(allOrders.map(o=>o.warehouse).filter(Boolean))];
-    const regions=DB.get('areas');
-
-    document.getElementById('f-rep').innerHTML=`<option value="">All Reps</option>`+reps.map(r=>`<option>${r}</option>`).join('');
-    document.getElementById('f-ph').innerHTML=`<option value="">All Pharmacies</option>`+phs.map(p=>`<option>${p}</option>`).join('');
-    document.getElementById('f-warehouse').innerHTML=`<option value="">All Warehouses</option>`+warehouses.map(w=>`<option>${w}</option>`).join('');
-    document.getElementById('f-region').innerHTML=`<option value="">All Regions</option>`+regions.map(r=>`<option>${r}</option>`).join('');
-
-    applyOrderFilters();
-  });
-}
-
-function applyOrderFilters(){
-  const repF      = document.getElementById('f-rep')?.value||'';
-  const phF       = document.getElementById('f-ph')?.value||'';
-  const lineF     = document.getElementById('f-line')?.value||'';
-  const regionF   = document.getElementById('f-region')?.value||'';
-  const warehouseF= document.getElementById('f-warehouse')?.value||'';
-  const dateFrom  = document.getElementById('f-date-from')?.value||'';
-  const dateTo    = document.getElementById('f-date-to')?.value||'';
-
-  const filtered=allOrders.filter(o=>{
-    if(repF       && o.rep!==repF)           return false;
-    if(phF        && o.pharmacy!==phF)       return false;
-    if(lineF      && !o.items.some(i=>i.line===lineF)) return false;
-    if(warehouseF && o.warehouse!==warehouseF) return false;
-    if(dateFrom   && o.date < dateFrom)      return false;
-    if(dateTo     && o.date > dateTo)        return false;
-    return true;
-  });
-
-  const tQty =filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+i.qty,0)+s,0);
-  const tBon =filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+i.bonusQty,0)+s,0);
-  const tOrd =filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+(i.qty*i.price),0)+s,0);
-  const tBonV=filtered.reduce((s,o)=>o.items.reduce((ss,i)=>ss+(i.bonusQty*i.price),0)+s,0);
-
-  document.getElementById('ord-stats').innerHTML=`
-    <div class="stat-mini">Orders <span>${filtered.length}</span></div>
-    <div class="stat-mini">Qty <span>${fmt(tQty)}</span></div>
-    <div class="stat-mini">Bonus Qty <span>${fmt(tBon)}</span></div>
-    <div class="stat-mini">Order Value <span>${fmtV(tOrd)}</span></div>
-    <div class="stat-mini">Bonus Value <span>${fmtV(tBonV)}</span></div>
-    <div class="stat-mini">Total <span>${fmtV(tOrd+tBonV)}</span></div>
-  `;
-
-  const container=document.getElementById('ord-list');
-  if(!filtered.length){container.innerHTML='<div class="empty">No orders found</div>';return;}
-
-  // جدول موحد لما تختار صيدلية أو مخزن
-  if(phF || warehouseF){
-    const label = phF || warehouseF;
-    const icon  = phF ? '🏪' : '🏭';
-    const allItems=[];
-    filtered.forEach(o=>{
-      o.items.forEach(i=>{
-        allItems.push({...i, date:o.date, rep:o.rep, pharmacy:o.pharmacy, warehouse:o.warehouse});
-      });
-    });
-    const totalOrd=allItems.reduce((s,i)=>s+(i.qty*i.price),0);
-    const totalBon=allItems.reduce((s,i)=>s+(i.bonusQty*i.price),0);
-
-    container.innerHTML=`
-      <div class="card fade-up">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-          <h2 style="margin:0">${icon} ${label}</h2>
-          <div style="display:flex;gap:14px;font-size:12px;flex-wrap:wrap">
-            <span style="color:var(--accent2)">Order Value: <strong>${fmtV(totalOrd)}</strong></span>
-            <span style="color:var(--warn)">Bonus: <strong>${fmtV(totalBon)}</strong></span>
-            <span style="color:#fff;font-weight:700">Total: ${fmtV(totalOrd+totalBon)}</span>
-          </div>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr>
-              <th>Date</th>
-              ${!phF?'<th style="text-align:right">Pharmacy</th>':''}
-              <th style="text-align:right">Product</th>
-              <th>Line</th>
-              <th>Rep</th>
-              ${!warehouseF?'<th>Warehouse</th>':''}
-              <th>Qty</th>
-              <th>Price</th>
-              <th>Order Value</th>
-              <th>Bonus%</th>
-              <th>Bonus Qty</th>
-              <th>Bonus Value</th>
-              <th>Total</th>
-            </tr></thead>
-            <tbody>
-              ${allItems.map(i=>{
-                const iOrd=i.qty*i.price;
-                const iBon=i.bonusQty*i.price;
-                return `<tr>
-                  <td style="color:var(--muted);white-space:nowrap">${i.date}</td>
-                  ${!phF?`<td style="text-align:right;font-weight:600;white-space:nowrap">${i.pharmacy}</td>`:''}
-                  <td style="text-align:right;font-weight:600;white-space:nowrap">${i.product}</td>
-                  <td>${i.line?`<span style="background:${lc(i.line)}18;color:${lc(i.line)};border-radius:999px;padding:2px 7px;font-size:10px;font-weight:600">${i.line}</span>`:'-'}</td>
-                  <td style="color:var(--muted);font-size:11px">${i.rep||'—'}</td>
-                  ${!warehouseF?`<td style="color:var(--muted);font-size:11px">${i.warehouse||'—'}</td>`:''}
-                  <td style="font-weight:700">${fmt(i.qty)}</td>
-                  <td>${fmtV(i.price)}</td>
-                  <td style="color:var(--accent2);font-weight:700">${fmtV(iOrd)}</td>
-                  <td style="color:var(--muted)">${i.bonusPct||0}%</td>
-                  <td style="color:var(--warn);font-weight:700">${fmt(i.bonusQty||0)}</td>
-                  <td style="color:var(--warn);font-weight:700">${fmtV(iBon)}</td>
-                  <td style="color:#fff;font-weight:700;background:rgba(255,255,255,.04)">${fmtV(iOrd+iBon)}</td>
-                </tr>`;
-              }).join('')}
-              <tr style="background:rgba(255,255,255,.06);font-weight:700">
-                <td colspan="${phF&&warehouseF?4:5}" style="text-align:right;color:var(--muted)">Total</td>
-                <td style="color:var(--accent2)">${fmtV(totalOrd)}</td>
-                <td></td>
-                <td style="color:var(--warn)">${fmt(allItems.reduce((s,i)=>s+i.bonusQty,0))}</td>
-                <td style="color:var(--warn)">${fmtV(totalBon)}</td>
-                <td style="color:#fff">${fmtV(totalOrd+totalBon)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  container.innerHTML=filtered.map((o,oi)=>{
-    const lines=[...new Set(o.items.map(i=>i.line).filter(Boolean))];
-    const ordVal=o.items.reduce((s,i)=>s+(i.qty*i.price),0);
-    const bonVal=o.items.reduce((s,i)=>s+(i.bonusQty*i.price),0);
-    const id=`ord_${oi}`;
-    return `<div class="order-card">
-      <div class="order-head" onclick="document.getElementById('ob-${id}').classList.toggle('open')">
-        <div class="order-info">
-          <span style="font-size:14px;font-weight:700;color:#fff">${o.pharmacy}</span>
-          ${o.rep?`<span class="pill">👤 ${o.rep}</span>`:''}
-          ${o.warehouse?`<span class="pill">🏭 ${o.warehouse}</span>`:''}
-          <span class="pill">📅 ${o.date}</span>
-          ${lines.map(l=>`<span style="background:${lc(l)}18;color:${lc(l)};border:1px solid ${lc(l)}33;border-radius:999px;padding:3px 8px;font-size:10px;font-weight:700">${l}</span>`).join('')}
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">
-          <span style="font-size:11px;color:var(--accent2)">طلبية: <strong>${fmtV(ordVal)}</strong></span>
-          <span style="font-size:11px;color:var(--warn)">بونص: <strong>${fmtV(bonVal)}</strong></span>
-          <span style="font-size:12px;color:#fff;font-weight:700">الإجمالي: ${fmtV(ordVal+bonVal)}</span>
-        </div>
-      </div>
-      <div class="order-body" id="ob-${id}">
-        <div class="table-wrap">
-          <table>
-            <thead><tr>
-              <th style="text-align:right">المادة</th><th>Line</th><th>الكمية</th><th>السعر</th>
-              <th>قيمة الطلبية</th><th>البونص%</th><th>كمية البونص</th><th>قيمة البونص</th><th>الإجمالي</th>
-            </tr></thead>
-            <tbody>
-              ${o.items.map(i=>{
-                const iOrd=i.qty*i.price;const iBon=i.bonusQty*i.price;
-                return `<tr>
-                  <td style="text-align:right;font-weight:600;white-space:nowrap">${i.product}</td>
-                  <td>${i.line?`<span style="background:${lc(i.line)}18;color:${lc(i.line)};border-radius:999px;padding:2px 7px;font-size:10px;font-weight:600">${i.line}</span>`:'-'}</td>
-                  <td style="font-weight:700">${fmt(i.qty)}</td>
-                  <td>${fmtV(i.price)}</td>
-                  <td style="color:var(--accent2);font-weight:700">${fmtV(iOrd)}</td>
-                  <td style="color:var(--muted)">${i.bonusPct||0}%</td>
-                  <td style="color:var(--warn);font-weight:700">${fmt(i.bonusQty||0)}</td>
-                  <td style="color:var(--warn);font-weight:700">${fmtV(iBon)}</td>
-                  <td style="color:#fff;font-weight:700;background:rgba(255,255,255,.04)">${fmtV(iOrd+iBon)}</td>
-                </tr>`;
-              }).join('')}
-              <tr style="background:rgba(255,255,255,.04);font-weight:700">
-                <td colspan="4" style="text-align:right;color:var(--muted)">الإجمالي</td>
-                <td style="color:var(--accent2)">${fmtV(ordVal)}</td>
-                <td></td>
-                <td style="color:var(--warn)">${fmt(o.items.reduce((s,i)=>s+i.bonusQty,0))}</td>
-                <td style="color:var(--warn)">${fmtV(bonVal)}</td>
-                <td style="color:#fff">${fmtV(ordVal+bonVal)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function clearOrdFilters(){
-  ['f-rep','f-ph','f-line','f-region','f-warehouse','f-date-from','f-date-to'].forEach(id=>{
-    const el=document.getElementById(id);if(el)el.value='';
-  });
-  applyOrderFilters();
-}
-
-/* ══════════════════════════════════════════════
-   PAGE: STOCK ENTRY
-══════════════════════════════════════════════ */
-function renderStock(el){
-  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const cur=new Date();
-  el.innerHTML=`
-    <div class="fade-up">
-      <div class="card">
-        <h2>📦 Stock Entry</h2>
-        <p style="color:var(--muted);font-size:12px;margin-bottom:14px">
-          Secondary = Opening Stock + Primary Sales − Closing Stock
-        </p>
-        <div class="form-grid" style="margin-bottom:12px">
-          <div class="form-group"><label>Year</label>
-            <select id="st-year" onchange="renderStockGrid()">${[2024,2025,2026,2027,2028].map(y=>`<option${y===cur.getFullYear()?' selected':''}>${y}</option>`).join('')}</select>
-          </div>
-          <div class="form-group"><label>Month</label>
-            <select id="st-month" onchange="renderStockGrid()">${months.map((m,i)=>`<option value="${i+1}"${i===cur.getMonth()?' selected':''}>${m}</option>`).join('')}</select>
-          </div>
-          <div class="form-group"><label>Region</label>
-            <select id="st-area" onchange="renderStockGrid()">${DB.get('areas').map(a=>`<option>${a}</option>`).join('')||'<option>Basra</option>'}</select>
-          </div>
-          <div class="form-group"><label>Warehouse</label>
-            <select id="st-warehouse" onchange="renderStockGrid()" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:12px;font-size:13px;font-family:inherit;outline:none">
-              <option value="">— اختر مخزن —</option>
-              ${(DB.get('warehouses')||[]).map(w=>`<option value="${w.name}">${w.name}${w.group?' ('+w.group+')':''}</option>`).join('')}
-            </select>
-          </div>
-          <div class="form-group"><label>Line</label>
-            <select id="st-line" onchange="renderStockGrid()">
-              <option value="all">All Lines</option>
-              <option>Derma</option><option>Optha</option><option>General Line</option><option>CM Line</option>
-            </select>
-          </div>
-        </div>
-        <input type="text" id="st-search" placeholder="🔍 Search product..." oninput="filterStock()"
-          style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:9px 14px;border-radius:10px;font-size:13px;font-family:inherit;outline:none;margin-bottom:10px">
-        <div id="st-warn" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:8px 14px;font-size:12px;color:var(--warn);margin-bottom:10px">
-          ⚠ ادخل اسم المخزن حتى تحفظ الأرصدة بشكل منفصل لكل مخزن
-        </div>
-        <button class="btn btn-primary btn-sm" onclick="saveStockGrid()" style="margin-bottom:12px">💾 Save & Calculate</button>
-        <div class="table-wrap">
-          <table>
-            <thead><tr>
-              <th style="text-align:right">Product</th>
-              <th>Line</th>
-              <th>Opening Stock</th>
-              <th>Primary (اختياري)</th>
-              <th>Closing Stock</th>
-              <th style="color:var(--accent2)">Secondary (Auto)</th>
-            </tr></thead>
-            <tbody id="st-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  `;
-  renderStockGrid();
-}
-
-function renderStockGrid(){
-  const year      = document.getElementById('st-year')?.value;
-  const month     = document.getElementById('st-month')?.value;
-  const area      = document.getElementById('st-area')?.value||'Basra';
-  const warehouse = document.getElementById('st-warehouse')?.value.trim()||'';
-  const line      = document.getElementById('st-line')?.value||'all';
-  if(!year||!month) return;
-
-  const prods = DB.get('products').filter(p=>line==='all'||p.line===line);
-  const ps    = DB.getObj('primarySales');
-  const stock = DB.getObj('stockEntry');
-  const tbody = document.getElementById('st-tbody');
-  if(!tbody) return;
-
-  // عرض تحذير لو ما في مخزن
-  const warnEl = document.getElementById('st-warn');
-  if(warnEl) warnEl.style.display = warehouse ? 'none' : 'block';
-
-  tbody.innerHTML = prods.map(p=>{
-    const psKey    = `${year}__${p.name}__${area}__${month}`;
-    const primary  = Number(ps[psKey]||0);
-    // الـ key يتضمن المخزن
-    const stKey    = warehouse
-      ? `${year}__${p.name}__${area}__${month}__${warehouse}`
-      : `${year}__${p.name}__${area}__${month}`;
-    const saved    = stock[stKey]||{open:null,close:null};
-
-    // لو ما في opening مدخل — اجلب closing الشهر السابق تلقائياً
-    let autoOpen = null;
-    if(saved.open==null){
-      const prevMonth = Number(month)===1 ? 12 : Number(month)-1;
-      const prevYear  = Number(month)===1 ? Number(year)-1 : year;
-      const prevKey   = warehouse
-        ? `${prevYear}__${p.name}__${area}__${prevMonth}__${warehouse}`
-        : `${prevYear}__${p.name}__${area}__${prevMonth}`;
-      const prevSaved = stock[prevKey];
-      if(prevSaved?.close!=null) autoOpen = prevSaved.close;
-    }
-
-    const open     = saved.open!=null ? saved.open : autoOpen;
-    const close    = saved.close!=null ? saved.close : null;
-    const secondary= open!=null&&close!=null ? open - close : '—';
-
-    // Primary: اختياري لكل مخزن، أو يأخذ من primarySales تلقائياً
-    const primStKey = `${stKey}__prim`;
-    const savedPrim  = stock[primStKey]!=null ? stock[primStKey] : null;
-
-    // Secondary = Opening + Primary(مخزن أو كلي) - Closing
-    const effPrimary = savedPrim!=null ? savedPrim : primary;
-    const secondary2 = open!=null&&close!=null ? open + effPrimary - close : '—';
-
-    return `<tr data-key="${stKey}" data-pskey="${psKey}" data-primstkey="${primStKey}">
-      <td style="text-align:right;font-weight:600">
-        <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${lc(p.line)};margin-left:6px"></span>${p.name}
-      </td>
-      <td><span style="background:${lc(p.line)}18;color:${lc(p.line)};border-radius:999px;padding:2px 7px;font-size:10px;font-weight:600">${p.line}</span></td>
-      <td>
-        <input type="number" class="st-open" value="${open!=null?open:''}" min="0"
-          style="width:80px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:8px;font-size:12px;text-align:center;font-family:inherit;outline:none"
-          placeholder="0" oninput="calcSec2(this,'${stKey}','${psKey}','${primStKey}')">
-      </td>
-      <td>
-        <input type="number" class="st-primary" value="${savedPrim!=null?savedPrim:''}" min="0"
-          style="width:80px;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.2);color:var(--text);padding:6px 8px;border-radius:8px;font-size:12px;text-align:center;font-family:inherit;outline:none"
-          placeholder="${fmt(primary)}" oninput="calcSec2(this,'${stKey}','${psKey}','${primStKey}')">
-      </td>
-      <td>
-        <input type="number" class="st-close" value="${close!=null?close:''}" min="0"
-          style="width:80px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:8px;font-size:12px;text-align:center;font-family:inherit;outline:none"
-          placeholder="0" oninput="calcSec2(this,'${stKey}','${psKey}','${primStKey}')">
-      </td>
-      <td id="sec-${stKey.replace(/[^a-zA-Z0-9]/g,'_')}" style="font-weight:700;font-size:14px;color:${secondary2==='—'?'var(--muted)':secondary2<0?'var(--danger)':secondary2>0?'var(--accent2)':'var(--muted)'}">
-        ${secondary2==='—'?'—':(secondary2<0?'-':'')+fmt(Math.abs(secondary2))}
-      </td>
-    </tr>`;
-  }).join('');
-}
-
-function calcSec2(inp, stKey, psKey, primStKey){
-  const row      = inp.closest('tr');
-  const openVal  = row.querySelector('.st-open')?.value;
-  const closeVal = row.querySelector('.st-close')?.value;
-  const primVal  = row.querySelector('.st-primary')?.value;
-  const safeId   = stKey.replace(/[^a-zA-Z0-9]/g,'_');
-  const el       = document.getElementById(`sec-${safeId}`);
-  if(!el) return;
-  if(openVal===''||closeVal===''){el.textContent='—';el.style.color='var(--muted)';return;}
-  const ps      = DB.getObj('primarySales');
-  const primary = Number(ps[psKey]||0);
-  const effPrim = primVal!=='' ? Number(primVal) : primary;
-  const sec     = Number(openVal) + effPrim - Number(closeVal);
-  el.textContent = (sec<0?'-':'')+fmt(Math.abs(sec));
-  el.style.color = sec>0?'var(--accent2)':sec<0?'var(--danger)':'var(--muted)';
-}
-
-function calcSecondary(inp, stKey, psKey){ calcSec2(inp, stKey, psKey, ''); }
-
-function filterStock(){
-  const q=document.getElementById('st-search')?.value.toLowerCase()||'';
-  document.querySelectorAll('#st-tbody tr').forEach(row=>{
-    row.style.display=row.querySelector('td')?.textContent.toLowerCase().includes(q)?'':'none';
-  });
-}
-
-function saveStockGrid(){
-  const stock = DB.getObj('stockEntry');
-  const wf    = DB.getObj('warehouseFlow');
-  const ps    = DB.getObj('primarySales');
-  const year  = document.getElementById('st-year')?.value;
-  const month = document.getElementById('st-month')?.value;
-  const area  = document.getElementById('st-area')?.value||'Basra';
-  const wh    = document.getElementById('st-warehouse')?.value.trim()||'';
-
-  const entries = [];
-
-  document.querySelectorAll('#st-tbody tr').forEach(row=>{
-    const stKey = row.dataset.key;
-    const psKey = row.dataset.pskey;
-    if(!stKey) return;
-    const openVal  = row.querySelector('.st-open')?.value;
-    const closeVal = row.querySelector('.st-close')?.value;
-    const primVal  = row.querySelector('.st-primary')?.value;
-    if((openVal===''||openVal==null)&&(closeVal===''||closeVal==null)) return;
-
-    const openNum  = openVal!==''&&openVal!=null ? Number(openVal) : null;
-    const closeNum = closeVal!==''&&closeVal!=null ? Number(closeVal) : null;
-    const primNum  = primVal!==''&&primVal!=null ? Number(primVal) : null;
-
-    // حفظ primary المخزن لو مدخل
-    const primStKey = `${stKey}__prim`;
-    if(primNum!=null) stock[primStKey]=primNum;
-    else delete stock[primStKey];
-
-    const defPrimary = Number(ps[psKey]||0);
-    const effPrimary = primNum!=null ? primNum : defPrimary;
-    const secondary  = openNum!=null&&closeNum!=null ? openNum + effPrimary - closeNum : 0;
-
-    stock[stKey] = {open:openNum, close:closeNum};
-
-    // Secondary لهذا المخزن يُضاف للـ warehouseFlow
-    // psKey = year__product__area__month (بدون مخزن)
-    const prevSec = Number(wf[psKey]||0);
-    // نحذف contribution القديم ونضيف الجديد
-    wf[psKey] = prevSec + secondary;
-    if(wf[psKey]===0) delete wf[psKey];
-
-    // تجهيز للإرسال للشيت
-    const productName = row.cells[row.cells.length-1]?.textContent?.trim().replace(/^\W+/,'').trim()||'';
-    const primary = Number(DB.getObj('primarySales')[psKey]||0);
-    entries.push({
-      year, month, area,
-      warehouse: wh,
-      product:   productName,
-      line:      row.querySelector('span[style*="border-radius"]')?.textContent||'',
-      opening:   openNum||0,
-      closing:   closeNum||0,
-      primary,
-      secondary,
-    });
-  });
-
-  DB.setObj('stockEntry', stock);
-  DB.setObj('warehouseFlow', wf);
-
-  // إرسال للشيت
-  if(entries.length){
-    fetch(SHEETS_URL, {
-      method:'POST',
-      body: JSON.stringify({action:'saveStock', entries}),
-    }).then(r=>r.json()).then(d=>{
-      if(d.success) toast(`✓ Saved — ${d.rowsAdded} added, ${d.rowsUpdated} updated`);
-      else toast('⚠ Sheets error: '+d.error);
-    }).catch(()=>toast('✓ Saved locally (Sheets offline)'));
-  }
-
-  toast('✓ Saved — Secondary updated');
-  renderStockGrid();
-}
-function renderTargets(el){
-  el.innerHTML=`<div class="fade-up"><div class="card"><h2>🎯 الأهداف</h2><p style="color:var(--muted)">قريباً — ستُربط بصفحة الأهداف التفصيلية</p></div></div>`;
-}
-
-/* ══════════════════════════════════════════════
-   PAGE: PERFORMANCE
-══════════════════════════════════════════════ */
-function renderPerformance(el){
-  el.innerHTML=`<div class="fade-up"><div class="card"><h2>📊 الأداء</h2><p style="color:var(--muted)">قريباً — تحليل أداء الفريق</p></div></div>`;
-}
-
-/* ══════════════════════════════
-   INIT
-══════════════════════════════ */
-// Seed default warehouses if empty
-if(!(DB.get('warehouses')||[]).length){
-  DB.set('warehouses',[
-    // مجموعة سيادة
-    {name:'سيادة',    type:'branch', group:'سيادة Group', area:'Basra'},
-    {name:'خضراء',    type:'branch', group:'سيادة Group', area:'Basra'},
-    {name:'لافندر',   type:'branch', group:'سيادة Group', area:'Basra'},
-    // مستقلة
-    {name:'منهل',     type:'standalone', group:'', area:'Basra'},
-    {name:'اندلس',    type:'standalone', group:'', area:'Basra'},
-    {name:'ساوة',     type:'standalone', group:'', area:'Basra'},
-    {name:'لافقدر',   type:'standalone', group:'', area:'Basra'},
-    {name:'ركن الرافدين', type:'standalone', group:'', area:'Basra'},
-  ]);
-}
-
-navigate('dashboard', document.querySelector('.nav-link.active'));
-</script>
-</body>
-</html>
