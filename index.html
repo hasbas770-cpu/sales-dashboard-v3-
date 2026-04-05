@@ -1477,12 +1477,14 @@ function renderSecGrid() {
       const stKey = `${year}__${p.name}__${area}__${month}__${w.name}`;
       const saved = stock[stKey] || { open:null, close:null };
       const primStKey = `${stKey}__prim`;
-      const whPrim = stock[primStKey] != null ? stock[primStKey] : primary;
+      const whPrim = stock[primStKey] != null ? Number(stock[primStKey]) : 0;
+      // لو ما في بيانات opening و closing → ما يحسب
       if (saved.open == null && saved.close == null) return null;
       return Number(saved.open||0) + whPrim - Number(saved.close||0);
     });
 
     const totalSec = whSecs.reduce((s,v) => s + (v != null ? v : 0), 0);
+    // Flow Rate = Total Secondary ÷ Primary Sales Total × 100
     const flow = primary > 0 ? (totalSec / primary * 100) : 0;
 
     return `<tr>
