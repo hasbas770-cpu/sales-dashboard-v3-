@@ -1598,27 +1598,11 @@ function renderStockGrid() {
     const open  = saved.open  != null ? saved.open  : autoOpen;
     const close = saved.close != null ? saved.close : null;
 
-    // Saved warehouse-specific primary
+    // Primary للمخزن — مستقل تماماً عن Primary Sales
     const primStKey = `${stKey}__prim`;
     const savedPrim = stock[primStKey] != null ? stock[primStKey] : null;
+    const effPrim   = savedPrim != null ? savedPrim : 0;
 
-    // حساب Primary المتبقي للمخازن الفارغة
-    // = Primary Total - مجموع Primary المخازن المدخلة الأخرى
-    function getEffPrimary(currentStKey, psKey) {
-      const whs = DB.get('warehouses') || [];
-      let sumEntered = 0;
-      let currentHasValue = stock[`${currentStKey}__prim`] != null;
-      whs.forEach(w => {
-        const wKey = `${year}__${p.name}__${area}__${month}__${w.name}`;
-        if (wKey === currentStKey) return; // تخطى المخزن الحالي
-        const wPrim = stock[`${wKey}__prim`];
-        if (wPrim != null) sumEntered += Number(wPrim);
-      });
-      if (currentHasValue) return Number(stock[`${currentStKey}__prim`]);
-      return Math.max(0, primary - sumEntered);
-    }
-
-    const effPrim = getEffPrimary(stKey, psKey);
     const secondary = open != null && close != null ? open + effPrim - close : '—';
 
     return `<tr data-key="${stKey}" data-pskey="${psKey}" data-primkey="${primStKey}">
@@ -1634,7 +1618,7 @@ function renderStockGrid() {
       <td>
         <input type="number" class="st-primary" value="${savedPrim != null ? savedPrim : ''}" min="0"
           style="width:80px;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.2);color:var(--text);padding:6px 8px;border-radius:8px;font-size:12px;text-align:center;font-family:inherit;outline:none"
-          placeholder="${fmt(primary)}" oninput="calcSec(this,'${stKey}','${psKey}','${primStKey}')">
+          placeholder="0" oninput="calcSec(this,'${stKey}','${psKey}','${primStKey}')">
       </td>
       <td>
         <input type="number" class="st-close" value="${close != null ? close : ''}" min="0"
@@ -1660,30 +1644,9 @@ function calcSec(inp, stKey, psKey, primStKey) {
   if (openVal === '' || closeVal === '') {
     el.textContent = '—'; el.style.color = 'var(--muted)'; return;
   }
-
-  const ps      = DB.getObj('primarySales');
-  const stock   = DB.getObj('stockEntry');
-  const primary = Number(ps[psKey] || 0);
-
-  // حساب Primary المتبقي
-  let effPrim;
-  if (primVal !== '' && primVal != null) {
-    effPrim = Number(primVal);
-  } else {
-    // مجموع المخازن الأخرى المدخلة
-    const whs = DB.get('warehouses') || [];
-    let sumOthers = 0;
-    whs.forEach(w => {
-      const parts = stKey.split('__');
-      const wKey = `${parts[0]}__${parts[1]}__${parts[2]}__${parts[3]}__${w.name}`;
-      if (wKey === stKey) return;
-      const wPrim = stock[`${wKey}__prim`];
-      if (wPrim != null) sumOthers += Number(wPrim);
-    });
-    effPrim = Math.max(0, primary - sumOthers);
-  }
-
-  const sec = Number(openVal) + effPrim - Number(closeVal);
+  // Primary المخزن مستقل — لو فارغ = 0
+  const effPrim = primVal !== '' && primVal != null ? Number(primVal) : 0;
+  const sec     = Number(openVal) + effPrim - Number(closeVal);
   el.textContent = fmtSec(sec);
   el.style.color = sec > 0 ? 'var(--accent2)' : sec < 0 ? 'var(--danger)' : 'var(--muted)';
 }
@@ -1724,8 +1687,8 @@ function saveStockGrid() {
     if (primNum != null) stock[primStKey] = primNum;
     else delete stock[primStKey];
 
-    const defPrimary = Number(ps[psKey] || 0);
-    const effPrimary = primNum != null ? primNum : defPrimary;
+    const defPrimary = 0; // Primary المخزن مستقل — لا يرث من Primary Sales
+    const effPrimary = primNum != null ? primNum : 0;
     const secondary  = openNum != null && closeNum != null ? openNum + effPrimary - closeNum : 0;
 
     stock[stKey] = { open:openNum, close:closeNum };
