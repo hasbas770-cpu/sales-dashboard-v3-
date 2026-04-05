@@ -1103,17 +1103,77 @@ function renderWhGroupDetail(el, groupName) {
   const whs     = DB.get('warehouses') || [];
   const members = whs.filter(w => w.group === groupName);
   const gs      = getWhGroupStats(members.map(m => m.name));
+  const stock   = DB.getObj('stockEntry');
+  const ps      = DB.getObj('primarySales');
+  const prods   = DB.get('products');
+  const year    = new Date().getFullYear();
+  const months  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const cur     = new Date();
+
+  // حساب إجمالي Opening و Closing لكل مادة من كل فروع المجموعة
+  function getGroupProdStats(month) {
+    return prods.map(p => {
+      let totalOpen = 0, totalClose = 0, hasData = false;
+      members.forEach(w => {
+        const stKey = `${year}__${p.name}__Basra__${month}__${w.name}`;
+        const saved = stock[stKey];
+        if (saved?.open != null || saved?.close != null) {
+          hasData = true;
+          totalOpen  += Number(saved?.open  || 0);
+          totalClose += Number(saved?.close || 0);
+        }
+      });
+      // Primary للمجموعة
+      const psKey    = `${year}__${p.name}__Basra__${month}`;
+      const grpPrimKey = `group__${groupName}__${psKey}`;
+      const savedGrpPrim = stock[grpPrimKey];
+      const defPrimary   = Number(ps[psKey] || 0);
+      const primary      = savedGrpPrim != null ? savedGrpPrim : defPrimary;
+      const secondary    = hasData ? totalOpen + primary - totalClose : null;
+      return { name:p.name, line:p.line, totalOpen, totalClose, primary, savedGrpPrim, psKey, grpPrimKey, secondary, hasData };
+    }).filter(p => p.hasData || p.primary > 0);
+  }
 
   el.innerHTML = `
     <div class="fade-up">
       <button class="btn btn-ghost btn-sm" onclick="navigate('warehouses',null)" style="margin-bottom:14px">← رجوع</button>
+
+      <!-- KPIs -->
       <div class="kpi-grid" style="margin-bottom:16px">
         <div class="kpi-card"><div class="kpi-label">إجمالي Stock</div><div class="kpi-value">${fmt(gs.stock)}</div></div>
         <div class="kpi-card"><div class="kpi-label">إجمالي Secondary</div><div class="kpi-value" style="color:var(--accent)">${fmtSec(gs.secondary)}</div></div>
         <div class="kpi-card"><div class="kpi-label">إجمالي Primary</div><div class="kpi-value" style="color:var(--muted)">${fmt(gs.primary)}</div></div>
         <div class="kpi-card"><div class="kpi-label">Flow%</div><div class="kpi-value" style="color:${flowColor(gs.flow)}">${gs.flow.toFixed(1)}%</div></div>
       </div>
-      <div style="display:grid;gap:12px">
+
+      <!-- Stock Entry للمجموعة -->
+      <div class="card">
+        <h2>📦 Stock Entry — ${groupName}</h2>
+        <p style="color:var(--muted);font-size:12px;margin-bottom:14px">
+          Opening و Closing = مجموع الفروع تلقائياً • Primary يدوي للمجموعة
+        </p>
+        <div class="form-grid" style="margin-bottom:12px">
+          <div class="form-group"><label>Month</label>
+            <select id="grp-month" onchange="renderGroupStockTable('${groupName}')">
+              ${months.map((m,i) => `<option value="${i+1}"${i===cur.getMonth()?' selected':''}>${m}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="saveGroupStock('${groupName}')" style="margin-bottom:12px">💾 Save & Calculate</button>
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th style="text-align:right">Product</th><th>Line</th>
+            <th>Opening (إجمالي)</th>
+            <th title="يدوي للمجموعة">Primary <span style="color:var(--muted);font-size:10px">(يدوي)</span></th>
+            <th>Closing (إجمالي)</th>
+            <th style="color:var(--accent2)">Secondary</th>
+          </tr></thead><tbody id="grp-stock-tbody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- فروع المجموعة -->
+      <div style="display:grid;gap:12px;margin-top:16px">
+        <h2 style="color:#dbe7ff;font-size:14px">🏭 الفروع</h2>
         ${members.map(w => {
           const ws = getWhStats(w.name);
           return `<div class="card" style="cursor:pointer" onclick="navigate('wh_${encodeURIComponent(w.name)}',null)">
@@ -1131,6 +1191,119 @@ function renderWhGroupDetail(el, groupName) {
         }).join('')}
       </div>
     </div>`;
+
+  renderGroupStockTable(groupName);
+}
+
+function renderGroupStockTable(groupName) {
+  const month   = document.getElementById('grp-month')?.value || new Date().getMonth()+1;
+  const whs     = DB.get('warehouses') || [];
+  const members = whs.filter(w => w.group === groupName);
+  const stock   = DB.getObj('stockEntry');
+  const ps      = DB.getObj('primarySales');
+  const prods   = DB.get('products');
+  const year    = new Date().getFullYear();
+  const tbody   = document.getElementById('grp-stock-tbody');
+  if (!tbody) return;
+
+  const rows = prods.map(p => {
+    let totalOpen = 0, totalClose = 0, hasData = false;
+    members.forEach(w => {
+      const stKey = `${year}__${p.name}__Basra__${month}__${w.name}`;
+      const saved = stock[stKey];
+      if (saved?.open != null || saved?.close != null) {
+        hasData = true;
+        totalOpen  += Number(saved?.open  || 0);
+        totalClose += Number(saved?.close || 0);
+      }
+    });
+    if (!hasData) return null;
+    const psKey      = `${year}__${p.name}__Basra__${month}`;
+    const grpPrimKey = `group__${groupName}__${psKey}`;
+    const defPrimary = Number(ps[psKey] || 0);
+    const savedPrim  = stock[grpPrimKey];
+    const effPrim    = savedPrim != null ? savedPrim : defPrimary;
+    const secondary  = totalOpen + effPrim - totalClose;
+    return { name:p.name, line:p.line, totalOpen, totalClose, effPrim, savedPrim, defPrimary, secondary, psKey, grpPrimKey };
+  }).filter(Boolean);
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty">لا توجد بيانات — أدخل Stock Entry للفروع أولاً</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(p => `<tr data-grpkey="${p.grpKey}" data-pskey="${p.psKey}" data-grpprimkey="${p.grpPrimKey}">
+    <td style="text-align:right;font-weight:600">
+      <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${lc(p.line)};margin-left:6px"></span>${p.name}
+    </td>
+    <td><span style="background:${lc(p.line)}18;color:${lc(p.line)};border-radius:999px;padding:2px 7px;font-size:10px;font-weight:600">${p.line}</span></td>
+    <td style="color:var(--accent2);font-weight:600">${fmt(p.totalOpen)}</td>
+    <td>
+      <input type="number" class="grp-primary" value="${p.savedPrim != null ? p.savedPrim : ''}" min="0"
+        style="width:85px;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.2);color:var(--text);padding:6px 8px;border-radius:8px;font-size:12px;text-align:center;font-family:inherit;outline:none"
+        placeholder="${fmt(p.defPrimary)}" oninput="calcGroupSec(this)">
+    </td>
+    <td style="color:var(--muted);font-weight:600">${fmt(p.totalClose)}</td>
+    <td id="grpsec-${p.grpPrimKey.replace(/[^a-zA-Z0-9]/g,'_')}"
+      style="font-weight:700;font-size:14px;color:${p.secondary<0?'var(--danger)':p.secondary>0?'var(--accent2)':'var(--muted)'}">
+      ${fmtSec(p.secondary)}
+    </td>
+  </tr>`).join('');
+}
+
+function calcGroupSec(inp) {
+  const row      = inp.closest('tr');
+  const primKey  = row.dataset.grpprimkey;
+  const psKey    = row.dataset.pskey;
+  const ps       = DB.getObj('primarySales');
+  const stock    = DB.getObj('stockEntry');
+  const defPrim  = Number(ps[psKey] || 0);
+  const primVal  = inp.value !== '' ? Number(inp.value) : defPrim;
+  // Get totals from cells
+  const cells    = row.querySelectorAll('td');
+  const totalOpen  = Number(cells[2].textContent.replace(/,/g,'')) || 0;
+  const totalClose = Number(cells[4].textContent.replace(/,/g,'')) || 0;
+  const sec      = totalOpen + primVal - totalClose;
+  const safeId   = primKey.replace(/[^a-zA-Z0-9]/g,'_');
+  const el       = document.getElementById(`grpsec-${safeId}`);
+  if (el) {
+    el.textContent = fmtSec(sec);
+    el.style.color = sec > 0 ? 'var(--accent2)' : sec < 0 ? 'var(--danger)' : 'var(--muted)';
+  }
+}
+
+function saveGroupStock(groupName) {
+  const stock = DB.getObj('stockEntry');
+  const wf    = DB.getObj('warehouseFlow');
+  const ps    = DB.getObj('primarySales');
+
+  document.querySelectorAll('#grp-stock-tbody tr').forEach(row => {
+    const grpPrimKey = row.dataset.grpprimkey;
+    const psKey      = row.dataset.pskey;
+    if (!grpPrimKey) return;
+    const primVal = row.querySelector('.grp-primary')?.value;
+    if (primVal !== '' && primVal != null) {
+      stock[grpPrimKey] = Number(primVal);
+    } else {
+      delete stock[grpPrimKey];
+    }
+    // Update warehouseFlow
+    const defPrim   = Number(ps[psKey] || 0);
+    const effPrim   = primVal !== '' && primVal != null ? Number(primVal) : defPrim;
+    const cells     = row.querySelectorAll('td');
+    const totalOpen  = Number(cells[2].textContent.replace(/,/g,'')) || 0;
+    const totalClose = Number(cells[4].textContent.replace(/,/g,'')) || 0;
+    const sec        = totalOpen + effPrim - totalClose;
+    wf[`${psKey}__${groupName}`] = sec;
+    // Recalculate total
+    const allWhKeys = Object.keys(wf).filter(k => k.startsWith(psKey + '__'));
+    wf[psKey] = allWhKeys.reduce((s,k) => s + Number(wf[k]||0), 0);
+  });
+
+  DB.setObj('stockEntry', stock);
+  DB.setObj('warehouseFlow', wf);
+  toast('✓ Saved — Group Secondary updated');
+  renderGroupStockTable(groupName);
 }
 
 
