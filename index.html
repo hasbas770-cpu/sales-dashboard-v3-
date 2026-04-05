@@ -404,6 +404,7 @@ document.addEventListener('DOMContentLoaded', function() {
   navigate('dashboard', document.querySelector('.nav-link.active'));
 });
 </script>
+
 <script>
 
 /* === JS/DB.JS === */
@@ -1506,8 +1507,24 @@ function renderStockGrid() {
     // Saved warehouse-specific primary
     const primStKey = `${stKey}__prim`;
     const savedPrim = stock[primStKey] != null ? stock[primStKey] : null;
-    const effPrim   = savedPrim != null ? savedPrim : primary;
 
+    // حساب Primary المتبقي للمخازن الفارغة
+    // = Primary Total - مجموع Primary المخازن المدخلة الأخرى
+    function getEffPrimary(currentStKey, psKey) {
+      const whs = DB.get('warehouses') || [];
+      let sumEntered = 0;
+      let currentHasValue = stock[`${currentStKey}__prim`] != null;
+      whs.forEach(w => {
+        const wKey = `${year}__${p.name}__${area}__${month}__${w.name}`;
+        if (wKey === currentStKey) return; // تخطى المخزن الحالي
+        const wPrim = stock[`${wKey}__prim`];
+        if (wPrim != null) sumEntered += Number(wPrim);
+      });
+      if (currentHasValue) return Number(stock[`${currentStKey}__prim`]);
+      return Math.max(0, primary - sumEntered);
+    }
+
+    const effPrim = getEffPrimary(stKey, psKey);
     const secondary = open != null && close != null ? open + effPrim - close : '—';
 
     return `<tr data-key="${stKey}" data-pskey="${psKey}" data-primkey="${primStKey}">
@@ -1547,14 +1564,32 @@ function calcSec(inp, stKey, psKey, primStKey) {
   const el       = document.getElementById(`sec-${safeId}`);
   if (!el) return;
   if (openVal === '' || closeVal === '') {
-    el.textContent = '—';
-    el.style.color = 'var(--muted)';
-    return;
+    el.textContent = '—'; el.style.color = 'var(--muted)'; return;
   }
+
   const ps      = DB.getObj('primarySales');
+  const stock   = DB.getObj('stockEntry');
   const primary = Number(ps[psKey] || 0);
-  const effPrim = primVal !== '' ? Number(primVal) : primary;
-  const sec     = Number(openVal) + effPrim - Number(closeVal);
+
+  // حساب Primary المتبقي
+  let effPrim;
+  if (primVal !== '' && primVal != null) {
+    effPrim = Number(primVal);
+  } else {
+    // مجموع المخازن الأخرى المدخلة
+    const whs = DB.get('warehouses') || [];
+    let sumOthers = 0;
+    whs.forEach(w => {
+      const parts = stKey.split('__');
+      const wKey = `${parts[0]}__${parts[1]}__${parts[2]}__${parts[3]}__${w.name}`;
+      if (wKey === stKey) return;
+      const wPrim = stock[`${wKey}__prim`];
+      if (wPrim != null) sumOthers += Number(wPrim);
+    });
+    effPrim = Math.max(0, primary - sumOthers);
+  }
+
+  const sec = Number(openVal) + effPrim - Number(closeVal);
   el.textContent = fmtSec(sec);
   el.style.color = sec > 0 ? 'var(--accent2)' : sec < 0 ? 'var(--danger)' : 'var(--muted)';
 }
