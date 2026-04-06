@@ -255,12 +255,14 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
 
   <nav class="sidebar-nav">
 
+    <!-- Dashboard -->
     <div class="nav-item">
       <button class="nav-link active" onclick="navigate('dashboard',this)">
         <div class="icon">📈</div><span>Dashboard</span>
       </button>
     </div>
 
+    <!-- Master Data -->
     <div class="nav-item">
       <button class="nav-link" onclick="toggleMenu('menu-master',this)">
         <div class="icon">🗂</div><span>Master Data</span><span class="arrow">›</span>
@@ -270,12 +272,24 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
         <button class="sub-link" onclick="navigate('pharmacies',this)">الصيدليات</button>
         <button class="sub-link" onclick="navigate('doctors',this)">الأطباء</button>
         <button class="sub-link" onclick="navigate('reps',this)">المندوبين</button>
-        <button class="sub-link" onclick="navigate('warehouses',this)">المخازن</button>
-        <button class="sub-link" onclick="navigate('wh_summary',this)">Warehouse Summary</button>
         <button class="sub-link" onclick="navigate('regions',this)">المناطق</button>
+        <button class="sub-link" onclick="navigate('stock',this)">Stock Entry</button>
       </div>
     </div>
 
+    <!-- Warehouses -->
+    <div class="nav-item">
+      <button class="nav-link" onclick="toggleMenu('menu-warehouses',this)">
+        <div class="icon">🏭</div><span>Warehouses</span><span class="arrow">›</span>
+      </button>
+      <div class="sub-menu" id="menu-warehouses">
+        <button class="sub-link" onclick="navigate('warehouses',this)">Warehouses</button>
+        <button class="sub-link" onclick="navigate('wh_summary',this)">Summary</button>
+        <button class="sub-link" onclick="navigate('wh_add',this)">Add Warehouse</button>
+      </div>
+    </div>
+
+    <!-- Sales -->
     <div class="nav-item">
       <button class="nav-link" onclick="toggleMenu('menu-sales',this)">
         <div class="icon">💰</div><span>Sales</span><span class="arrow">›</span>
@@ -283,11 +297,11 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
       <div class="sub-menu" id="menu-sales">
         <button class="sub-link" onclick="navigate('primary',this)">Primary Sales</button>
         <button class="sub-link" onclick="navigate('secondary',this)">Secondary Sales</button>
-        <button class="sub-link" onclick="navigate('stock',this)">Stock Entry</button>
         <button class="sub-link" onclick="navigate('orders',this)">Pharmacy Orders</button>
       </div>
     </div>
 
+    <!-- Targets -->
     <div class="nav-item">
       <button class="nav-link" onclick="toggleMenu('menu-targets',this)">
         <div class="icon">🎯</div><span>Targets & Performance</span><span class="arrow">›</span>
@@ -1312,8 +1326,8 @@ function renderWhSummary(el) {
   const cur    = new Date();
   const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const whs    = DB.get('warehouses') || [];
+  const areas  = DB.get('areas') || ['Basra'];
 
-  // بناء قائمة الفلاتر — مخازن + مجموعات
   const groups     = [...new Set(whs.filter(w=>w.group).map(w=>w.group))];
   const whOptions  = whs.map(w=>`<option value="wh__${w.name}">${w.name}</option>`).join('');
   const grpOptions = groups.map(g=>`<option value="grp__${g}">${g}</option>`).join('');
@@ -1328,9 +1342,19 @@ function renderWhSummary(el) {
               ${[2024,2025,2026,2027,2028].map(y=>`<option${y===cur.getFullYear()?' selected':''}>${y}</option>`).join('')}
             </select>
           </div>
-          <div class="form-group"><label>Month</label>
-            <select id="ws-month" onchange="renderWhSummaryTable()">
+          <div class="form-group"><label>From Month</label>
+            <select id="ws-month-from" onchange="renderWhSummaryTable()">
               ${months.map((m,i)=>`<option value="${i+1}"${i===cur.getMonth()?' selected':''}>${m}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>To Month</label>
+            <select id="ws-month-to" onchange="renderWhSummaryTable()">
+              ${months.map((m,i)=>`<option value="${i+1}"${i===cur.getMonth()?' selected':''}>${m}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>Region</label>
+            <select id="ws-area" onchange="renderWhSummaryTable()">
+              ${areas.map(a=>`<option>${a}</option>`).join('')}
             </select>
           </div>
           <div class="form-group"><label>Warehouse / Group</label>
@@ -1347,6 +1371,7 @@ function renderWhSummary(el) {
             </select>
           </div>
         </div>
+        <button class="btn btn-primary btn-sm" onclick="renderWhSummaryTable()" style="margin-bottom:12px">Apply</button>
         <div id="ws-table"></div>
       </div>
     </div>`;
@@ -1354,11 +1379,13 @@ function renderWhSummary(el) {
 }
 
 function renderWhSummaryTable() {
-  const year  = document.getElementById('ws-year')?.value;
-  const month = document.getElementById('ws-month')?.value;
-  const whSel = document.getElementById('ws-wh')?.value   || 'all';
-  const line  = document.getElementById('ws-line')?.value || 'all';
-  if (!year || !month) return;
+  const year      = document.getElementById('ws-year')?.value;
+  const monthFrom = Number(document.getElementById('ws-month-from')?.value || 1);
+  const monthTo   = Number(document.getElementById('ws-month-to')?.value   || 12);
+  const area      = document.getElementById('ws-area')?.value  || 'Basra';
+  const whSel     = document.getElementById('ws-wh')?.value    || 'all';
+  const line      = document.getElementById('ws-line')?.value  || 'all';
+  if (!year) return;
 
   const prods = DB.get('products').filter(p => line==='all' || p.line===line);
   const stock = DB.getObj('stockEntry');
@@ -1437,6 +1464,98 @@ function renderWhSummaryTable() {
         </tbody>
       </table>
     </div>`;
+}
+
+/* ── Add Warehouse Page ── */
+function renderWhAdd(el) {
+  const areas = DB.get('areas') || ['Basra'];
+  const whs   = DB.get('warehouses') || [];
+  const groups = [...new Set(whs.filter(w=>w.group).map(w=>w.group))];
+
+  el.innerHTML = `
+    <div class="fade-up">
+      <div class="card" style="max-width:500px">
+        <h2>🏭 Add Warehouse</h2>
+        <div class="form-grid" style="margin-bottom:14px">
+          <div class="form-group"><label>اسم المخزن</label>
+            <input type="text" id="wha-name" placeholder="مثال: منهل">
+          </div>
+          <div class="form-group"><label>النوع</label>
+            <select id="wha-type" onchange="toggleWhAddGroup()">
+              <option value="standalone">مستقل</option>
+              <option value="branch">فرعي (ضمن مجموعة)</option>
+            </select>
+          </div>
+          <div class="form-group" id="wha-group-wrap" style="display:none">
+            <label>المجموعة</label>
+            <input type="text" id="wha-group" placeholder="اسم المجموعة" list="wha-groups-list">
+            <datalist id="wha-groups-list">
+              ${groups.map(g=>`<option value="${g}">`).join('')}
+            </datalist>
+          </div>
+          <div class="form-group"><label>المنطقة</label>
+            <select id="wha-area">
+              ${areas.map(a=>`<option>${a}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-primary" onclick="addWarehouseFromPage()">✓ حفظ</button>
+          <button class="btn btn-ghost" onclick="navigate('warehouses',null)">إلغاء</button>
+        </div>
+        <div id="wha-msg" style="margin-top:12px;font-size:13px"></div>
+      </div>
+
+      <!-- قائمة المخازن الحالية -->
+      <div class="card" style="margin-top:16px">
+        <h2>📋 المخازن الحالية</h2>
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th style="text-align:right">الاسم</th><th>النوع</th><th>المجموعة</th><th>المنطقة</th><th>حذف</th>
+          </tr></thead><tbody>
+            ${whs.map((w,i)=>`<tr>
+              <td style="text-align:right;font-weight:600">${w.name}</td>
+              <td><span style="background:${w.type==='branch'?'rgba(79,142,247,.1)':'rgba(52,211,153,.1)'};color:${w.type==='branch'?'var(--accent)':'var(--accent2)'};border-radius:999px;padding:2px 8px;font-size:10px">${w.type==='branch'?'فرعي':'مستقل'}</span></td>
+              <td style="color:var(--muted)">${w.group||'—'}</td>
+              <td style="color:var(--muted)">${w.area||'—'}</td>
+              <td><button class="btn btn-danger btn-sm" onclick="deleteWhFromPage(${i})">🗑</button></td>
+            </tr>`).join('')}
+          </tbody></table>
+        </div>
+      </div>
+    </div>`;
+}
+
+function toggleWhAddGroup() {
+  const type = document.getElementById('wha-type').value;
+  document.getElementById('wha-group-wrap').style.display = type==='branch' ? 'block' : 'none';
+}
+
+function addWarehouseFromPage() {
+  const name  = document.getElementById('wha-name').value.trim();
+  const type  = document.getElementById('wha-type').value;
+  const group = document.getElementById('wha-group')?.value.trim() || '';
+  const area  = document.getElementById('wha-area').value;
+  const msg   = document.getElementById('wha-msg');
+
+  if (!name) { msg.innerHTML = '<span style="color:var(--danger)">⚠ ادخل اسم المخزن</span>'; return; }
+  const whs = DB.get('warehouses') || [];
+  if (whs.find(w=>w.name===name)) { msg.innerHTML = '<span style="color:var(--danger)">⚠ المخزن موجود</span>'; return; }
+
+  whs.push({ name, type, group: type==='branch' ? group : '', area });
+  DB.set('warehouses', whs);
+  msg.innerHTML = '<span style="color:var(--accent2)">✓ تم الحفظ</span>';
+  document.getElementById('wha-name').value = '';
+  // Refresh page
+  setTimeout(() => navigate('wh_add', null), 800);
+}
+
+function deleteWhFromPage(i) {
+  const whs = DB.get('warehouses') || [];
+  if (!confirm('حذف '+whs[i].name+'؟')) return;
+  whs.splice(i,1);
+  DB.set('warehouses', whs);
+  navigate('wh_add', null);
 }
 
 
@@ -1577,7 +1696,10 @@ function renderSecondary(el) {
         </div>
         <div class="table-wrap">
           <table><thead><tr>
-            <th style="text-align:right">Product</th><th>Line</th><th>Primary</th>
+            <th style="text-align:right">Product</th><th>Line</th>
+            <th style="color:var(--accent2)">Opening</th>
+            <th>Primary</th>
+            <th style="color:var(--muted)">Closing</th>
             ${(DB.get('warehouses')||[]).map(w=>`<th>${w.name}</th>`).join('')}
             <th style="color:var(--accent2)">Total Secondary</th><th>Flow%</th>
           </tr></thead><tbody id="sec-tbody"></tbody></table>
@@ -1601,11 +1723,12 @@ function renderSecGrid() {
   const tbody = document.getElementById('sec-tbody');
   if (!tbody) return;
 
-  tbody.innerHTML = prods.map(p => {
+  let grandOpen = 0, grandClose = 0, grandPrim = 0, grandSec = 0;
+
+  const rows = prods.map(p => {
     const psKey   = `${year}__${p.name}__${area}__${month}`;
     const primary = Number(ps[psKey] || 0);
 
-    // مجموع Opening و Closing من كل المخازن
     let totalOpen = 0, totalClose = 0, hasData = false;
     const whSecs = whs.map(w => {
       const stKey  = `${year}__${p.name}__${area}__${month}__${w.name}`;
@@ -1622,21 +1745,41 @@ function renderSecGrid() {
 
     if (!hasData && primary === 0) return null;
 
-    // Total Secondary = مجموع Opening + Primary - مجموع Closing
     const totalSec = totalOpen + primary - totalClose;
-    const flow = primary > 0 ? (totalSec / primary * 100) : 0;
+    const flow     = primary > 0 ? (totalSec / primary * 100) : null;
+
+    grandOpen  += totalOpen;
+    grandClose += totalClose;
+    grandPrim  += primary;
+    grandSec   += totalSec;
 
     return `<tr>
       <td style="text-align:right;font-weight:600">
         <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${lc(p.line)};margin-left:6px"></span>${p.name}
       </td>
       <td><span style="background:${lc(p.line)}18;color:${lc(p.line)};border-radius:999px;padding:2px 7px;font-size:10px;font-weight:600">${p.line}</span></td>
+      <td style="color:var(--accent2)">${fmt(totalOpen)}</td>
       <td style="color:var(--muted)">${fmt(primary)}</td>
+      <td style="color:var(--muted)">${fmt(totalClose)}</td>
       ${whSecs.map(v => `<td style="color:${v==null?'var(--muted)':v<0?'var(--danger)':v>0?'var(--accent)':'var(--muted)'};font-weight:600">${v==null?'—':fmtSec(v)}</td>`).join('')}
       <td style="color:${totalSec<0?'var(--danger)':totalSec>0?'var(--accent2)':'var(--muted)'};font-weight:700;font-size:14px">${fmtSec(totalSec)}</td>
-      <td style="color:${flow>=80?'var(--accent2)':flow>=50?'var(--warn)':'var(--danger)'}">${flow.toFixed(1)}%</td>
+      <td style="color:${flow===null?'var(--muted)':flow>=80?'var(--accent2)':flow>=50?'var(--warn)':'var(--danger)'}">${flow===null?'—':flow.toFixed(1)+'%'}</td>
     </tr>`;
-  }).filter(Boolean).join('');
+  }).filter(Boolean);
+
+  const grandFlow = grandPrim > 0 ? (grandSec / grandPrim * 100) : null;
+
+  tbody.innerHTML = rows.join('') + `
+    <tr style="background:rgba(255,255,255,.06);font-weight:700;border-top:2px solid var(--border)">
+      <td style="text-align:right;color:#fff">Total</td>
+      <td></td>
+      <td style="color:var(--accent2)">${fmt(grandOpen)}</td>
+      <td style="color:var(--muted)">${fmt(grandPrim)}</td>
+      <td style="color:var(--muted)">${fmt(grandClose)}</td>
+      ${whs.map(()=>'<td></td>').join('')}
+      <td style="color:${grandSec<0?'var(--danger)':grandSec>0?'var(--accent2)':'var(--muted)'};font-size:16px">${fmtSec(grandSec)}</td>
+      <td style="color:${grandFlow===null?'var(--muted)':grandFlow>=80?'var(--accent2)':grandFlow>=50?'var(--warn)':'var(--danger)'};font-size:16px">${grandFlow===null?'—':grandFlow.toFixed(1)+'%'}</td>
+    </tr>`;
 }
 
 /* ──────────────────────────────────────
@@ -2158,8 +2301,9 @@ const PAGES = {
   pharmacies:  { title:'الصيدليات',              sub:'إدارة صيدليات المجمعات',                 render: renderPharmacies  },
   doctors:     { title:'الأطباء',                sub:'إدارة قائمة الأطباء',                    render: renderDoctors     },
   reps:        { title:'المندوبين',              sub:'فريق المبيعات',                           render: renderReps        },
-  warehouses:  { title:'المخازن',                sub:'إدارة المخازن والمجموعات',               render: renderWarehouses  },
+  warehouses:  { title:'Warehouses',             sub:'إدارة المخازن والمجموعات',               render: renderWarehouses  },
   wh_summary:  { title:'Warehouse Summary',      sub:'تقرير المخازن — Opening + Primary + Closing + Secondary', render: renderWhSummary },
+  wh_add:      { title:'Add Warehouse',           sub:'إضافة مخزن جديد',                         render: renderWhAdd       },
   regions:     { title:'المناطق',                sub:'إدارة المناطق',                           render: renderRegions     },
   primary:     { title:'Primary Sales',          sub:'مبيعات المستودع الشهرية',                render: renderPrimary     },
   secondary:   { title:'Secondary Sales',        sub:'مبيعات الصيدليات — محسوبة من Stock',    render: renderSecondary   },
