@@ -754,7 +754,7 @@ function renderDoctors(el) {
             <th>Line</th>
             <th>المنطقة</th>
             <th>الصيدليات</th>
-            <th>حذف</th>
+            <th>إجراء</th>
           </tr></thead><tbody id="doc-tbody"></tbody></table>
         </div>
       </div>
@@ -820,13 +820,93 @@ function renderDocTable(line) {
         ? (d.pharmacies||[]).map(p=>`<span class="chip">${p}</span>`).join(' ')
         : '<span style="color:var(--muted)">—</span>'}
     </td>
-    <td><button class="btn btn-danger btn-sm" onclick="deleteDoc('${d.name.replace(/'/g,"\\'")}')">🗑</button></td>
+    <td style="display:flex;gap:4px">
+      <button class="btn btn-ghost btn-sm" onclick="editDoc('${d.name.replace(/'/g,"\\'")}')">✏️</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteDoc('${d.name.replace(/'/g,"\\'")}')">🗑</button>
+    </td>
   </tr>`).join('');
 }
 
-function deleteDoc(name) {
+function editDoc(name) {
+  const docs = DB.get('doctors');
+  const doc  = docs.find(d=>d.name===name);
+  if (!doc) return;
+  const phs  = DB.get('pharmacies') || [];
+
+  // أنشئ modal تعديل
+  const existing = document.getElementById('doc-edit-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'doc-edit-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML = `
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:24px;width:100%;max-width:500px;max-height:80vh;overflow-y:auto">
+      <h2 style="margin-bottom:16px;color:#fff">✏️ تعديل طبيب</h2>
+      <div class="form-grid" style="margin-bottom:12px">
+        <div class="form-group"><label>الاسم</label>
+          <input type="text" id="edit-doc-name" value="${doc.name}">
+        </div>
+        <div class="form-group"><label>Line</label>
+          <select id="edit-doc-line">
+            ${['Derma','Optha','General Line','CM Line'].map(l=>`<option${l===doc.line?' selected':''}>${l}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group"><label>المنطقة</label>
+          <input type="text" id="edit-doc-area" value="${doc.area||''}">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label>الصيدليات المرتبطة</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;padding:10px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;max-height:200px;overflow-y:auto">
+          ${phs.map(p=>`
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--muted)">
+              <input type="checkbox" value="${p.name}" ${(doc.pharmacies||[]).includes(p.name)?'checked':''} style="accent-color:var(--accent)"> ${p.name}
+            </label>`).join('')}
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('doc-edit-modal').remove()">إلغاء</button>
+        <button class="btn btn-primary" onclick="saveDocEdit('${name.replace(/'/g,"\\'")}')">✓ حفظ</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function saveDocEdit(oldName) {
+  const newName  = document.getElementById('edit-doc-name').value.trim();
+  const newLine  = document.getElementById('edit-doc-line').value;
+  const newArea  = document.getElementById('edit-doc-area').value.trim();
+  const newPhs   = [...document.querySelectorAll('#doc-edit-modal input[type=checkbox]:checked')].map(i=>i.value);
+
+  if (!newName) return alert('ادخل الاسم');
+
+  const docs = DB.get('doctors');
+  const idx  = docs.findIndex(d=>d.name===oldName);
+  if (idx<0) return;
+
+  // تحديث الصيدليات — احذف الطبيب القديم وأضف الجديد
+  const phs = DB.get('pharmacies');
+  phs.forEach(p => {
+    if (!p.doctors) p.doctors=[];
+    p.doctors = p.doctors.filter(d=>d!==oldName);
+  });
+  newPhs.forEach(phName => {
+    const ph = phs.find(p=>p.name===phName);
+    if (ph) { if (!ph.doctors) ph.doctors=[]; if (!ph.doctors.includes(newName)) ph.doctors.push(newName); }
+  });
+  DB.set('pharmacies', phs);
+
+  docs[idx] = { name:newName, line:newLine, area:newArea, pharmacies:newPhs };
+  DB.set('doctors', docs);
+
+  document.getElementById('doc-edit-modal').remove();
+  renderDocTable(_docFilter);
+  toast('✓ تم التحديث');
+}
+
+function _deleteDocDuplicate(name) {
   if (!confirm(`حذف ${name}؟`)) return;
-  // احذف من الصيدليات أيضاً
   const phs = DB.get('pharmacies');
   phs.forEach(p => { if (p.doctors) p.doctors = p.doctors.filter(d=>d!==name); });
   DB.set('pharmacies', phs);
