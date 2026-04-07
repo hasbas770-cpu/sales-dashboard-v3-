@@ -573,7 +573,7 @@ function renderProducts(el) {
         </div>
         <div class="table-wrap">
           <table><thead><tr>
-            <th style="text-align:right">المنتج</th><th>Line</th><th>الهدف السنوي</th><th>السعر</th><th>حذف</th>
+            <th style="text-align:right">المنتج</th><th>Line</th><th>الهدف السنوي</th><th>السعر</th><th>إجراء</th>
           </tr></thead><tbody id="prod-tbody"></tbody></table>
         </div>
       </div>
@@ -601,7 +601,10 @@ function renderProductsTable() {
         style="width:90px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:8px;font-size:12px;text-align:center;font-family:inherit;outline:none"
         onchange="saveTarget('${p.name.replace(/'/g,"\\'")}','${year}','${area}',this.value)"></td>
       <td style="color:var(--accent2)">${p.price ? Number(p.price).toLocaleString()+' IQD' : '—'}</td>
-      <td><button class="btn btn-danger btn-sm" onclick="deleteProd(${i})">🗑</button></td>
+      <td style="display:flex;gap:4px">
+        <button class="btn btn-ghost btn-sm" onclick="editProd(${i})">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteProd(${i})">🗑</button>
+      </td>
     </tr>`;
   }).join('');
 }
@@ -611,6 +614,53 @@ function saveTarget(product, year, area, val) {
   targets[`${year}__${product}__${area}`] = Number(val)||0;
   DB.setObj('productTargets', targets);
   toast('✓ تم حفظ الهدف');
+}
+
+function editProd(i) {
+  const prods = DB.get('products');
+  const p     = prods[i]; if (!p) return;
+
+  const existing = document.getElementById('prod-edit-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'prod-edit-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML = `
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:24px;width:100%;max-width:460px">
+      <h2 style="margin-bottom:16px;color:#fff">✏️ تعديل منتج</h2>
+      <div class="form-grid" style="margin-bottom:14px">
+        <div class="form-group"><label>الاسم</label>
+          <input type="text" id="ep-name" value="${p.name}">
+        </div>
+        <div class="form-group"><label>Line</label>
+          <select id="ep-line">
+            ${['Derma','Optha','General Line','CM Line'].map(l=>`<option${l===p.line?' selected':''}>${l}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group"><label>السعر (IQD)</label>
+          <input type="number" id="ep-price" value="${p.price||''}" min="0" placeholder="0">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('prod-edit-modal').remove()">إلغاء</button>
+        <button class="btn btn-primary" onclick="saveProdEdit(${i})">✓ حفظ</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function saveProdEdit(i) {
+  const prods    = DB.get('products');
+  const newName  = document.getElementById('ep-name').value.trim();
+  const newLine  = document.getElementById('ep-line').value;
+  const newPrice = Number(document.getElementById('ep-price').value||0);
+  if (!newName) return alert('ادخل الاسم');
+  prods[i] = { ...prods[i], name:newName, line:newLine, price:newPrice };
+  DB.set('products', prods);
+  document.getElementById('prod-edit-modal').remove();
+  renderProductsTable();
+  toast('✓ تم التحديث');
 }
 
 function deleteProd(i) {
