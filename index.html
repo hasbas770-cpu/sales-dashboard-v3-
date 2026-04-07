@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -8,7 +9,6 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <!-- JS Modules -->
-
 
 <style>
 /* ═══════════════════
@@ -240,10 +240,12 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
 }
 
 </style>
+
 </head>
 <body>
 
 <!-- ═══════════════════ SIDEBAR ═══════════════════ -->
+
 <div class="sidebar" id="sidebar">
   <div class="sidebar-logo">
     <div class="logo-icon">📊</div>
@@ -255,61 +257,64 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
 
   <nav class="sidebar-nav">
 
-    <!-- Dashboard -->
-    <div class="nav-item">
-      <button class="nav-link active" onclick="navigate('dashboard',this)">
-        <div class="icon">📈</div><span>Dashboard</span>
-      </button>
-    </div>
+```
+<!-- Dashboard -->
+<div class="nav-item">
+  <button class="nav-link active" onclick="navigate('dashboard',this)">
+    <div class="icon">📈</div><span>Dashboard</span>
+  </button>
+</div>
 
-    <!-- Master Data -->
-    <div class="nav-item">
-      <button class="nav-link" onclick="toggleMenu('menu-master',this)">
-        <div class="icon">🗂</div><span>Master Data</span><span class="arrow">›</span>
-      </button>
-      <div class="sub-menu" id="menu-master">
-        <button class="sub-link" onclick="navigate('products',this)">المنتجات</button>
-        <button class="sub-link" onclick="navigate('pharmacies',this)">الصيدليات</button>
-        <button class="sub-link" onclick="navigate('doctors',this)">الأطباء</button>
-        <button class="sub-link" onclick="navigate('reps',this)">المندوبين</button>
-        <button class="sub-link" onclick="navigate('regions',this)">المناطق</button>
-      </div>
-    </div>
+<!-- Master Data -->
+<div class="nav-item">
+  <button class="nav-link" onclick="toggleMenu('menu-master',this)">
+    <div class="icon">🗂</div><span>Master Data</span><span class="arrow">›</span>
+  </button>
+  <div class="sub-menu" id="menu-master">
+    <button class="sub-link" onclick="navigate('products',this)">المنتجات</button>
+    <button class="sub-link" onclick="navigate('pharmacies',this)">الصيدليات</button>
+    <button class="sub-link" onclick="navigate('doctors',this)">الأطباء</button>
+    <button class="sub-link" onclick="navigate('reps',this)">المندوبين</button>
+    <button class="sub-link" onclick="navigate('regions',this)">المناطق</button>
+  </div>
+</div>
 
-    <!-- Warehouses -->
-    <div class="nav-item">
-      <button class="nav-link" onclick="toggleMenu('menu-warehouses',this)">
-        <div class="icon">🏭</div><span>Warehouses</span><span class="arrow">›</span>
-      </button>
-      <div class="sub-menu" id="menu-warehouses">
-        <button class="sub-link" onclick="navigate('warehouses',this)">Warehouses</button>
-        <button class="sub-link" onclick="navigate('stock',this)">Stock Entry</button>
-      </div>
-    </div>
+<!-- Warehouses -->
+<div class="nav-item">
+  <button class="nav-link" onclick="toggleMenu('menu-warehouses',this)">
+    <div class="icon">🏭</div><span>Warehouses</span><span class="arrow">›</span>
+  </button>
+  <div class="sub-menu" id="menu-warehouses">
+    <button class="sub-link" onclick="navigate('warehouses',this)">Warehouses</button>
+    <button class="sub-link" onclick="navigate('stock',this)">Stock Entry</button>
+  </div>
+</div>
 
-    <!-- Sales -->
-    <div class="nav-item">
-      <button class="nav-link" onclick="toggleMenu('menu-sales',this)">
-        <div class="icon">💰</div><span>Sales</span><span class="arrow">›</span>
-      </button>
-      <div class="sub-menu" id="menu-sales">
-        <button class="sub-link" onclick="navigate('primary',this)">Primary Sales</button>
-        <button class="sub-link" onclick="navigate('secondary',this)">Secondary Sales</button>
-        <button class="sub-link" onclick="navigate('orders',this)">Pharmacy Orders</button>
-      </div>
-    </div>
+<!-- Sales -->
+<div class="nav-item">
+  <button class="nav-link" onclick="toggleMenu('menu-sales',this)">
+    <div class="icon">💰</div><span>Sales</span><span class="arrow">›</span>
+  </button>
+  <div class="sub-menu" id="menu-sales">
+    <button class="sub-link" onclick="navigate('primary',this)">Primary Sales</button>
+    <button class="sub-link" onclick="navigate('secondary',this)">Secondary Sales</button>
+    <button class="sub-link" onclick="navigate('orders',this)">Pharmacy Orders</button>
+  </div>
+</div>
 
-    <!-- Targets -->
-    <div class="nav-item">
-      <button class="nav-link" onclick="toggleMenu('menu-targets',this)">
-        <div class="icon">🎯</div><span>Targets & Performance</span><span class="arrow">›</span>
-      </button>
-      <div class="sub-menu" id="menu-targets">
-        <button class="sub-link" onclick="navigate('targets',this)">الأهداف</button>
-        <button class="sub-link" onclick="navigate('penetration',this)">Penetration</button>
-        <button class="sub-link" onclick="navigate('performance',this)">الأداء</button>
-      </div>
-    </div>
+<!-- Targets -->
+<div class="nav-item">
+  <button class="nav-link" onclick="toggleMenu('menu-targets',this)">
+    <div class="icon">🎯</div><span>Targets & Performance</span><span class="arrow">›</span>
+  </button>
+  <div class="sub-menu" id="menu-targets">
+    <button class="sub-link" onclick="navigate('targets',this)">الأهداف</button>
+    <button class="sub-link" onclick="navigate('penetration',this)">Penetration</button>
+    <button class="sub-link" onclick="navigate('pen_trend',this)">Penetration Trend</button>
+    <button class="sub-link" onclick="navigate('performance',this)">الأداء</button>
+  </div>
+</div>
+```
 
   </nav>
 
@@ -324,6 +329,7 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
 <!-- ═══════════════════ MAIN ═══════════════════ -->
+
 <div class="main">
   <div class="topbar">
     <div>
@@ -652,10 +658,30 @@ function editProd(i) {
 
 function saveProdEdit(i) {
   const prods    = DB.get('products');
+  const oldName  = prods[i]?.name;
   const newName  = document.getElementById('ep-name').value.trim();
   const newLine  = document.getElementById('ep-line').value;
   const newPrice = Number(document.getElementById('ep-price').value||0);
   if (!newName) return alert('ادخل الاسم');
+
+  // لو تغير الاسم — حدّث كل الـ keys في localStorage
+  if (oldName && oldName !== newName) {
+    const keysToUpdate = ['primarySales','warehouseFlow','stockEntry','productTargets'];
+    keysToUpdate.forEach(storageKey => {
+      const data = DB.getObj(storageKey);
+      const updated = {};
+      Object.entries(data).forEach(([k,v]) => {
+        const newKey = k.replace(
+          new RegExp('(^|__)' + oldName.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '(__|\$)', 'g'),
+          (m, p1, p2) => p1 + newName + (p2||'')
+        );
+        updated[newKey] = v;
+      });
+      DB.setObj(storageKey, updated);
+    });
+    toast('✓ تم تحديث البيانات المرتبطة');
+  }
+
   prods[i] = { ...prods[i], name:newName, line:newLine, price:newPrice };
   DB.set('products', prods);
   document.getElementById('prod-edit-modal').remove();
@@ -2717,6 +2743,166 @@ function calcPenetration() {
 }
 
 
+/* ──────────────────────────────────────
+   PENETRATION TREND
+────────────────────────────────────── */
+function renderPenetrationTrend(el) {
+  const prods = DB.get('products') || [];
+  const docs  = DB.get('doctors')  || [];
+  const cur   = new Date();
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  el.innerHTML = `
+    <div class="fade-up">
+      <div class="card">
+        <h2>📈 Penetration Trend</h2>
+        <p style="color:var(--muted);font-size:12px;margin-bottom:14px">
+          تغير نسبة تغطية الأطباء لكل مادة عبر الزمن
+        </p>
+        <div class="form-grid" style="margin-bottom:12px">
+          <div class="form-group"><label>Product</label>
+            <select id="pt-product">
+              <option value="all">All Products</option>
+              ${prods.map(p=>`<option value="${p.name}">${p.name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>Line</label>
+            <select id="pt-line">
+              <option value="all">All Lines</option>
+              <option>Derma</option><option>Optha</option><option>General Line</option><option>CM Line</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Year</label>
+            <select id="pt-year">
+              ${[2024,2025,2026].map(y=>`<option${y===cur.getFullYear()?' selected':''}>${y}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>From Month</label>
+            <select id="pt-from">
+              ${months.map((m,i)=>`<option value="${i+1}"${i===0?' selected':''}>${m}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>To Month</label>
+            <select id="pt-to">
+              ${months.map((m,i)=>`<option value="${i+1}"${i===cur.getMonth()?' selected':''}>${m}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="calcTrend()" style="margin-bottom:14px">📊 Calculate Trend</button>
+        <div id="pt-result"><div class="empty">اضغط Calculate لعرض Trend</div></div>
+      </div>
+    </div>`;
+}
+
+function calcTrend() {
+  const prodFilter = document.getElementById('pt-product')?.value || 'all';
+  const lineFilter = document.getElementById('pt-line')?.value    || 'all';
+  const year       = document.getElementById('pt-year')?.value;
+  const fromMonth  = Number(document.getElementById('pt-from')?.value || 1);
+  const toMonth    = Number(document.getElementById('pt-to')?.value   || 12);
+  const cont       = document.getElementById('pt-result');
+
+  cont.innerHTML = '<div class="loader"><div class="spinner"></div><span style="color:var(--muted);font-size:12px;margin-top:8px">جاري التحليل...</span></div>';
+
+  jsonpRequest(`${SHEETS_URL}?action=getOrders`, function(data) {
+    if (!data || !data.success) { cont.innerHTML='<div class="empty">⚠ تعذر تحميل الأوردرات</div>'; return; }
+
+    const docs  = DB.get('doctors')  || [];
+    const prods = DB.get('products') || [];
+    const orders = data.orders;
+
+    // تجميع الأوردرات حسب الشهر
+    const monthOrders = {};
+    orders.forEach(o => {
+      const d = new Date(o.date);
+      if (String(d.getFullYear()) !== String(year)) return;
+      const m = d.getMonth() + 1;
+      if (m < fromMonth || m > toMonth) return;
+      if (!monthOrders[m]) monthOrders[m] = [];
+      monthOrders[m].push(o);
+    });
+
+    const months = [];
+    for (let m = fromMonth; m <= toMonth; m++) months.push(m);
+    const monthNames = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    // المواد المطلوبة
+    let targetProds = prods.filter(p =>
+      (lineFilter==='all' || p.line===lineFilter) &&
+      (prodFilter==='all' || p.name===prodFilter)
+    );
+
+    if (!targetProds.length) { cont.innerHTML='<div class="empty">لا توجد مواد</div>'; return; }
+
+    // حساب Trend لكل مادة
+    const trendData = targetProds.map(p => {
+      const lineDocs  = docs.filter(d => d.line===p.line);
+      const totalDocs = lineDocs.length;
+      if (totalDocs === 0) return null;
+
+      const monthlyData = months.map(m => {
+        const mo = monthOrders[m] || [];
+        // صيدليات سحبت هذه المادة هذا الشهر
+        const phWithProd = new Set(mo.filter(o=>o.product===p.name).map(o=>o.pharmacy));
+        // أطباء يكتبونها
+        const writingDocs = new Set();
+        lineDocs.forEach(doc => {
+          (doc.pharmacies||[]).forEach(ph => {
+            if (phWithProd.has(ph)) writingDocs.add(doc.name);
+          });
+        });
+        const pct = totalDocs > 0 ? (writingDocs.size / totalDocs * 100) : 0;
+        return { month:m, writing:writingDocs.size, total:totalDocs, pct, docs:[...writingDocs] };
+      });
+
+      return { name:p.name, line:p.line, totalDocs, monthlyData };
+    }).filter(Boolean);
+
+    if (!trendData.length) { cont.innerHTML='<div class="empty">لا توجد بيانات</div>'; return; }
+
+    // عرض الجدول
+    let html = `<div class="table-wrap"><table>
+      <thead><tr>
+        <th style="text-align:right">Product</th>
+        <th>Line</th>
+        <th>Doctors</th>
+        ${months.map(m=>`<th>${monthNames[m]}</th>`).join('')}
+        <th>Trend</th>
+      </tr></thead><tbody>`;
+
+    trendData.forEach(p => {
+      const first = p.monthlyData.find(m=>m.writing>0)?.pct || 0;
+      const last  = [...p.monthlyData].reverse().find(m=>m.writing>0)?.pct || 0;
+      const trend = last > first ? '↑' : last < first ? '↓' : '→';
+      const trendColor = last > first ? 'var(--accent2)' : last < first ? 'var(--danger)' : 'var(--muted)';
+
+      html += `<tr>
+        <td style="text-align:right;font-weight:600;white-space:nowrap">
+          <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${lc(p.line)};margin-left:6px"></span>${p.name}
+        </td>
+        <td><span style="background:${lc(p.line)}18;color:${lc(p.line)};border-radius:999px;padding:2px 7px;font-size:10px;font-weight:600">${p.line}</span></td>
+        <td style="color:var(--muted)">${p.totalDocs}</td>
+        ${p.monthlyData.map(m => {
+          const c = m.pct>=60?'var(--accent2)':m.pct>=30?'var(--warn)':m.pct>0?'var(--danger)':'var(--muted)';
+          return `<td>
+            <div style="text-align:center">
+              <div style="font-weight:700;color:${c}">${m.writing}</div>
+              <div style="font-size:10px;color:${c}">${m.pct.toFixed(0)}%</div>
+              <div style="height:3px;background:rgba(255,255,255,.06);border-radius:999px;margin-top:3px">
+                <div style="width:${Math.min(m.pct,100).toFixed(0)}%;height:100%;background:${c};border-radius:999px"></div>
+              </div>
+            </div>
+          </td>`;
+        }).join('')}
+        <td style="font-size:18px;font-weight:700;color:${trendColor}">${trend}</td>
+      </tr>`;
+    });
+
+    html += '</tbody></table></div>';
+    cont.innerHTML = html;
+  });
+}
+
 
 /* === ROUTER === */
 
@@ -2736,6 +2922,7 @@ const PAGES = {
   orders:      { title:'Pharmacy Orders',        sub:'أوردرات صيدليات المجمعات',               render: renderOrders      },
   targets:     { title:'الأهداف',                sub:'إدارة الأهداف السنوية',                  render: el => el.innerHTML='<div class="fade-up"><div class="card"><h2>🎯 الأهداف</h2><p style="color:var(--muted)">قريباً</p></div></div>' },
   penetration: { title:'Penetration',            sub:'نسبة تغطية الأطباء لكل مادة',             render: renderPenetration },
+  pen_trend:   { title:'Penetration Trend',      sub:'تغير نسبة التغطية عبر الزمن',              render: renderPenetrationTrend },
   performance: { title:'الأداء',                 sub:'تحليل أداء الفريق',                       render: el => el.innerHTML='<div class="fade-up"><div class="card"><h2>📊 الأداء</h2><p style="color:var(--muted)">قريباً</p></div></div>' },
 };
 
@@ -2800,5 +2987,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 </script>
+
 </body>
 </html>
