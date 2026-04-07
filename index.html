@@ -306,6 +306,7 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
       </button>
       <div class="sub-menu" id="menu-targets">
         <button class="sub-link" onclick="navigate('targets',this)">الأهداف</button>
+        <button class="sub-link" onclick="navigate('penetration',this)">Penetration</button>
         <button class="sub-link" onclick="navigate('performance',this)">الأداء</button>
       </div>
     </div>
@@ -2473,6 +2474,190 @@ function clearOrdFilters() {
 }
 
 
+/* === JS/PERFORMANCE.JS === */
+
+/* ═══════════════════════════════════════
+   PERFORMANCE.JS — Penetration & Analysis
+═══════════════════════════════════════ */
+
+/* ──────────────────────────────────────
+   PENETRATION
+────────────────────────────────────── */
+function renderPenetration(el) {
+  el.innerHTML = `
+    <div class="fade-up">
+      <div class="card">
+        <h2>🎯 Penetration — نسبة تغطية الأطباء</h2>
+        <p style="color:var(--muted);font-size:12px;margin-bottom:14px">
+          كم طبيب من إجمالي أطباء اللاين يكتب كل مادة (عن طريق صيدلياته)
+        </p>
+        <div class="form-grid" style="margin-bottom:12px">
+          <div class="form-group"><label>Line</label>
+            <select id="pen-line" onchange="">
+              <option value="all">All Lines</option>
+              <option>Derma</option><option>Optha</option><option>General Line</option><option>CM Line</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Period</label>
+            <select id="pen-period">
+              <option value="all">All Time</option>
+              <option value="3">Last 3 Months</option>
+              <option value="6">Last 6 Months</option>
+              <option value="1m">This Month</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="calcPenetration()" style="margin-bottom:14px">
+          🔍 Calculate
+        </button>
+        <div id="pen-result">
+          <div class="empty">اضغط Calculate لحساب Penetration</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function calcPenetration() {
+  const lineFilter = document.getElementById('pen-line')?.value || 'all';
+  const cont       = document.getElementById('pen-result');
+
+  cont.innerHTML = '<div class="loader"><div class="spinner"></div><span style="color:var(--muted);font-size:12px;margin-top:8px">جاري التحليل...</span></div>';
+
+  // تحميل الأوردرات من Sheets
+  jsonpRequest(`${SHEETS_URL}?action=getOrders`, function(data) {
+    if (!data || !data.success) {
+      cont.innerHTML = '<div class="empty">⚠ تعذر تحميل الأوردرات</div>';
+      return;
+    }
+
+    const docs  = DB.get('doctors') || [];
+    const prods = DB.get('products') || [];
+    const orders = data.orders;
+
+    // فلترة حسب Period
+    const period = document.getElementById('pen-period')?.value || 'all';
+    const now    = new Date();
+    const filteredOrders = orders.filter(o => {
+      if (period === 'all') return true;
+      const d = new Date(o.date);
+      if (period === '1m') return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+      const months = Number(period);
+      const cutoff = new Date(now); cutoff.setMonth(cutoff.getMonth()-months);
+      return d >= cutoff;
+    });
+
+    // بناء map: صيدلية → مواد تسحبها
+    const phProducts = {};
+    filteredOrders.forEach(o => {
+      if (!phProducts[o.pharmacy]) phProducts[o.pharmacy] = new Set();
+      phProducts[o.pharmacy].add(o.product);
+    });
+
+    // بناء map: صيدلية → أطباء
+    const phDoctors = {};
+    docs.forEach(d => {
+      (d.pharmacies||[]).forEach(ph => {
+        if (!phDoctors[ph]) phDoctors[ph] = [];
+        phDoctors[ph].push({ name:d.name, line:d.line });
+      });
+    });
+
+    // حساب Penetration لكل مادة
+    const lines = lineFilter === 'all'
+      ? ['Derma','Optha','General Line','CM Line']
+      : [lineFilter];
+
+    const results = [];
+
+    lines.forEach(line => {
+      const lineDocs  = docs.filter(d=>d.line===line);
+      const totalDocs = lineDocs.length;
+      if (totalDocs === 0) return;
+
+      const lineProds = prods.filter(p=>p.line===line);
+
+      lineProds.forEach(p => {
+        // الأطباء اللي يكتبون هذه المادة = الأطباء اللي صيدلياتهم تسحبها
+        const writingDocs = new Set();
+        lineDocs.forEach(doc => {
+          (doc.pharmacies||[]).forEach(ph => {
+            if (phProducts[ph]?.has(p.name)) {
+              writingDocs.add(doc.name);
+            }
+          });
+        });
+
+        const penetration = totalDocs > 0 ? (writingDocs.size / totalDocs * 100) : 0;
+
+        // قيمة المبيعات لهذه المادة
+        const orderValue = filteredOrders
+          .filter(o=>o.product===p.name)
+          .reduce((s,o)=>(s + (Number(o.quantity||0)+Number(o.bonusQty||0))*Number(o.unitPrice||0)),0);
+
+        results.push({
+          product: p.name,
+          line,
+          totalDocs,
+          writingDocs: writingDocs.size,
+          writingDocNames: [...writingDocs],
+          penetration,
+          orderValue,
+        });
+      });
+    });
+
+    // ترتيب حسب Penetration تنازلي
+    results.sort((a,b) => b.penetration - a.penetration);
+
+    if (!results.length) {
+      cont.innerHTML = '<div class="empty">لا توجد بيانات</div>';
+      return;
+    }
+
+    cont.innerHTML = `
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th style="text-align:right">Product</th>
+            <th>Line</th>
+            <th>Total Doctors</th>
+            <th>Writing Doctors</th>
+            <th>Penetration%</th>
+            <th>Order Value</th>
+            <th style="text-align:right">Doctors</th>
+          </tr></thead>
+          <tbody>
+            ${results.map(r => {
+              const barWidth = r.penetration.toFixed(0);
+              const barColor = r.penetration>=60?'var(--accent2)':r.penetration>=30?'var(--warn)':'var(--danger)';
+              return `<tr>
+                <td style="text-align:right;font-weight:600;white-space:nowrap">
+                  <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${lc(r.line)};margin-left:6px"></span>${r.product}
+                </td>
+                <td><span style="background:${lc(r.line)}18;color:${lc(r.line)};border-radius:999px;padding:2px 7px;font-size:10px;font-weight:600">${r.line}</span></td>
+                <td style="color:var(--muted)">${r.totalDocs}</td>
+                <td style="font-weight:700;color:${barColor}">${r.writingDocs}</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div style="flex:1;height:6px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden">
+                      <div style="width:${barWidth}%;height:100%;background:${barColor};border-radius:999px;transition:width .3s"></div>
+                    </div>
+                    <span style="font-weight:700;color:${barColor};min-width:40px">${r.penetration.toFixed(1)}%</span>
+                  </div>
+                </td>
+                <td style="color:var(--accent2);font-weight:600">${fmtV(r.orderValue)}</td>
+                <td style="text-align:right;font-size:11px;color:var(--muted)">
+                  ${r.writingDocNames.slice(0,3).join('، ')}${r.writingDocNames.length>3?` +${r.writingDocNames.length-3}`:''}
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  });
+}
+
+
 /* === ROUTER === */
 
 const PAGES = {
@@ -2490,6 +2675,7 @@ const PAGES = {
   stock:       { title:'Stock Entry',            sub:'إدخال أرصدة المخازن — يحسب Secondary',  render: renderStock       },
   orders:      { title:'Pharmacy Orders',        sub:'أوردرات صيدليات المجمعات',               render: renderOrders      },
   targets:     { title:'الأهداف',                sub:'إدارة الأهداف السنوية',                  render: el => el.innerHTML='<div class="fade-up"><div class="card"><h2>🎯 الأهداف</h2><p style="color:var(--muted)">قريباً</p></div></div>' },
+  penetration: { title:'Penetration',            sub:'نسبة تغطية الأطباء لكل مادة',             render: renderPenetration },
   performance: { title:'الأداء',                 sub:'تحليل أداء الفريق',                       render: el => el.innerHTML='<div class="fade-up"><div class="card"><h2>📊 الأداء</h2><p style="color:var(--muted)">قريباً</p></div></div>' },
 };
 
