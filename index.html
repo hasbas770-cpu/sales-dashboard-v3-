@@ -283,9 +283,7 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
       </button>
       <div class="sub-menu" id="menu-warehouses">
         <button class="sub-link" onclick="navigate('warehouses',this)">Warehouses</button>
-        <button class="sub-link" onclick="navigate('wh_summary',this)">Summary</button>
         <button class="sub-link" onclick="navigate('stock',this)">Stock Entry</button>
-        <button class="sub-link" onclick="navigate('wh_add',this)">Add Warehouse</button>
       </div>
     </div>
 
@@ -700,18 +698,63 @@ let _docFilter = 'all';
 
 function renderDoctors(el) {
   const lines = ['all','Derma','Optha','General Line','CM Line'];
+  const areas = DB.get('areas') || ['Basra'];
+  const phs   = DB.get('pharmacies') || [];
+
   el.innerHTML = `
     <div class="fade-up">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
           <h2 style="margin:0">👨‍⚕️ الأطباء</h2>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            ${lines.map(l => `<button class="btn btn-ghost btn-sm" onclick="filterDocs('${l}',this)">${l==='all'?'الكل':l}</button>`).join('')}
+          <button class="btn btn-primary btn-sm" onclick="showDocForm()">➕ إضافة طبيب</button>
+        </div>
+
+        <!-- Add Form -->
+        <div id="doc-form" style="display:none;margin-bottom:16px;padding:14px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px">
+          <div class="form-grid">
+            <div class="form-group"><label>اسم الطبيب</label>
+              <input type="text" id="doc-name" placeholder="د. محمد علي">
+            </div>
+            <div class="form-group"><label>التخصص (Line)</label>
+              <select id="doc-line">
+                <option value="">— اختر —</option>
+                <option>Derma</option><option>Optha</option><option>General Line</option><option>CM Line</option>
+              </select>
+            </div>
+            <div class="form-group"><label>المنطقة</label>
+              <select id="doc-area">
+                ${areas.map(a=>`<option>${a}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:10px">
+            <label>الصيدليات المرتبطة</label>
+            <div id="doc-ph-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;padding:10px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;min-height:40px">
+              ${phs.map(p=>`
+                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--muted)">
+                  <input type="checkbox" value="${p.name}" style="accent-color:var(--accent)"> ${p.name}
+                </label>`).join('')}
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-success btn-sm" onclick="addDoctor()">✓ حفظ</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('doc-form').style.display='none'">إلغاء</button>
           </div>
         </div>
+
+        <!-- Filter -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+          ${lines.map(l=>`<button class="btn btn-ghost btn-sm" onclick="filterDocs('${l}',this)">${l==='all'?'الكل':l}</button>`).join('')}
+        </div>
+
+        <!-- Table -->
         <div class="table-wrap">
           <table><thead><tr>
-            <th style="text-align:right">الطبيب</th><th>Line</th><th>المنطقة</th><th>حذف</th>
+            <th style="text-align:right">الطبيب</th>
+            <th>Line</th>
+            <th>المنطقة</th>
+            <th>الصيدليات</th>
+            <th>حذف</th>
           </tr></thead><tbody id="doc-tbody"></tbody></table>
         </div>
       </div>
@@ -719,29 +762,75 @@ function renderDoctors(el) {
   renderDocTable('all');
 }
 
+function showDocForm() {
+  document.getElementById('doc-form').style.display='block';
+}
+
+function addDoctor() {
+  const name = document.getElementById('doc-name').value.trim();
+  const line = document.getElementById('doc-line').value;
+  const area = document.getElementById('doc-area').value;
+  if (!name) return alert('ادخل اسم الطبيب');
+  if (!line) return alert('اختر التخصص');
+
+  // الصيدليات المختارة
+  const checked = [...document.querySelectorAll('#doc-ph-list input:checked')].map(i=>i.value);
+
+  const docs = DB.get('doctors');
+  if (docs.find(d=>d.name===name)) return alert('الطبيب موجود');
+  docs.push({ name, line, area, pharmacies: checked });
+  DB.set('doctors', docs);
+
+  // ربط الطبيب بالصيدليات
+  const phs = DB.get('pharmacies');
+  checked.forEach(phName => {
+    const ph = phs.find(p=>p.name===phName);
+    if (ph) {
+      if (!ph.doctors) ph.doctors = [];
+      if (!ph.doctors.includes(name)) ph.doctors.push(name);
+    }
+  });
+  DB.set('pharmacies', phs);
+
+  document.getElementById('doc-form').style.display='none';
+  document.getElementById('doc-name').value='';
+  renderDocTable(_docFilter);
+  toast('✓ تم الحفظ');
+}
+
 function filterDocs(line, btn) {
   _docFilter = line;
-  document.querySelectorAll('#content .btn-ghost').forEach(b => b.style.borderColor = '');
-  if (btn) btn.style.borderColor = 'var(--accent)';
+  document.querySelectorAll('#content .btn-ghost').forEach(b => b.style.borderColor='');
+  if (btn) btn.style.borderColor='var(--accent)';
   renderDocTable(line);
 }
 
 function renderDocTable(line) {
   let docs = DB.get('doctors');
-  if (line !== 'all') docs = docs.filter(d => d.line === line);
+  if (line !== 'all') docs = docs.filter(d => d.line===line);
   const tbody = document.getElementById('doc-tbody');
-  if (!docs.length) { tbody.innerHTML = `<tr><td colspan="4" class="empty">لا توجد بيانات</td></tr>`; return; }
+  if (!tbody) return;
+  if (!docs.length) { tbody.innerHTML=`<tr><td colspan="5" class="empty">لا توجد بيانات</td></tr>`; return; }
   tbody.innerHTML = docs.map(d => `<tr>
     <td style="text-align:right;font-weight:600">${d.name}</td>
     <td><span style="background:${lc(d.line)}18;color:${lc(d.line)};border-radius:999px;padding:2px 8px;font-size:10px;font-weight:600">${d.line}</span></td>
     <td style="color:var(--muted)">${d.area||'—'}</td>
+    <td style="font-size:11px">
+      ${(d.pharmacies||[]).length
+        ? (d.pharmacies||[]).map(p=>`<span class="chip">${p}</span>`).join(' ')
+        : '<span style="color:var(--muted)">—</span>'}
+    </td>
     <td><button class="btn btn-danger btn-sm" onclick="deleteDoc('${d.name.replace(/'/g,"\\'")}')">🗑</button></td>
   </tr>`).join('');
 }
 
 function deleteDoc(name) {
   if (!confirm(`حذف ${name}؟`)) return;
-  DB.set('doctors', DB.get('doctors').filter(d => d.name !== name));
+  // احذف من الصيدليات أيضاً
+  const phs = DB.get('pharmacies');
+  phs.forEach(p => { if (p.doctors) p.doctors = p.doctors.filter(d=>d!==name); });
+  DB.set('pharmacies', phs);
+  DB.set('doctors', DB.get('doctors').filter(d=>d.name!==name));
   renderDocTable(_docFilter);
   toast('✓ تم الحذف');
 }
@@ -1733,11 +1822,12 @@ function renderSecGrid() {
     const whSecs = whs.map(w => {
       const stKey  = `${year}__${p.name}__${area}__${month}__${w.name}`;
       const saved  = stock[stKey] || { open:null, close:null };
-      const whPrim = stock[`${stKey}__prim`] != null ? Number(stock[`${stKey}__prim`]) : 0;
       if (saved.open == null && saved.close == null) return null;
       hasData = true;
       const o = Number(saved.open  || 0);
       const c = Number(saved.close || 0);
+      // Primary المخزن — لو مدخل يستخدمه، لو لا يستخدم 0
+      const whPrim = stock[`${stKey}__prim`] != null ? Number(stock[`${stKey}__prim`]) : 0;
       totalOpen  += o;
       totalClose += c;
       return o + whPrim - c;
@@ -1745,8 +1835,18 @@ function renderSecGrid() {
 
     if (!hasData && primary === 0) return null;
 
-    const totalSec = totalOpen + primary - totalClose;
-    const flow     = primary > 0 ? (totalSec / primary * 100) : null;
+    // Total Secondary:
+    // لو في Primary مخازن مدخل → يجمعهم مع Opening/Closing
+    // لو لا → يستخدم Primary Sales
+    let totalWhPrim = 0;
+    whs.forEach(w => {
+      const stKey  = `${year}__${p.name}__${area}__${month}__${w.name}`;
+      const whPrim = stock[`${stKey}__prim`];
+      if (whPrim != null) totalWhPrim += Number(whPrim);
+    });
+    const effPrimary = totalWhPrim > 0 ? totalWhPrim : primary;
+    const totalSec   = totalOpen + effPrimary - totalClose;
+    const flow       = effPrimary > 0 ? (totalSec / effPrimary * 100) : null;
 
     grandOpen  += totalOpen;
     grandClose += totalClose;
