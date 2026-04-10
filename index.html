@@ -2129,7 +2129,7 @@ function renderStockGrid() {
 
     const secondary = open != null && close != null ? open + effPrim - close : '—';
 
-    return `<tr data-key="${stKey}" data-pskey="${psKey}" data-primkey="${primStKey}">
+    return `<tr data-key="${stKey}" data-pskey="${psKey}" data-primkey="${primStKey}" data-product="${p.name}" data-line="${p.line}">
       <td style="text-align:right;font-weight:600">
         <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${lc(p.line)};margin-left:6px"></span>${p.name}
       </td>
@@ -2226,12 +2226,13 @@ function saveStockGrid() {
     wf[psKey] = totalSec;
 
     // Prepare for Sheets
-    const productName = row.cells[row.cells.length - 1]?.textContent?.trim().replace(/^\W+/, '').trim() || '';
+    const productName = row.dataset.product || '';
+    const productLine = row.dataset.line   || '';
     entries.push({
       year, month, area,
       warehouse: wh,
       product:   productName,
-      line:      row.querySelector('span[style*="border-radius"]')?.textContent || '',
+      line:      productLine,
       opening:   openNum  || 0,
       closing:   closeNum || 0,
       primary:   effPrimary,
@@ -2453,15 +2454,15 @@ function applyOrderFilters() {
                 <td style="color:#fff;font-weight:700;background:rgba(255,255,255,.04)">${fmtV(iOrd+iBon)}</td>
               </tr>`;
             }).join('')}
-            <tr style="background:rgba(255,255,255,.06);font-weight:700">
-              <td colspan="${3 + (!phF?1:0) + (!whF?1:0)}" style="text-align:right;color:var(--muted)">Total</td>
+            <tr style="background:rgba(255,255,255,.06);font-weight:700;border-top:2px solid var(--border-s)">
+              <td colspan="${4 + (!phF?1:0) + (!whF?1:0)}" style="text-align:right;color:var(--muted);padding-right:14px">Total</td>
               <td style="color:var(--accent2);font-weight:700">${fmt(items.reduce((s,i)=>s+i.qty,0))}</td>
               <td></td>
               <td style="color:var(--accent2);font-weight:700">${fmtV(totOrd)}</td>
               <td></td>
               <td style="color:var(--warn);font-weight:700">${fmt(items.reduce((s,i)=>s+(i.bonusQty||0),0))}</td>
               <td style="color:var(--warn);font-weight:700">${fmtV(totBon)}</td>
-              <td style="color:#fff;font-weight:700;background:rgba(255,255,255,.04)">${fmtV(totOrd+totBon)}</td>
+              <td style="color:#fff;font-weight:700;background:rgba(255,255,255,.06)">${fmtV(totOrd+totBon)}</td>
             </tr>
           </tbody></table>
         </div>
