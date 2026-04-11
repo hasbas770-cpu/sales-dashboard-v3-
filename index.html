@@ -575,7 +575,10 @@ function renderProducts(el) {
   el.innerHTML = `
     <div class="fade-up">
       <div class="card">
-        <h2>💊 المنتجات والأهداف</h2>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+          <h2 style="margin:0">💊 المنتجات والأهداف</h2>
+          <button class="btn btn-warn btn-sm" onclick="migrateProductKeys()" title="تحديث البيانات المخزنة لتطابق أسماء المنتجات الحالية">🔄 Migrate Data</button>
+        </div>
         <div class="form-grid" style="margin-bottom:14px">
           <div class="form-group"><label>السنة</label>
             <select id="cfg-year" onchange="renderProductsTable()">
@@ -631,6 +634,45 @@ function saveTarget(product, year, area, val) {
   targets[`${year}__${product}__${area}`] = Number(val)||0;
   DB.setObj('productTargets', targets);
   toast('✓ تم حفظ الهدف');
+}
+
+function migrateProductKeys() {
+  const prods = DB.get('products') || [];
+  if (!prods.length) return alert('لا توجد منتجات');
+
+  const storageKeys = ['primarySales','warehouseFlow','stockEntry','productTargets'];
+  let totalUpdated = 0;
+
+  storageKeys.forEach(sk => {
+    const data    = DB.getObj(sk);
+    const updated = {};
+    let changed   = false;
+
+    Object.entries(data).forEach(([k, v]) => {
+      // ابحث عن منتج يطابق جزء من الـ key
+      let newKey = k;
+      prods.forEach(p => {
+        if (p.alias && p.alias !== p.name) {
+          // لو الـ key يحتوي الـ alias القديم — استبدله بالاسم الجديد
+          if (k.includes(`__${p.alias}__`) || k.includes(`__${p.alias}`)) {
+            newKey = k.split(`__${p.alias}`).join(`__${p.name}`);
+            changed = true;
+            totalUpdated++;
+          }
+        }
+      });
+      updated[newKey] = v;
+    });
+
+    if (changed) DB.setObj(sk, updated);
+  });
+
+  if (totalUpdated > 0) {
+    toast(`✓ تم تحديث ${totalUpdated} key`);
+    renderProductsTable();
+  } else {
+    toast('✓ لا يوجد شيء يحتاج تحديث');
+  }
 }
 
 function editProd(i) {
