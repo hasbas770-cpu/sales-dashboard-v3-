@@ -441,6 +441,28 @@ function normalizeProductName(sheetName) {
   return p ? p.name : sheetName;
 }
 
+/* ── Fuzzy key lookup for stockEntry/primarySales ── */
+function getFuzzyKey(data, year, prodName, area, month, warehouse) {
+  // البحث الدقيق أولاً
+  const exactKey = warehouse
+    ? `${year}__${prodName}__${area}__${month}__${warehouse}`
+    : `${year}__${prodName}__${area}__${month}`;
+  if (data[exactKey] !== undefined) return exactKey;
+
+  // البحث المرن — لو الاسم موجود كجزء من الـ key
+  const prefix = `${year}__`;
+  const suffix = warehouse
+    ? `__${area}__${month}__${warehouse}`
+    : `__${area}__${month}`;
+
+  const match = Object.keys(data).find(k =>
+    k.startsWith(prefix) &&
+    k.endsWith(suffix) &&
+    k.includes(prodName)
+  );
+  return match || exactKey;
+}
+
 
 /* === JS/API.JS === */
 
@@ -2040,7 +2062,6 @@ function renderSecGrid() {
       hasData = true;
       const o = Number(saved.open  || 0);
       const c = Number(saved.close || 0);
-      // Primary المخزن — لو مدخل يستخدمه، لو لا يستخدم 0
       const whPrim = stock[`${stKey}__prim`] != null ? Number(stock[`${stKey}__prim`]) : 0;
       totalOpen  += o;
       totalClose += c;
