@@ -548,11 +548,16 @@ function renderDashboard(el) {
     if (!data || !data.success) return;
     const orders = data.orders;
 
-    document.getElementById('kpi-orders').textContent = fmt(orders.length);
+    const kpiOrders = document.getElementById('kpi-orders');
+    const kpiVal    = document.getElementById('kpi-orders-val');
+    const dashOrds  = document.getElementById('dash-orders');
+    if (!kpiOrders) return; // الصفحة تغيرت قبل ما يرجع الـ request
+
+    kpiOrders.textContent = fmt(orders.length);
     const totalVal = orders.reduce((s,o) => {
       return s + (Number(o.quantity||0) + Number(o.bonusQty||0)) * Number(o.unitPrice||0);
     }, 0);
-    document.getElementById('kpi-orders-val').textContent = fmtV(totalVal);
+    if (kpiVal) kpiVal.textContent = fmtV(totalVal);
 
     // Group and show last 5
     const grouped = {};
@@ -567,7 +572,7 @@ function renderDashboard(el) {
 
     const recent = Object.values(grouped).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 5);
 
-    document.getElementById('dash-orders').innerHTML = recent.map(o => `
+    if (dashOrds) dashOrds.innerHTML = recent.map(o => `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
         <div>
           <div style="font-weight:600;font-size:13px">${o.pharmacy}</div>
