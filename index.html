@@ -600,6 +600,7 @@ function renderProducts(el) {
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
           <h2 style="margin:0">💊 المنتجات والأهداف</h2>
           <button class="btn btn-warn btn-sm" onclick="migrateProductKeys()" title="تحديث البيانات المخزنة لتطابق أسماء المنتجات الحالية">🔄 Migrate Data</button>
+          <button class="btn btn-danger btn-sm" onclick="if(confirm('حذف كل البيانات القديمة؟'))clearOldStockData()">🗑 Clear Old Data</button>
         </div>
         <div class="form-grid" style="margin-bottom:14px">
           <div class="form-group"><label>السنة</label>
@@ -1148,6 +1149,27 @@ function deleteArea(i) {
   areas.splice(i, 1);
   DB.set('areas', areas);
   renderAreasList();
+}
+
+/* ── Clear old stock data ── */
+function clearOldStockData() {
+  const prods = DB.get('products') || [];
+  const prodNames = new Set(prods.map(p => p.name));
+  
+  ['stockEntry','warehouseFlow','primarySales','productTargets'].forEach(key => {
+    const data = DB.getObj(key);
+    const cleaned = {};
+    Object.entries(data).forEach(([k, v]) => {
+      // خذ اسم المنتج من الـ key (الجزء الثاني)
+      const parts = k.split('__');
+      const prodInKey = parts[1];
+      // لو المنتج موجود في القائمة الحالية → احتفظ به
+      if (prodNames.has(prodInKey)) cleaned[k] = v;
+    });
+    DB.setObj(key, cleaned);
+  });
+  
+  toast('✓ تم حذف البيانات القديمة');
 }
 
 
