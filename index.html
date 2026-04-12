@@ -1231,20 +1231,29 @@ function editRepData(repName, year) {
   modal.id = 'rep-edit-modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px';
 
-  const selLine   = data.line || '';
-  const lineProds = selLine ? prods.filter(p=>p.line===selLine) : [];
   const repTargets = data.targets || {};
 
+  // حساب ما تم توزيعه على المندوبين الآخرين
+  const allocatedByOthers = {};
+  Object.entries(savedReps).forEach(([k,v]) => {
+    if (!k.endsWith(`__${year}`)) return;
+    const otherRep = k.replace(`__${year}`,'');
+    if (otherRep === repName) return;
+    (v.subline||[]).forEach(prod => {
+      if (!allocatedByOthers[prod]) allocatedByOthers[prod] = 0;
+      allocatedByOthers[prod] += Number(v.targets?.[prod] || 0);
+    });
+  });
+
   modal.innerHTML = `
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:24px;width:100%;max-width:600px;max-height:88vh;overflow-y:auto">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:24px;width:100%;max-width:620px;max-height:88vh;overflow-y:auto">
       <h2 style="margin-bottom:4px;color:#fff">✏️ ${repName}</h2>
       <p style="color:var(--muted);font-size:11px;margin-bottom:16px">سنة ${year}</p>
-
       <div class="form-grid" style="margin-bottom:16px">
-        <div class="form-group"><label>Line</label>
-          <select id="re-line" onchange="updateRepModalProducts('${year}','${repName}')">
+        <div class="form-group"><label>Line (للتصنيف)</label>
+          <select id="re-line">
             <option value="">— اختر —</option>
-            ${lines.map(l=>`<option${l===selLine?' selected':''}>${l}</option>`).join('')}
+            ${lines.map(l=>`<option${l===data.line?' selected':''}>${l}</option>`).join('')}
           </select>
         </div>
         <div class="form-group"><label>المنطقة</label>
@@ -1253,83 +1262,95 @@ function editRepData(repName, year) {
           </select>
         </div>
       </div>
-
-      <label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:8px">المواد المسؤول عنها + Target</label>
-      <div id="re-products" style="display:grid;gap:8px;max-height:300px;overflow-y:auto;padding:4px">
-        ${_buildRepProductCards(lineProds, data.subline||[], repTargets, targets, year)}
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <label style="font-size:11px;color:var(--muted);font-weight:600">المواد + Target</label>
+        <input type="text" id="re-prod-search" placeholder="🔍 بحث..." oninput="filterRepModalProds()"
+          style="background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:8px;font-size:11px;font-family:inherit;outline:none;width:150px">
       </div>
-
+      <div id="re-products" style="display:grid;gap:6px;max-height:340px;overflow-y:auto;padding:2px">
+        ${_buildRepProductCards(prods, data.subline||[], repTargets, targets, year, allocatedByOthers)}
+      </div>
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
-        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('rep-edit-modal').remove()">إلغاء</button>
-        <button class="btn btn-primary" onclick="saveRepData('${repName.replace(/'/g,"\\'")}','${year}')">✓ حفظ</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById(\'rep-edit-modal\').remove()">إلغاء</button>
+        <button class="btn btn-primary" onclick="saveRepData(\'${repName.replace(/'/g,"\\'")}\',\'${year}\')">✓ حفظ</button>
       </div>
     </div>`;
   document.body.appendChild(modal);
 }
 
-function _buildRepProductCards(lineProds, selected, repTargets, allTargets, year) {
-  if (!lineProds.length) return '<div style="color:var(--muted);font-size:12px;padding:10px">اختر Line أولاً</div>';
-  return lineProds.map(p => {
-    const isSelected = selected.includes(p.name);
-    const totalTarget = allTargets[`${year}__${p.name}__Basra`] || p.annualTarget || 0;
-    const repTarget   = repTargets[p.name] != null ? repTargets[p.name] : (isSelected ? totalTarget : '');
-    return `
-      <div id="rpc-${p.name.replace(/[^a-zA-Z0-9]/g,'_')}"
-        onclick="toggleRepProduct('${p.name.replace(/'/g,"\\'")}', ${totalTarget})"
-        style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;
-          border-radius:12px;cursor:pointer;border:2px solid ${isSelected?'var(--accent)':'var(--border)'};
-          background:${isSelected?'rgba(79,142,247,.08)':'rgba(255,255,255,.02)'};transition:all .15s">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div style="width:20px;height:20px;border-radius:6px;border:2px solid ${isSelected?'var(--accent)':'var(--border)'};
-            background:${isSelected?'var(--accent)':'transparent'};display:grid;place-items:center;flex-shrink:0;transition:.15s">
-            ${isSelected?'<span style="color:#fff;font-size:11px;font-weight:700">✓</span>':''}
-          </div>
-          <div>
-            <div style="font-size:12px;font-weight:600;color:${isSelected?'#fff':'var(--muted)'}">${p.name}</div>
-            <div style="font-size:10px;color:var(--muted)">Total Target: ${fmt(totalTarget)}</div>
-          </div>
-        </div>
-        <div onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:6px;opacity:${isSelected?1:0.3}">
-          <span style="font-size:10px;color:var(--muted)">Target:</span>
-          <input type="number" id="rt-${p.name.replace(/[^a-zA-Z0-9]/g,'_')}"
-            value="${repTarget}"
-            min="0" max="${totalTarget}"
-            placeholder="${fmt(totalTarget)}"
-            style="width:80px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);
-              padding:5px 8px;border-radius:8px;font-size:11px;text-align:center;font-family:inherit;outline:none"
-            ${isSelected?'':'disabled'}>
-        </div>
-      </div>`;
-  }).join('');
+function filterRepModalProds() {
+  const q = document.getElementById('re-prod-search')?.value.toLowerCase() || '';
+  document.querySelectorAll('#re-products > div').forEach(group => {
+    let anyVisible = false;
+    group.querySelectorAll('[id^="rpc-"]').forEach(card => {
+      const show = card.dataset.prod?.toLowerCase().includes(q);
+      card.style.display = show ? '' : 'none';
+      if (show) anyVisible = true;
+    });
+    group.style.display = anyVisible ? '' : 'none';
+  });
 }
 
-function toggleRepProduct(prodName, totalTarget) {
-  const safeId  = prodName.replace(/[^a-zA-Z0-9]/g,'_');
-  const card    = document.getElementById('rpc-'+safeId);
-  const inp     = document.getElementById('rt-'+safeId);
-  const check   = card?.querySelector('div > div');
+function _buildRepProductCards(prods, selected, repTargets, allTargets, year, allocatedByOthers) {
+  allocatedByOthers = allocatedByOthers || {};
+  if (!prods.length) return '<div style="color:var(--muted);font-size:12px;padding:10px">لا توجد مواد</div>';
+  const byLine = {};
+  prods.forEach(p => { if (!byLine[p.line]) byLine[p.line] = []; byLine[p.line].push(p); });
+  return Object.entries(byLine).map(([line, lineProds]) => `
+    <div>
+      <div style="font-size:10px;font-weight:700;color:${lc(line)};padding:4px 2px;margin-bottom:4px">${line}</div>
+      ${lineProds.map(p => {
+        const isSelected  = selected.includes(p.name);
+        const totalTarget = allTargets[`${year}__${p.name}__Basra`] || p.annualTarget || 0;
+        const allocated   = allocatedByOthers[p.name] || 0;
+        const remaining   = Math.max(0, totalTarget - allocated);
+        const repTarget   = repTargets[p.name] != null ? repTargets[p.name] : (isSelected ? remaining : '');
+        const safeId      = p.name.replace(/[^a-zA-Z0-9]/g,'_');
+        return `<div id="rpc-${safeId}" data-prod="${p.name}"
+          onclick="toggleRepProduct(\'${p.name.replace(/'/g,"\\'")}\', ${remaining})"
+          style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;
+            border-radius:10px;cursor:pointer;border:2px solid ${isSelected?'var(--accent)':'var(--border)'};
+            background:${isSelected?'rgba(79,142,247,.08)':'rgba(255,255,255,.02)'};transition:all .15s;margin-bottom:4px">
+          <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
+            <div style="width:18px;height:18px;border-radius:5px;border:2px solid ${isSelected?'var(--accent)':'var(--border)'};
+              background:${isSelected?'var(--accent)':'transparent'};display:grid;place-items:center;flex-shrink:0;transition:.15s">
+              ${isSelected?'<span style="color:#fff;font-size:10px;font-weight:700">✓</span>':''}
+            </div>
+            <div style="min-width:0">
+              <div style="font-size:12px;font-weight:600;color:${isSelected?'#fff':'var(--muted)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+              <div style="font-size:10px;color:var(--muted)">
+                Total: ${fmt(totalTarget)}
+                ${allocated>0?` • Others: <span style="color:var(--warn)">${fmt(allocated)}</span>`:''}
+                • Avail: <span style="color:var(--accent2)">${fmt(remaining)}</span>
+              </div>
+            </div>
+          </div>
+          <div onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+            <input type="number" id="rt-${safeId}" value="${repTarget}" min="0"
+              placeholder="${fmt(remaining)}"
+              style="width:75px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);
+                padding:5px 7px;border-radius:8px;font-size:11px;text-align:center;font-family:inherit;outline:none"
+              ${isSelected?'':'disabled'}>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+function toggleRepProduct(prodName, remaining) {
+  const safeId = prodName.replace(/[^a-zA-Z0-9]/g,'_');
+  const card   = document.getElementById('rpc-'+safeId);
+  const inp    = document.getElementById('rt-'+safeId);
+  const check  = card?.querySelector('div > div:first-child');
   if (!card) return;
-
-  const isNowSelected = card.style.borderColor.includes('accent') || card.style.background.includes('rgba(79');
-  const nowSelected   = !isNowSelected;
-
-  card.style.border    = `2px solid ${nowSelected?'var(--accent)':'var(--border)'}`;
+  const nowSelected = !card.style.background.includes('rgba(79');
+  card.style.border     = `2px solid ${nowSelected?'var(--accent)':'var(--border)'}`;
   card.style.background = nowSelected ? 'rgba(79,142,247,.08)' : 'rgba(255,255,255,.02)';
-  if (check) check.innerHTML = nowSelected ? '<span style="color:#fff;font-size:11px;font-weight:700">✓</span>' : '';
-  if (check) { check.style.borderColor=nowSelected?'var(--accent)':'var(--border)'; check.style.background=nowSelected?'var(--accent)':'transparent'; }
-  if (inp)   { inp.disabled=!nowSelected; inp.style.opacity=nowSelected?'1':'0.3'; if(nowSelected && !inp.value) inp.value=totalTarget; }
-}
-
-function updateRepModalProducts(year, repName) {
-  const line      = document.getElementById('re-line')?.value;
-  const prods     = DB.get('products') || [];
-  const targets   = DB.getObj('productTargets') || {};
-  const savedReps = DB.getObj('repsData') || {};
-  const data      = savedReps[`${repName}__${year}`] || {};
-  const cont      = document.getElementById('re-products');
-  if (!cont) return;
-  const filtered = line ? prods.filter(p=>p.line===line) : [];
-  cont.innerHTML = _buildRepProductCards(filtered, data.subline||[], data.targets||{}, targets, year);
+  if (check) { check.innerHTML=nowSelected?'<span style="color:#fff;font-size:10px;font-weight:700">✓</span>':''; check.style.borderColor=nowSelected?'var(--accent)':'var(--border)'; check.style.background=nowSelected?'var(--accent)':'transparent'; }
+  if (inp)   { inp.disabled=!nowSelected; if(nowSelected&&!inp.value) inp.value=remaining; }
+  // تحديث لون النص
+  const nameEl = card.querySelector('div > div:last-child > div:first-child');
+  if (nameEl) nameEl.style.color = nowSelected ? '#fff' : 'var(--muted)';
 }
 
 function saveRepData(repName, year) {
