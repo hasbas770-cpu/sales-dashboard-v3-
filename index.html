@@ -342,6 +342,7 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
 
 <div id="toast">✓ Done</div>
 
+
 <script>
 
 /* === JS/DB.JS === */
@@ -464,7 +465,6 @@ function getFuzzyKey(data, year, prodName, area, month, warehouse) {
   return match || exactKey;
 }
 
-
 /* === JS/API.JS === */
 
 /* ═══════════════════════════════════════
@@ -495,7 +495,6 @@ function apiPost(body) {
     body: JSON.stringify(body),
   }).then(r => r.json());
 }
-
 
 /* === JS/DASHBOARD.JS === */
 
@@ -691,7 +690,6 @@ function renderDashboard(el) {
       </div>`).join('') || '<div class="empty">لا توجد بيانات</div>';
   });
 }
-
 
 /* === JS/MASTER.JS === */
 
@@ -1866,7 +1864,6 @@ function clearOldStockData() {
   toast('✓ تم حذف البيانات القديمة');
 }
 
-
 /* === JS/WAREHOUSES.JS === */
 
 /* ═══════════════════════════════════════
@@ -2599,7 +2596,6 @@ function deleteWhFromPage(i) {
   navigate('wh_add', null);
 }
 
-
 /* === JS/SALES.JS === */
 
 /* ═══════════════════════════════════════
@@ -3068,7 +3064,6 @@ function saveStockGrid() {
   renderStockGrid();
 }
 
-
 /* === JS/ORDERS.JS === */
 
 /* ═══════════════════════════════════════
@@ -3343,7 +3338,6 @@ function clearOrdFilters() {
   });
   applyOrderFilters();
 }
-
 
 /* === JS/PERFORMANCE.JS === */
 
@@ -3698,8 +3692,9 @@ function calcTrend() {
   });
 }
 
-
 /* === ROUTER === */
+
+
 
 const PAGES = {
   dashboard:   { title:'Dashboard',              sub:'نظرة عامة على الأداء',                  render: renderDashboard   },
@@ -3782,6 +3777,7 @@ document.addEventListener('DOMContentLoaded', function() {
   navigate('dashboard', document.querySelector('.nav-link.active'));
 });
 
+
+
 </script>
 </body>
-</html>
