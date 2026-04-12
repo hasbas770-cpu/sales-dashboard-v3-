@@ -1087,20 +1087,29 @@ function _deleteDocDuplicate(name) {
 let _repOrdersCache = null;
 
 function updateRepProductFilter() {
-  const repF   = document.getElementById('ro-rep')?.value  || '';
-  const lineF  = document.getElementById('ro-line')?.value || '';
-  const prodEl = document.getElementById('ro-product');
+  const repF    = document.getElementById('ro-rep')?.value  || '';
+  const lineF   = document.getElementById('ro-line')?.value || '';
+  const prodEl  = document.getElementById('ro-product');
   if (!prodEl) return;
+
   const year      = document.getElementById('reps-year')?.value || new Date().getFullYear();
   const savedReps = DB.getObj('repsData') || {};
   const allProds  = DB.get('products') || [];
-  let filtered    = allProds;
+
+  let filtered = allProds;
+
   if (repF) {
     const repData = savedReps[`${repF}__${year}`];
-    if (repData?.subline?.length) filtered = allProds.filter(p=>repData.subline.includes(p.name));
+    // استخدم subline (مواد الـ Sub-line) لو موجودة
+    if (repData?.subline?.length) {
+      filtered = allProds.filter(p => repData.subline.includes(p.name));
+    }
   }
-  if (lineF) filtered = filtered.filter(p=>p.line===lineF);
+
+  if (lineF) filtered = filtered.filter(p => p.line === lineF);
+
   prodEl.innerHTML = '<option value="">All Products</option>' +
+    (repF ? '<option value="__subline__">مواده فقط (Sub-line)</option>' : '') +
     filtered.map(p=>`<option value="${p.name}">${p.name}</option>`).join('');
 }
 
@@ -1354,18 +1363,32 @@ function loadRepOrders() {
 
   const reps  = DB.get('reps') || [];
   const prods = DB.get('products') || [];
+  const year      = document.getElementById('reps-year')?.value || new Date().getFullYear();
+  const savedReps = DB.getObj('repsData') || {};
+
+  // لو اختار "مواده فقط (Sub-line)"
+  let sublineFilter = null;
+  if (prodF === '__subline__' && repF) {
+    const repData = savedReps[`${repF}__${year}`];
+    sublineFilter = repData?.subline || [];
+  }
 
   let orders = _repOrdersCache.filter(o => {
     if (repF  && o.rep !== repF) return false;
     if (from  && o.date < from)  return false;
     if (to    && o.date > to)    return false;
-    // فلتر اللاين — من قائمة المنتجات
     if (lineF) {
-      const p = prods.find(p=>p.name===o.product||(p.name&&o.product&&o.product.includes(p.name)));
+      const p  = prods.find(p=>p.name===o.product||(p.name&&o.product&&o.product.includes(p.name)));
       const ol = p?.line || getLineByProduct(o.product);
       if (ol !== lineF) return false;
     }
-    if (prodF && o.product !== prodF && !o.product.includes(prodF)) return false;
+    if (sublineFilter) {
+      const p     = prods.find(p=>p.name===o.product||(p.name&&o.product&&o.product.includes(p.name)));
+      const pName = p?.name || o.product;
+      if (!sublineFilter.includes(pName)) return false;
+    } else if (prodF && prodF !== '__subline__') {
+      if (o.product !== prodF && !o.product.includes(prodF)) return false;
+    }
     return true;
   });
 
