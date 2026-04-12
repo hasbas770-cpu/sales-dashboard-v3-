@@ -1080,130 +1080,346 @@ function _deleteDocDuplicate(name) {
 /* ──────────────────────────────────────
    REPS
 ────────────────────────────────────── */
+/* ──────────────────────────────────────
+   REPS
+────────────────────────────────────── */
 function renderReps(el) {
+  const prods = DB.get('products') || [];
+  const areas = DB.get('areas')    || ['Basra'];
+  const lines = ['Derma','Optha','General Line','CM Line'];
+
   el.innerHTML = `
     <div class="fade-up">
+      <!-- Add/Edit Rep Form -->
+      <div class="card" style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <h2 style="margin:0">👥 المندوبين</h2>
+          <button class="btn btn-primary btn-sm" onclick="showRepForm()">➕ إضافة مندوب</button>
+        </div>
+        <div id="rep-form" style="display:none;padding:14px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;margin-bottom:14px">
+          <div class="form-grid" style="margin-bottom:12px">
+            <div class="form-group"><label>الاسم</label>
+              <input type="text" id="rf-name" placeholder="اسم المندوب">
+            </div>
+            <div class="form-group"><label>Line</label>
+              <select id="rf-line" onchange="renderRepProducts()">
+                <option value="">— اختر —</option>
+                ${lines.map(l=>`<option>${l}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group"><label>المنطقة</label>
+              <select id="rf-area">${areas.map(a=>`<option>${a}</option>`).join('')}</select>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:12px">
+            <label>المواد المسؤول عنها (Sub-line)</label>
+            <div id="rf-products" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;padding:10px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;min-height:40px">
+              <span style="color:var(--muted);font-size:12px">اختر Line أولاً</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-success btn-sm" onclick="saveRep()">✓ حفظ</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('rep-form').style.display='none'">إلغاء</button>
+          </div>
+        </div>
+        <div id="reps-list"></div>
+      </div>
+
+      <!-- Orders View -->
       <div class="card">
-        <h2>👥 المندوبين</h2>
-        <div id="reps-content"><div class="loader"><div class="spinner"></div></div></div>
+        <h2>📋 أوردرات المندوبين</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:12px">
+          <div class="form-group"><label>Rep</label>
+            <select id="ro-rep" onchange="loadRepOrders()">
+              <option value="">All Reps</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Line</label>
+            <select id="ro-line" onchange="loadRepOrders()">
+              <option value="">All Lines</option>
+              ${lines.map(l=>`<option>${l}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>Product</label>
+            <select id="ro-product" onchange="loadRepOrders()">
+              <option value="">All Products</option>
+              ${prods.map(p=>`<option value="${p.name}">${p.name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>From</label>
+            <input type="date" id="ro-from" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none">
+          </div>
+          <div class="form-group"><label>To</label>
+            <input type="date" id="ro-to" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none">
+          </div>
+          <div class="form-group" style="display:flex;align-items:flex-end">
+            <button class="btn btn-primary" style="width:100%" onclick="loadRepOrders()">Apply</button>
+          </div>
+        </div>
+        <div id="ro-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:12px"></div>
+        <div id="ro-list"><div class="empty">اختر فلتر وضغط Apply</div></div>
       </div>
     </div>`;
 
+  renderRepsList();
+  _loadRepOrdersData();
+}
+
+function showRepForm() { document.getElementById('rep-form').style.display='block'; }
+
+function renderRepProducts() {
+  const line  = document.getElementById('rf-line')?.value;
+  const prods = DB.get('products').filter(p=>p.line===line);
+  const cont  = document.getElementById('rf-products');
+  if (!line || !prods.length) { cont.innerHTML='<span style="color:var(--muted);font-size:12px">لا توجد مواد لهذا اللاين</span>'; return; }
+  cont.innerHTML = prods.map(p=>`
+    <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--muted)">
+      <input type="checkbox" value="${p.name}" style="accent-color:var(--accent)"> ${p.name}
+    </label>`).join('');
+}
+
+function saveRep() {
+  const name  = document.getElementById('rf-name').value.trim();
+  const line  = document.getElementById('rf-line').value;
+  const area  = document.getElementById('rf-area').value;
+  const subline = [...document.querySelectorAll('#rf-products input:checked')].map(i=>i.value);
+  if (!name) return alert('ادخل الاسم');
+  if (!line) return alert('اختر Line');
+  const reps = DB.get('reps') || [];
+  if (reps.find(r=>r.name===name)) return alert('المندوب موجود');
+  reps.push({ name, line, area, subline });
+  DB.set('reps', reps);
+  document.getElementById('rep-form').style.display='none';
+  document.getElementById('rf-name').value='';
+  renderRepsList();
+  toast('✓ تم الحفظ');
+}
+
+function renderRepsList() {
+  const reps = DB.get('reps') || [];
+  const cont = document.getElementById('reps-list');
+  if (!cont) return;
+  if (!reps.length) { cont.innerHTML='<div style="color:var(--muted);font-size:12px">لا توجد مندوبين مضافين — اضغط ➕ لإضافة</div>'; return; }
+  cont.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr>
+      <th style="text-align:right">المندوب</th><th>Line</th><th>المنطقة</th><th>المواد</th><th>إجراء</th>
+    </tr></thead><tbody>
+    ${reps.map((r,i)=>`<tr>
+      <td style="text-align:right;font-weight:600">👤 ${r.name}</td>
+      <td><span style="background:${lc(r.line)}18;color:${lc(r.line)};border-radius:999px;padding:2px 8px;font-size:10px;font-weight:600">${r.line}</span></td>
+      <td style="color:var(--muted)">${r.area||'—'}</td>
+      <td style="font-size:11px;color:var(--muted)">${(r.subline||[]).length ? (r.subline||[]).join(', ') : '—'}</td>
+      <td style="display:flex;gap:4px">
+        <button class="btn btn-ghost btn-sm" onclick="editRep(${i})">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteRep(${i})">🗑</button>
+      </td>
+    </tr>`).join('')}
+    </tbody></table></div>`;
+}
+
+function editRep(i) {
+  const reps  = DB.get('reps') || [];
+  const r     = reps[i]; if (!r) return;
+  const prods = DB.get('products').filter(p=>p.line===r.line);
+  const existing = document.getElementById('rep-edit-modal');
+  if (existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'rep-edit-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML = `
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:24px;width:100%;max-width:500px;max-height:80vh;overflow-y:auto">
+      <h2 style="margin-bottom:16px;color:#fff">✏️ تعديل مندوب</h2>
+      <div class="form-grid" style="margin-bottom:12px">
+        <div class="form-group"><label>الاسم</label><input type="text" id="re-name" value="${r.name}"></div>
+        <div class="form-group"><label>Line</label>
+          <select id="re-line">
+            ${['Derma','Optha','General Line','CM Line'].map(l=>`<option${l===r.line?' selected':''}>${l}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group"><label>المنطقة</label><input type="text" id="re-area" value="${r.area||''}"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label>المواد</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;padding:10px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;max-height:200px;overflow-y:auto">
+          ${prods.map(p=>`
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--muted)">
+              <input type="checkbox" value="${p.name}" ${(r.subline||[]).includes(p.name)?'checked':''} style="accent-color:var(--accent)"> ${p.name}
+            </label>`).join('')}
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('rep-edit-modal').remove()">إلغاء</button>
+        <button class="btn btn-primary" onclick="saveRepEdit(${i})">✓ حفظ</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function saveRepEdit(i) {
+  const reps    = DB.get('reps') || [];
+  const newName = document.getElementById('re-name').value.trim();
+  const newLine = document.getElementById('re-line').value;
+  const newArea = document.getElementById('re-area').value.trim();
+  const newSub  = [...document.querySelectorAll('#rep-edit-modal input[type=checkbox]:checked')].map(i=>i.value);
+  if (!newName) return alert('ادخل الاسم');
+  reps[i] = { name:newName, line:newLine, area:newArea, subline:newSub };
+  DB.set('reps', reps);
+  document.getElementById('rep-edit-modal').remove();
+  renderRepsList();
+  toast('✓ تم التحديث');
+}
+
+function deleteRep(i) {
+  const reps = DB.get('reps') || [];
+  if (!confirm('حذف '+reps[i]?.name+'؟')) return;
+  reps.splice(i,1);
+  DB.set('reps', reps);
+  renderRepsList();
+  toast('✓ تم الحذف');
+}
+
+/* ── Rep Orders ── */
+let _repOrdersCache = null;
+
+function _loadRepOrdersData() {
   apiGet('getOrders', {}, function(data) {
-    const cont = document.getElementById('reps-content');
-    if (!cont) return;
-    if (!data || !data.success) { cont.innerHTML='<div class="empty">تعذر التحميل</div>'; return; }
+    if (!data || !data.success) return;
+    _repOrdersCache = data.orders;
+    // تعبئة قائمة المندوبين
+    const repEl = document.getElementById('ro-rep');
+    if (!repEl) return;
+    const reps = [...new Set(data.orders.map(o=>o.rep).filter(Boolean))].sort();
+    repEl.innerHTML = '<option value="">All Reps</option>' + reps.map(r=>`<option>${r}</option>`).join('');
+  });
+}
 
-    const prods = DB.get('products') || [];
-    const orders = data.orders;
+function loadRepOrders() {
+  if (!_repOrdersCache) { _loadRepOrdersData(); return; }
 
-    // إحصائيات لكل مندوب
-    const stats = {};
+  const repF  = document.getElementById('ro-rep')?.value     || '';
+  const lineF = document.getElementById('ro-line')?.value    || '';
+  const prodF = document.getElementById('ro-product')?.value || '';
+  const from  = document.getElementById('ro-from')?.value    || '';
+  const to    = document.getElementById('ro-to')?.value      || '';
+
+  const reps  = DB.get('reps') || [];
+  const prods = DB.get('products') || [];
+
+  let orders = _repOrdersCache.filter(o => {
+    if (repF  && o.rep !== repF) return false;
+    if (from  && o.date < from)  return false;
+    if (to    && o.date > to)    return false;
+    // فلتر اللاين — من قائمة المنتجات
+    if (lineF) {
+      const p = prods.find(p=>p.name===o.product||(p.name&&o.product&&o.product.includes(p.name)));
+      const ol = p?.line || getLineByProduct(o.product);
+      if (ol !== lineF) return false;
+    }
+    if (prodF && o.product !== prodF && !o.product.includes(prodF)) return false;
+    return true;
+  });
+
+  // Stats
+  const tOrd = orders.length;
+  const tQty = orders.reduce((s,o)=>s+Number(o.quantity||0),0);
+  const tBon = orders.reduce((s,o)=>s+Number(o.bonusQty||0),0);
+  const tVal = orders.reduce((s,o)=>s+(Number(o.quantity||0)*Number(o.unitPrice||0)),0);
+  const tBonV= orders.reduce((s,o)=>s+(Number(o.bonusQty||0)*Number(o.unitPrice||0)),0);
+
+  const statsEl = document.getElementById('ro-stats');
+  if (statsEl) statsEl.innerHTML = `
+    <div class="stat-mini">Orders <span>${fmt(tOrd)}</span></div>
+    <div class="stat-mini">Qty <span>${fmt(tQty)}</span></div>
+    <div class="stat-mini">Bonus <span>${fmt(tBon)}</span></div>
+    <div class="stat-mini">Order Value <span>${fmtV(tVal)}</span></div>
+    <div class="stat-mini">Bonus Value <span>${fmtV(tBonV)}</span></div>
+    <div class="stat-mini">Total <span>${fmtV(tVal+tBonV)}</span></div>`;
+
+  const listEl = document.getElementById('ro-list');
+  if (!listEl) return;
+  if (!orders.length) { listEl.innerHTML='<div class="empty">لا توجد نتائج</div>'; return; }
+
+  // تجميع حسب مندوب → مادة
+  if (repF) {
+    // عرض تفصيلي لمندوب واحد
+    const repData = DB.get('reps')?.find(r=>r.name===repF);
+    const byProd = {};
     orders.forEach(o => {
-      if (!o.rep) return;
-      if (!stats[o.rep]) stats[o.rep] = { orders:0, qty:0, bonusQty:0, value:0, bonusVal:0, products:{} };
-      const s   = stats[o.rep];
-      const qty = Number(o.quantity||0);
-      const bon = Number(o.bonusQty||0);
-      const pri = Number(o.unitPrice||0);
-      s.orders++;
-      s.qty      += qty;
-      s.bonusQty += bon;
-      s.value    += qty * pri;
-      s.bonusVal += bon * pri;
-      if (!s.products[o.product]) s.products[o.product] = { qty:0, bonusQty:0, value:0 };
-      s.products[o.product].qty      += qty;
-      s.products[o.product].bonusQty += bon;
-      s.products[o.product].value    += (qty+bon) * pri;
+      const p = prods.find(p=>p.name===o.product||(p.name&&o.product&&o.product.includes(p.name)));
+      const name = p?.name || o.product;
+      const line = p?.line || getLineByProduct(o.product) || '—';
+      if (!byProd[name]) byProd[name] = { line, qty:0, bonusQty:0, value:0, bonusVal:0 };
+      byProd[name].qty      += Number(o.quantity||0);
+      byProd[name].bonusQty += Number(o.bonusQty||0);
+      byProd[name].value    += Number(o.quantity||0)*Number(o.unitPrice||0);
+      byProd[name].bonusVal += Number(o.bonusQty||0)*Number(o.unitPrice||0);
     });
 
-    const reps = Object.keys(stats).sort();
+    const rows = Object.entries(byProd).sort((a,b)=>b[1].value-a[1].value);
+    const isSubline = (name) => repData?.subline?.includes(name);
 
-    cont.innerHTML = reps.map(rep => {
-      const s     = stats[rep];
-      const total = s.value + s.bonusVal;
-      return `
-        <div style="margin-bottom:10px;border:1px solid var(--border);border-radius:14px;overflow:hidden">
-          <div onclick="toggleRepDetail('${rep.replace(/'/g,"\\'")}',this)"
-            style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;cursor:pointer;background:rgba(255,255,255,.02);transition:.15s"
-            onmouseover="this.style.background='rgba(255,255,255,.05)'"
-            onmouseout="this.style.background='rgba(255,255,255,.02)'">
-            <div style="display:flex;align-items:center;gap:10px">
-              <div style="width:36px;height:36px;border-radius:50%;background:var(--grad);display:grid;place-items:center;font-size:16px">👤</div>
-              <div>
-                <div style="font-weight:700;color:#fff">${rep}</div>
-                <div style="font-size:11px;color:var(--muted)">${fmt(s.orders)} فاتورة • ${fmt(s.qty)} وحدة</div>
-              </div>
-            </div>
-            <div style="text-align:left">
-              <div style="font-size:11px;color:var(--accent2)">Order: <strong>${fmtV(s.value)}</strong></div>
-              <div style="font-size:11px;color:var(--warn)">Bonus: <strong>${fmtV(s.bonusVal)}</strong></div>
-              <div style="font-size:13px;font-weight:700;color:#fff">Total: ${fmtV(total)}</div>
-            </div>
-          </div>
-          <div id="rep-detail-${rep.replace(/[^a-zA-Z0-9]/g,'_')}" style="display:none;padding:14px 16px;border-top:1px solid var(--border);background:rgba(0,0,0,.1)">
-            ${_buildRepDetail(rep, s, prods)}
-          </div>
-        </div>`;
-    }).join('') || '<div class="empty">لا توجد بيانات</div>';
-  });
-}
-
-function _buildRepDetail(rep, s, prods) {
-  // كل المواد
-  const allProds = Object.entries(s.products).sort((a,b)=>b[1].value-a[1].value);
-
-  // مواد حسب اللاين
-  const lineProds = {};
-  allProds.forEach(([name, d]) => {
-    const p = prods.find(p=>p.name===name || name.includes(p.name) || (p.name&&name&&p.name.includes(name.split(' ')[0])));
-    const line = p?.line || getLineByProduct(name) || 'Other';
-    if (!lineProds[line]) lineProds[line] = [];
-    lineProds[line].push([name, d, line]);
-  });
-
-  let html = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
-    <div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600">📊 Total Orders</div>
-      <div class="table-wrap"><table>
-        <thead><tr><th style="text-align:right">Product</th><th>Line</th><th>Qty</th><th>Bonus</th><th>Value</th></tr></thead>
-        <tbody>
-          ${allProds.slice(0,10).map(([name,d])=>{
-            const p = prods.find(p=>p.name===name||(p.name&&name&&name.includes(p.name)));
-            const line = p?.line || getLineByProduct(name) || '—';
-            return `<tr>
-              <td style="text-align:right;font-size:11px;font-weight:600">${p?p.name:name}</td>
-              <td><span style="background:${lc(line)}18;color:${lc(line)};border-radius:999px;padding:1px 6px;font-size:9px">${line}</span></td>
-              <td style="font-weight:600">${fmt(d.qty)}</td>
+    listEl.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <!-- Total -->
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--accent2);margin-bottom:8px">📊 Total Orders</div>
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th style="text-align:right">Product</th><th>Line</th><th>Qty</th><th>Bonus</th><th>Value</th>
+            </tr></thead><tbody>
+            ${rows.map(([name,d])=>`<tr>
+              <td style="text-align:right;font-weight:600;font-size:11px">${name}</td>
+              <td><span style="background:${lc(d.line)}18;color:${lc(d.line)};border-radius:999px;padding:1px 6px;font-size:9px">${d.line}</span></td>
+              <td>${fmt(d.qty)}</td>
               <td style="color:var(--warn)">${fmt(d.bonusQty)}</td>
               <td style="color:var(--accent2);font-weight:700">${fmtV(d.value)}</td>
-            </tr>`;
-          }).join('')}
-        </tbody>
-      </table></div>
-    </div>
-    <div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600">🎯 By Line</div>
-      ${Object.entries(lineProds).map(([line, items])=>`
-        <div style="margin-bottom:10px">
-          <div style="font-size:11px;font-weight:700;color:${lc(line)};margin-bottom:5px">${line}</div>
-          ${items.map(([name,d])=>`
-            <div style="display:flex;justify-content:space-between;padding:5px 8px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:3px;font-size:11px">
-              <span style="color:var(--muted)">${prods.find(p=>p.name===name||(p.name&&name&&name.includes(p.name)))?.name||name}</span>
-              <span style="color:var(--accent2);font-weight:700">${fmtV(d.value)}</span>
-            </div>`).join('')}
-        </div>`).join('')}
-    </div>
-  </div>`;
-
-  return html;
-}
-
-function toggleRepDetail(rep, btn) {
-  const id = 'rep-detail-' + rep.replace(/[^a-zA-Z0-9]/g,'_');
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+            </tr>`).join('')}
+            </tbody></table></div>
+        </div>
+        <!-- By Line -->
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">🎯 مواده فقط (${repData?.line||'—'})</div>
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th style="text-align:right">Product</th><th>Qty</th><th>Bonus</th><th>Value</th>
+            </tr></thead><tbody>
+            ${rows.filter(([name])=>isSubline(name)).map(([name,d])=>`<tr>
+              <td style="text-align:right;font-weight:600;font-size:11px">${name}</td>
+              <td>${fmt(d.qty)}</td>
+              <td style="color:var(--warn)">${fmt(d.bonusQty)}</td>
+              <td style="color:var(--accent2);font-weight:700">${fmtV(d.value)}</td>
+            </tr>`).join('') || '<tr><td colspan="4" class="empty">لا توجد مواد مخصصة</td></tr>'}
+            </tbody></table></div>
+        </div>
+      </div>`;
+  } else {
+    // عرض كل المندوبين
+    const byRep = {};
+    orders.forEach(o => {
+      if (!byRep[o.rep]) byRep[o.rep] = { value:0, bonusVal:0, qty:0 };
+      byRep[o.rep].value    += Number(o.quantity||0)*Number(o.unitPrice||0);
+      byRep[o.rep].bonusVal += Number(o.bonusQty||0)*Number(o.unitPrice||0);
+      byRep[o.rep].qty      += Number(o.quantity||0);
+    });
+    const sorted = Object.entries(byRep).sort((a,b)=>b[1].value-a[1].value);
+    listEl.innerHTML = `<div class="table-wrap"><table>
+      <thead><tr>
+        <th style="text-align:right">المندوب</th><th>Line</th><th>Qty</th><th>Order Value</th><th>Bonus</th><th>Total</th>
+      </tr></thead><tbody>
+      ${sorted.map(([rep,d])=>{
+        const repData = DB.get('reps')?.find(r=>r.name===rep);
+        const line    = repData?.line || '—';
+        return `<tr>
+          <td style="text-align:right;font-weight:600">👤 ${rep}</td>
+          <td><span style="background:${lc(line)}18;color:${lc(line)};border-radius:999px;padding:2px 8px;font-size:10px;font-weight:600">${line}</span></td>
+          <td>${fmt(d.qty)}</td>
+          <td style="color:var(--accent2);font-weight:700">${fmtV(d.value)}</td>
+          <td style="color:var(--warn)">${fmtV(d.bonusVal)}</td>
+          <td style="color:#fff;font-weight:700">${fmtV(d.value+d.bonusVal)}</td>
+        </tr>`;
+      }).join('')}
+      </tbody></table></div>`;
+  }
 }
 
 /* ──────────────────────────────────────
