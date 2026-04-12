@@ -1144,6 +1144,12 @@ function renderReps(el) {
               <option value="">All Reps</option>
             </select>
           </div>
+          <div class="form-group"><label>عرض</label>
+            <select id="ro-view" onchange="loadRepOrders()">
+              <option value="rep">أوردرات المندوب</option>
+              <option value="subline">مواد Sub-line (كل المندوبين)</option>
+            </select>
+          </div>
           <div class="form-group"><label>Line</label>
             <select id="ro-line" onchange="updateRepProductFilter();loadRepOrders()">
               <option value="">All Lines</option>
@@ -1361,9 +1367,10 @@ function loadRepOrders() {
   const from  = document.getElementById('ro-from')?.value    || '';
   const to    = document.getElementById('ro-to')?.value      || '';
 
-  const reps  = DB.get('reps') || [];
-  const prods = DB.get('products') || [];
-  const year      = document.getElementById('reps-year')?.value || new Date().getFullYear();
+  const view    = document.getElementById('ro-view')?.value || 'rep';
+  const reps    = DB.get('reps') || [];
+  const prods   = DB.get('products') || [];
+  const year    = document.getElementById('reps-year')?.value || new Date().getFullYear();
   const savedReps = DB.getObj('repsData') || {};
 
   // لو اختار "مواده فقط (Sub-line)"
@@ -1373,14 +1380,28 @@ function loadRepOrders() {
     sublineFilter = repData?.subline || [];
   }
 
+  // لو view = subline → عرض كل أوردرات مواد Sub-line بغض النظر عن المندوب
+  let sublineProds = null;
+  if (view === 'subline' && repF) {
+    const repData = savedReps[`${repF}__${year}`];
+    sublineProds  = repData?.subline || [];
+  }
+
   let orders = _repOrdersCache.filter(o => {
-    if (repF  && o.rep !== repF) return false;
+    // لو view=rep → فلتر بالمندوب، لو view=subline → ما نفلتر بالمندوب
+    if (view === 'rep' && repF && o.rep !== repF) return false;
     if (from  && o.date < from)  return false;
     if (to    && o.date > to)    return false;
     if (lineF) {
       const p  = prods.find(p=>p.name===o.product||(p.name&&o.product&&o.product.includes(p.name)));
       const ol = p?.line || getLineByProduct(o.product);
       if (ol !== lineF) return false;
+    }
+    // لو subline view → فلتر بمواد المندوب فقط
+    if (sublineProds) {
+      const p     = prods.find(p=>p.name===o.product||(p.name&&o.product&&o.product.includes(p.name)));
+      const pName = p?.name || o.product;
+      if (!sublineProds.includes(pName)) return false;
     }
     if (sublineFilter) {
       const p     = prods.find(p=>p.name===o.product||(p.name&&o.product&&o.product.includes(p.name)));
