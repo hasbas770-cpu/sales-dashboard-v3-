@@ -1087,42 +1087,22 @@ function renderReps(el) {
   const prods = DB.get('products') || [];
   const areas = DB.get('areas')    || ['Basra'];
   const lines = ['Derma','Optha','General Line','CM Line'];
+  const cur   = new Date();
 
   el.innerHTML = `
     <div class="fade-up">
-      <!-- Add/Edit Rep Form -->
       <div class="card" style="margin-bottom:14px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
           <h2 style="margin:0">👥 المندوبين</h2>
-          <button class="btn btn-primary btn-sm" onclick="showRepForm()">➕ إضافة مندوب</button>
-        </div>
-        <div id="rep-form" style="display:none;padding:14px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;margin-bottom:14px">
-          <div class="form-grid" style="margin-bottom:12px">
-            <div class="form-group"><label>الاسم</label>
-              <input type="text" id="rf-name" placeholder="اسم المندوب">
-            </div>
-            <div class="form-group"><label>Line</label>
-              <select id="rf-line" onchange="renderRepProducts()">
-                <option value="">— اختر —</option>
-                ${lines.map(l=>`<option>${l}</option>`).join('')}
+          <div style="display:flex;gap:8px;align-items:center">
+            <div class="form-group" style="margin:0"><label style="font-size:10px">السنة</label>
+              <select id="reps-year" onchange="renderRepsMaster()" style="background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:10px;font-size:12px;font-family:inherit;outline:none">
+                ${[2024,2025,2026,2027,2028].map(y=>`<option${y===cur.getFullYear()?' selected':''}>${y}</option>`).join('')}
               </select>
             </div>
-            <div class="form-group"><label>المنطقة</label>
-              <select id="rf-area">${areas.map(a=>`<option>${a}</option>`).join('')}</select>
-            </div>
-          </div>
-          <div class="form-group" style="margin-bottom:12px">
-            <label>المواد المسؤول عنها (Sub-line)</label>
-            <div id="rf-products" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;padding:10px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;min-height:40px">
-              <span style="color:var(--muted);font-size:12px">اختر Line أولاً</span>
-            </div>
-          </div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-success btn-sm" onclick="saveRep()">✓ حفظ</button>
-            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('rep-form').style.display='none'">إلغاء</button>
           </div>
         </div>
-        <div id="reps-list"></div>
+        <div id="reps-master-list"><div class="loader"><div class="spinner"></div></div></div>
       </div>
 
       <!-- Orders View -->
@@ -1157,140 +1137,143 @@ function renderReps(el) {
           </div>
         </div>
         <div id="ro-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:12px"></div>
-        <div id="ro-list"><div class="empty">اختر فلتر وضغط Apply</div></div>
+        <div id="ro-list"><div class="empty">اختر فلتر واضغط Apply</div></div>
       </div>
     </div>`;
 
-  renderRepsList();
-  _loadRepOrdersData();
+  // حمّل المندوبين من Sheets ثم ادمجهم
+  apiGet('getOrders', {}, function(data) {
+    _repOrdersCache = data?.success ? data.orders : [];
+    // عبّي قائمة الـ rep filter
+    const repEl = document.getElementById('ro-rep');
+    if (repEl) {
+      const sheetReps = [...new Set((_repOrdersCache||[]).map(o=>o.rep).filter(Boolean))].sort();
+      repEl.innerHTML = '<option value="">All Reps</option>' + sheetReps.map(r=>`<option>${r}</option>`).join('');
+    }
+    renderRepsMaster();
+  });
 }
 
-function showRepForm() { document.getElementById('rep-form').style.display='block'; }
-
-function renderRepProducts() {
-  const line  = document.getElementById('rf-line')?.value;
-  const prods = DB.get('products').filter(p=>p.line===line);
-  const cont  = document.getElementById('rf-products');
-  if (!line || !prods.length) { cont.innerHTML='<span style="color:var(--muted);font-size:12px">لا توجد مواد لهذا اللاين</span>'; return; }
-  cont.innerHTML = prods.map(p=>`
-    <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--muted)">
-      <input type="checkbox" value="${p.name}" style="accent-color:var(--accent)"> ${p.name}
-    </label>`).join('');
-}
-
-function saveRep() {
-  const name  = document.getElementById('rf-name').value.trim();
-  const line  = document.getElementById('rf-line').value;
-  const area  = document.getElementById('rf-area').value;
-  const subline = [...document.querySelectorAll('#rf-products input:checked')].map(i=>i.value);
-  if (!name) return alert('ادخل الاسم');
-  if (!line) return alert('اختر Line');
-  const reps = DB.get('reps') || [];
-  if (reps.find(r=>r.name===name)) return alert('المندوب موجود');
-  reps.push({ name, line, area, subline });
-  DB.set('reps', reps);
-  document.getElementById('rep-form').style.display='none';
-  document.getElementById('rf-name').value='';
-  renderRepsList();
-  toast('✓ تم الحفظ');
-}
-
-function renderRepsList() {
-  const reps = DB.get('reps') || [];
-  const cont = document.getElementById('reps-list');
+function renderRepsMaster() {
+  const year = document.getElementById('reps-year')?.value || new Date().getFullYear();
+  const cont = document.getElementById('reps-master-list');
   if (!cont) return;
-  if (!reps.length) { cont.innerHTML='<div style="color:var(--muted);font-size:12px">لا توجد مندوبين مضافين — اضغط ➕ لإضافة</div>'; return; }
+
+  // المندوبين من Sheets
+  const sheetReps = [...new Set((_repOrdersCache||[]).map(o=>o.rep).filter(Boolean))].sort();
+
+  // البيانات المحفوظة
+  const savedReps = DB.getObj('repsData') || {};
+
+  if (!sheetReps.length) {
+    cont.innerHTML = '<div style="color:var(--muted);font-size:12px">لا توجد بيانات — يحتاج تحميل الأوردرات</div>';
+    return;
+  }
+
   cont.innerHTML = `<div class="table-wrap"><table>
     <thead><tr>
-      <th style="text-align:right">المندوب</th><th>Line</th><th>المنطقة</th><th>المواد</th><th>إجراء</th>
+      <th style="text-align:right">المندوب</th>
+      <th>Line (${year})</th>
+      <th>المنطقة</th>
+      <th>المواد المسؤول عنها</th>
+      <th>تعديل</th>
     </tr></thead><tbody>
-    ${reps.map((r,i)=>`<tr>
-      <td style="text-align:right;font-weight:600">👤 ${r.name}</td>
-      <td><span style="background:${lc(r.line)}18;color:${lc(r.line)};border-radius:999px;padding:2px 8px;font-size:10px;font-weight:600">${r.line}</span></td>
-      <td style="color:var(--muted)">${r.area||'—'}</td>
-      <td style="font-size:11px;color:var(--muted)">${(r.subline||[]).length ? (r.subline||[]).join(', ') : '—'}</td>
-      <td style="display:flex;gap:4px">
-        <button class="btn btn-ghost btn-sm" onclick="editRep(${i})">✏️</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteRep(${i})">🗑</button>
-      </td>
-    </tr>`).join('')}
+    ${sheetReps.map(rep => {
+      const key  = `${rep}__${year}`;
+      const data = savedReps[key] || {};
+      const line = data.line || '—';
+      const area = data.area || '—';
+      const sub  = data.subline || [];
+      return `<tr>
+        <td style="text-align:right;font-weight:600">👤 ${rep}</td>
+        <td>${line !== '—' ? `<span style="background:${lc(line)}18;color:${lc(line)};border-radius:999px;padding:2px 8px;font-size:10px;font-weight:600">${line}</span>` : '<span style="color:var(--muted)">—</span>'}</td>
+        <td style="color:var(--muted)">${area}</td>
+        <td style="font-size:11px;color:var(--muted)">${sub.length ? sub.slice(0,3).join(', ')+(sub.length>3?` +${sub.length-3}`:'') : '—'}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="editRepData('${rep.replace(/'/g,"\\'")}','${year}')">✏️</button></td>
+      </tr>`;
+    }).join('')}
     </tbody></table></div>`;
 }
 
-function editRep(i) {
-  const reps  = DB.get('reps') || [];
-  const r     = reps[i]; if (!r) return;
-  const prods = DB.get('products').filter(p=>p.line===r.line);
+function editRepData(repName, year) {
+  const savedReps = DB.getObj('repsData') || {};
+  const key       = `${repName}__${year}`;
+  const data      = savedReps[key] || {};
+  const prods     = DB.get('products') || [];
+  const areas     = DB.get('areas') || ['Basra'];
+  const lines     = ['Derma','Optha','General Line','CM Line'];
+  const targets   = DB.getObj('productTargets') || {};
+
   const existing = document.getElementById('rep-edit-modal');
   if (existing) existing.remove();
+
   const modal = document.createElement('div');
   modal.id = 'rep-edit-modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px';
+
+  const lineProds = (data.line ? prods.filter(p=>p.line===data.line) : prods);
+
   modal.innerHTML = `
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:24px;width:100%;max-width:500px;max-height:80vh;overflow-y:auto">
-      <h2 style="margin-bottom:16px;color:#fff">✏️ تعديل مندوب</h2>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:24px;width:100%;max-width:540px;max-height:85vh;overflow-y:auto">
+      <h2 style="margin-bottom:4px;color:#fff">✏️ ${repName}</h2>
+      <p style="color:var(--muted);font-size:11px;margin-bottom:16px">سنة ${year}</p>
       <div class="form-grid" style="margin-bottom:12px">
-        <div class="form-group"><label>الاسم</label><input type="text" id="re-name" value="${r.name}"></div>
         <div class="form-group"><label>Line</label>
-          <select id="re-line">
-            ${['Derma','Optha','General Line','CM Line'].map(l=>`<option${l===r.line?' selected':''}>${l}</option>`).join('')}
+          <select id="re-line" onchange="updateRepModalProducts('${year}')">
+            <option value="">— اختر —</option>
+            ${lines.map(l=>`<option${l===data.line?' selected':''}>${l}</option>`).join('')}
           </select>
         </div>
-        <div class="form-group"><label>المنطقة</label><input type="text" id="re-area" value="${r.area||''}"></div>
-      </div>
-      <div class="form-group" style="margin-bottom:14px">
-        <label>المواد</label>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;padding:10px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;max-height:200px;overflow-y:auto">
-          ${prods.map(p=>`
-            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--muted)">
-              <input type="checkbox" value="${p.name}" ${(r.subline||[]).includes(p.name)?'checked':''} style="accent-color:var(--accent)"> ${p.name}
-            </label>`).join('')}
+        <div class="form-group"><label>المنطقة</label>
+          <select id="re-area">
+            ${areas.map(a=>`<option${a===data.area?' selected':''}>${a}</option>`).join('')}
+          </select>
         </div>
       </div>
-      <div style="display:flex;gap:8px;justify-content:flex-end">
+      <div class="form-group" style="margin-bottom:8px">
+        <label>المواد المسؤول عنها</label>
+        <div id="re-products" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;padding:10px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;max-height:220px;overflow-y:auto">
+          ${lineProds.map(p=>`
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--muted)">
+              <input type="checkbox" value="${p.name}" ${(data.subline||[]).includes(p.name)?'checked':''} style="accent-color:var(--accent)">
+              <span>${p.name}</span>
+              <span style="color:var(--accent2);font-size:10px">(Target: ${fmt(targets[year+'__'+p.name+'__Basra']||p.annualTarget||0)})</span>
+            </label>`).join('') || '<span style="color:var(--muted);font-size:12px">اختر Line أولاً</span>'}
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
         <button class="btn btn-ghost btn-sm" onclick="document.getElementById('rep-edit-modal').remove()">إلغاء</button>
-        <button class="btn btn-primary" onclick="saveRepEdit(${i})">✓ حفظ</button>
+        <button class="btn btn-primary" onclick="saveRepData('${repName.replace(/'/g,"\\'")}','${year}')">✓ حفظ</button>
       </div>
     </div>`;
   document.body.appendChild(modal);
 }
 
-function saveRepEdit(i) {
-  const reps    = DB.get('reps') || [];
-  const newName = document.getElementById('re-name').value.trim();
-  const newLine = document.getElementById('re-line').value;
-  const newArea = document.getElementById('re-area').value.trim();
-  const newSub  = [...document.querySelectorAll('#rep-edit-modal input[type=checkbox]:checked')].map(i=>i.value);
-  if (!newName) return alert('ادخل الاسم');
-  reps[i] = { name:newName, line:newLine, area:newArea, subline:newSub };
-  DB.set('reps', reps);
+function updateRepModalProducts(year) {
+  const line    = document.getElementById('re-line')?.value;
+  const prods   = DB.get('products') || [];
+  const targets = DB.getObj('productTargets') || {};
+  const cont    = document.getElementById('re-products');
+  if (!cont) return;
+  const filtered = line ? prods.filter(p=>p.line===line) : prods;
+  cont.innerHTML = filtered.map(p=>`
+    <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--muted)">
+      <input type="checkbox" value="${p.name}" style="accent-color:var(--accent)">
+      <span>${p.name}</span>
+      <span style="color:var(--accent2);font-size:10px">(Target: ${fmt(targets[year+'__'+p.name+'__Basra']||p.annualTarget||0)})</span>
+    </label>`).join('') || '<span style="color:var(--muted);font-size:12px">لا توجد مواد</span>';
+}
+
+function saveRepData(repName, year) {
+  const line    = document.getElementById('re-line')?.value    || '';
+  const area    = document.getElementById('re-area')?.value    || '';
+  const subline = [...document.querySelectorAll('#re-products input:checked')].map(i=>i.value);
+  const savedReps = DB.getObj('repsData') || {};
+  savedReps[`${repName}__${year}`] = { line, area, subline };
+  DB.setObj('repsData', savedReps);
   document.getElementById('rep-edit-modal').remove();
-  renderRepsList();
-  toast('✓ تم التحديث');
-}
-
-function deleteRep(i) {
-  const reps = DB.get('reps') || [];
-  if (!confirm('حذف '+reps[i]?.name+'؟')) return;
-  reps.splice(i,1);
-  DB.set('reps', reps);
-  renderRepsList();
-  toast('✓ تم الحذف');
-}
-
-/* ── Rep Orders ── */
-let _repOrdersCache = null;
-
-function _loadRepOrdersData() {
-  apiGet('getOrders', {}, function(data) {
-    if (!data || !data.success) return;
-    _repOrdersCache = data.orders;
-    // تعبئة قائمة المندوبين
-    const repEl = document.getElementById('ro-rep');
-    if (!repEl) return;
-    const reps = [...new Set(data.orders.map(o=>o.rep).filter(Boolean))].sort();
-    repEl.innerHTML = '<option value="">All Reps</option>' + reps.map(r=>`<option>${r}</option>`).join('');
-  });
+  renderRepsMaster();
+  toast('✓ تم الحفظ');
 }
 
 function loadRepOrders() {
