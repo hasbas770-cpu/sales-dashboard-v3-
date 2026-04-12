@@ -1088,24 +1088,122 @@ function renderReps(el) {
         <div id="reps-content"><div class="loader"><div class="spinner"></div></div></div>
       </div>
     </div>`;
+
   apiGet('getOrders', {}, function(data) {
-    if (!data || !data.success) {
-      document.getElementById('reps-content').innerHTML = '<div class="empty">تعذر التحميل</div>';
-      return;
-    }
-    const reps = [...new Set(data.orders.map(o => o.rep).filter(Boolean))];
+    const cont = document.getElementById('reps-content');
+    if (!cont) return;
+    if (!data || !data.success) { cont.innerHTML='<div class="empty">تعذر التحميل</div>'; return; }
+
+    const prods = DB.get('products') || [];
+    const orders = data.orders;
+
+    // إحصائيات لكل مندوب
     const stats = {};
-    data.orders.forEach(o => {
-      if (!stats[o.rep]) stats[o.rep] = { orders:0, value:0 };
-      stats[o.rep].orders++;
-      stats[o.rep].value += Number(o.quantity||0) * Number(o.unitPrice||0);
+    orders.forEach(o => {
+      if (!o.rep) return;
+      if (!stats[o.rep]) stats[o.rep] = { orders:0, qty:0, bonusQty:0, value:0, bonusVal:0, products:{} };
+      const s   = stats[o.rep];
+      const qty = Number(o.quantity||0);
+      const bon = Number(o.bonusQty||0);
+      const pri = Number(o.unitPrice||0);
+      s.orders++;
+      s.qty      += qty;
+      s.bonusQty += bon;
+      s.value    += qty * pri;
+      s.bonusVal += bon * pri;
+      if (!s.products[o.product]) s.products[o.product] = { qty:0, bonusQty:0, value:0 };
+      s.products[o.product].qty      += qty;
+      s.products[o.product].bonusQty += bon;
+      s.products[o.product].value    += (qty+bon) * pri;
     });
-    let rows = reps.map(r =>
-      '<tr><td style="text-align:right;font-weight:600">👤 '+r+'</td><td>'+fmt(stats[r].orders)+'</td><td style="color:var(--accent2);font-weight:600">'+fmtV(stats[r].value)+'</td></tr>'
-    ).join('');
-    document.getElementById('reps-content').innerHTML =
-      '<div class="table-wrap"><table><thead><tr><th style="text-align:right">المندوب</th><th>الفواتير</th><th>القيمة</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+
+    const reps = Object.keys(stats).sort();
+
+    cont.innerHTML = reps.map(rep => {
+      const s     = stats[rep];
+      const total = s.value + s.bonusVal;
+      return `
+        <div style="margin-bottom:10px;border:1px solid var(--border);border-radius:14px;overflow:hidden">
+          <div onclick="toggleRepDetail('${rep.replace(/'/g,"\\'")}',this)"
+            style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;cursor:pointer;background:rgba(255,255,255,.02);transition:.15s"
+            onmouseover="this.style.background='rgba(255,255,255,.05)'"
+            onmouseout="this.style.background='rgba(255,255,255,.02)'">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="width:36px;height:36px;border-radius:50%;background:var(--grad);display:grid;place-items:center;font-size:16px">👤</div>
+              <div>
+                <div style="font-weight:700;color:#fff">${rep}</div>
+                <div style="font-size:11px;color:var(--muted)">${fmt(s.orders)} فاتورة • ${fmt(s.qty)} وحدة</div>
+              </div>
+            </div>
+            <div style="text-align:left">
+              <div style="font-size:11px;color:var(--accent2)">Order: <strong>${fmtV(s.value)}</strong></div>
+              <div style="font-size:11px;color:var(--warn)">Bonus: <strong>${fmtV(s.bonusVal)}</strong></div>
+              <div style="font-size:13px;font-weight:700;color:#fff">Total: ${fmtV(total)}</div>
+            </div>
+          </div>
+          <div id="rep-detail-${rep.replace(/[^a-zA-Z0-9]/g,'_')}" style="display:none;padding:14px 16px;border-top:1px solid var(--border);background:rgba(0,0,0,.1)">
+            ${_buildRepDetail(rep, s, prods)}
+          </div>
+        </div>`;
+    }).join('') || '<div class="empty">لا توجد بيانات</div>';
   });
+}
+
+function _buildRepDetail(rep, s, prods) {
+  // كل المواد
+  const allProds = Object.entries(s.products).sort((a,b)=>b[1].value-a[1].value);
+
+  // مواد حسب اللاين
+  const lineProds = {};
+  allProds.forEach(([name, d]) => {
+    const p = prods.find(p=>p.name===name || name.includes(p.name) || (p.name&&name&&p.name.includes(name.split(' ')[0])));
+    const line = p?.line || getLineByProduct(name) || 'Other';
+    if (!lineProds[line]) lineProds[line] = [];
+    lineProds[line].push([name, d, line]);
+  });
+
+  let html = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+    <div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600">📊 Total Orders</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th style="text-align:right">Product</th><th>Line</th><th>Qty</th><th>Bonus</th><th>Value</th></tr></thead>
+        <tbody>
+          ${allProds.slice(0,10).map(([name,d])=>{
+            const p = prods.find(p=>p.name===name||(p.name&&name&&name.includes(p.name)));
+            const line = p?.line || getLineByProduct(name) || '—';
+            return `<tr>
+              <td style="text-align:right;font-size:11px;font-weight:600">${p?p.name:name}</td>
+              <td><span style="background:${lc(line)}18;color:${lc(line)};border-radius:999px;padding:1px 6px;font-size:9px">${line}</span></td>
+              <td style="font-weight:600">${fmt(d.qty)}</td>
+              <td style="color:var(--warn)">${fmt(d.bonusQty)}</td>
+              <td style="color:var(--accent2);font-weight:700">${fmtV(d.value)}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table></div>
+    </div>
+    <div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600">🎯 By Line</div>
+      ${Object.entries(lineProds).map(([line, items])=>`
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;font-weight:700;color:${lc(line)};margin-bottom:5px">${line}</div>
+          ${items.map(([name,d])=>`
+            <div style="display:flex;justify-content:space-between;padding:5px 8px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:3px;font-size:11px">
+              <span style="color:var(--muted)">${prods.find(p=>p.name===name||(p.name&&name&&name.includes(p.name)))?.name||name}</span>
+              <span style="color:var(--accent2);font-weight:700">${fmtV(d.value)}</span>
+            </div>`).join('')}
+        </div>`).join('')}
+    </div>
+  </div>`;
+
+  return html;
+}
+
+function toggleRepDetail(rep, btn) {
+  const id = 'rep-detail-' + rep.replace(/[^a-zA-Z0-9]/g,'_');
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
 /* ──────────────────────────────────────
