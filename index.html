@@ -1083,6 +1083,26 @@ function _deleteDocDuplicate(name) {
 /* ──────────────────────────────────────
    REPS
 ────────────────────────────────────── */
+let _repOrdersCache = null;
+
+function updateRepProductFilter() {
+  const repF   = document.getElementById('ro-rep')?.value  || '';
+  const lineF  = document.getElementById('ro-line')?.value || '';
+  const prodEl = document.getElementById('ro-product');
+  if (!prodEl) return;
+  const year      = document.getElementById('reps-year')?.value || new Date().getFullYear();
+  const savedReps = DB.getObj('repsData') || {};
+  const allProds  = DB.get('products') || [];
+  let filtered    = allProds;
+  if (repF) {
+    const repData = savedReps[`${repF}__${year}`];
+    if (repData?.subline?.length) filtered = allProds.filter(p=>repData.subline.includes(p.name));
+  }
+  if (lineF) filtered = filtered.filter(p=>p.line===lineF);
+  prodEl.innerHTML = '<option value="">All Products</option>' +
+    filtered.map(p=>`<option value="${p.name}">${p.name}</option>`).join('');
+}
+
 function renderReps(el) {
   const prods = DB.get('products') || [];
   const areas = DB.get('areas')    || ['Basra'];
@@ -1110,12 +1130,12 @@ function renderReps(el) {
         <h2>📋 أوردرات المندوبين</h2>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:12px">
           <div class="form-group"><label>Rep</label>
-            <select id="ro-rep" onchange="loadRepOrders()">
+            <select id="ro-rep" onchange="updateRepProductFilter();loadRepOrders()">
               <option value="">All Reps</option>
             </select>
           </div>
           <div class="form-group"><label>Line</label>
-            <select id="ro-line" onchange="loadRepOrders()">
+            <select id="ro-line" onchange="updateRepProductFilter();loadRepOrders()">
               <option value="">All Lines</option>
               ${lines.map(l=>`<option>${l}</option>`).join('')}
             </select>
@@ -1211,17 +1231,20 @@ function editRepData(repName, year) {
   modal.id = 'rep-edit-modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px';
 
-  const lineProds = (data.line ? prods.filter(p=>p.line===data.line) : prods);
+  const selLine   = data.line || '';
+  const lineProds = selLine ? prods.filter(p=>p.line===selLine) : [];
+  const repTargets = data.targets || {};
 
   modal.innerHTML = `
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:24px;width:100%;max-width:540px;max-height:85vh;overflow-y:auto">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:24px;width:100%;max-width:600px;max-height:88vh;overflow-y:auto">
       <h2 style="margin-bottom:4px;color:#fff">✏️ ${repName}</h2>
       <p style="color:var(--muted);font-size:11px;margin-bottom:16px">سنة ${year}</p>
-      <div class="form-grid" style="margin-bottom:12px">
+
+      <div class="form-grid" style="margin-bottom:16px">
         <div class="form-group"><label>Line</label>
-          <select id="re-line" onchange="updateRepModalProducts('${year}')">
+          <select id="re-line" onchange="updateRepModalProducts('${year}','${repName}')">
             <option value="">— اختر —</option>
-            ${lines.map(l=>`<option${l===data.line?' selected':''}>${l}</option>`).join('')}
+            ${lines.map(l=>`<option${l===selLine?' selected':''}>${l}</option>`).join('')}
           </select>
         </div>
         <div class="form-group"><label>المنطقة</label>
@@ -1230,18 +1253,13 @@ function editRepData(repName, year) {
           </select>
         </div>
       </div>
-      <div class="form-group" style="margin-bottom:8px">
-        <label>المواد المسؤول عنها</label>
-        <div id="re-products" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;padding:10px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;max-height:220px;overflow-y:auto">
-          ${lineProds.map(p=>`
-            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--muted)">
-              <input type="checkbox" value="${p.name}" ${(data.subline||[]).includes(p.name)?'checked':''} style="accent-color:var(--accent)">
-              <span>${p.name}</span>
-              <span style="color:var(--accent2);font-size:10px">(Target: ${fmt(targets[year+'__'+p.name+'__Basra']||p.annualTarget||0)})</span>
-            </label>`).join('') || '<span style="color:var(--muted);font-size:12px">اختر Line أولاً</span>'}
-        </div>
+
+      <label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:8px">المواد المسؤول عنها + Target</label>
+      <div id="re-products" style="display:grid;gap:8px;max-height:300px;overflow-y:auto;padding:4px">
+        ${_buildRepProductCards(lineProds, data.subline||[], repTargets, targets, year)}
       </div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
         <button class="btn btn-ghost btn-sm" onclick="document.getElementById('rep-edit-modal').remove()">إلغاء</button>
         <button class="btn btn-primary" onclick="saveRepData('${repName.replace(/'/g,"\\'")}','${year}')">✓ حفظ</button>
       </div>
@@ -1249,27 +1267,90 @@ function editRepData(repName, year) {
   document.body.appendChild(modal);
 }
 
-function updateRepModalProducts(year) {
-  const line    = document.getElementById('re-line')?.value;
-  const prods   = DB.get('products') || [];
-  const targets = DB.getObj('productTargets') || {};
-  const cont    = document.getElementById('re-products');
+function _buildRepProductCards(lineProds, selected, repTargets, allTargets, year) {
+  if (!lineProds.length) return '<div style="color:var(--muted);font-size:12px;padding:10px">اختر Line أولاً</div>';
+  return lineProds.map(p => {
+    const isSelected = selected.includes(p.name);
+    const totalTarget = allTargets[`${year}__${p.name}__Basra`] || p.annualTarget || 0;
+    const repTarget   = repTargets[p.name] != null ? repTargets[p.name] : (isSelected ? totalTarget : '');
+    return `
+      <div id="rpc-${p.name.replace(/[^a-zA-Z0-9]/g,'_')}"
+        onclick="toggleRepProduct('${p.name.replace(/'/g,"\\'")}', ${totalTarget})"
+        style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;
+          border-radius:12px;cursor:pointer;border:2px solid ${isSelected?'var(--accent)':'var(--border)'};
+          background:${isSelected?'rgba(79,142,247,.08)':'rgba(255,255,255,.02)'};transition:all .15s">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:20px;height:20px;border-radius:6px;border:2px solid ${isSelected?'var(--accent)':'var(--border)'};
+            background:${isSelected?'var(--accent)':'transparent'};display:grid;place-items:center;flex-shrink:0;transition:.15s">
+            ${isSelected?'<span style="color:#fff;font-size:11px;font-weight:700">✓</span>':''}
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:600;color:${isSelected?'#fff':'var(--muted)'}">${p.name}</div>
+            <div style="font-size:10px;color:var(--muted)">Total Target: ${fmt(totalTarget)}</div>
+          </div>
+        </div>
+        <div onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:6px;opacity:${isSelected?1:0.3}">
+          <span style="font-size:10px;color:var(--muted)">Target:</span>
+          <input type="number" id="rt-${p.name.replace(/[^a-zA-Z0-9]/g,'_')}"
+            value="${repTarget}"
+            min="0" max="${totalTarget}"
+            placeholder="${fmt(totalTarget)}"
+            style="width:80px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);
+              padding:5px 8px;border-radius:8px;font-size:11px;text-align:center;font-family:inherit;outline:none"
+            ${isSelected?'':'disabled'}>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function toggleRepProduct(prodName, totalTarget) {
+  const safeId  = prodName.replace(/[^a-zA-Z0-9]/g,'_');
+  const card    = document.getElementById('rpc-'+safeId);
+  const inp     = document.getElementById('rt-'+safeId);
+  const check   = card?.querySelector('div > div');
+  if (!card) return;
+
+  const isNowSelected = card.style.borderColor.includes('accent') || card.style.background.includes('rgba(79');
+  const nowSelected   = !isNowSelected;
+
+  card.style.border    = `2px solid ${nowSelected?'var(--accent)':'var(--border)'}`;
+  card.style.background = nowSelected ? 'rgba(79,142,247,.08)' : 'rgba(255,255,255,.02)';
+  if (check) check.innerHTML = nowSelected ? '<span style="color:#fff;font-size:11px;font-weight:700">✓</span>' : '';
+  if (check) { check.style.borderColor=nowSelected?'var(--accent)':'var(--border)'; check.style.background=nowSelected?'var(--accent)':'transparent'; }
+  if (inp)   { inp.disabled=!nowSelected; inp.style.opacity=nowSelected?'1':'0.3'; if(nowSelected && !inp.value) inp.value=totalTarget; }
+}
+
+function updateRepModalProducts(year, repName) {
+  const line      = document.getElementById('re-line')?.value;
+  const prods     = DB.get('products') || [];
+  const targets   = DB.getObj('productTargets') || {};
+  const savedReps = DB.getObj('repsData') || {};
+  const data      = savedReps[`${repName}__${year}`] || {};
+  const cont      = document.getElementById('re-products');
   if (!cont) return;
-  const filtered = line ? prods.filter(p=>p.line===line) : prods;
-  cont.innerHTML = filtered.map(p=>`
-    <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:var(--muted)">
-      <input type="checkbox" value="${p.name}" style="accent-color:var(--accent)">
-      <span>${p.name}</span>
-      <span style="color:var(--accent2);font-size:10px">(Target: ${fmt(targets[year+'__'+p.name+'__Basra']||p.annualTarget||0)})</span>
-    </label>`).join('') || '<span style="color:var(--muted);font-size:12px">لا توجد مواد</span>';
+  const filtered = line ? prods.filter(p=>p.line===line) : [];
+  cont.innerHTML = _buildRepProductCards(filtered, data.subline||[], data.targets||{}, targets, year);
 }
 
 function saveRepData(repName, year) {
   const line    = document.getElementById('re-line')?.value    || '';
   const area    = document.getElementById('re-area')?.value    || '';
-  const subline = [...document.querySelectorAll('#re-products input:checked')].map(i=>i.value);
+
+  // اجمع المواد المختارة والـ targets
+  const subline = [];
+  const repTargets = {};
+  document.querySelectorAll('#re-products [id^="rpc-"]').forEach(card => {
+    const isSelected = card.style.background.includes('rgba(79');
+    const prodName   = card.querySelector('div > div + div > div')?.textContent?.trim();
+    if (!prodName || !isSelected) return;
+    subline.push(prodName);
+    const safeId  = prodName.replace(/[^a-zA-Z0-9]/g,'_');
+    const inp     = document.getElementById('rt-'+safeId);
+    if (inp && inp.value) repTargets[prodName] = Number(inp.value);
+  });
+
   const savedReps = DB.getObj('repsData') || {};
-  savedReps[`${repName}__${year}`] = { line, area, subline };
+  savedReps[`${repName}__${year}`] = { line, area, subline, targets:repTargets };
   DB.setObj('repsData', savedReps);
   document.getElementById('rep-edit-modal').remove();
   renderRepsMaster();
