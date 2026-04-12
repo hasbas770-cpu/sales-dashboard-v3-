@@ -504,74 +504,179 @@ function apiPost(body) {
 ═══════════════════════════════════════ */
 
 function renderDashboard(el) {
-  const year = new Date().getFullYear();
-  const ps   = DB.getObj('primarySales');
-  const wf   = DB.getObj('warehouseFlow');
+  const now   = new Date();
+  const year  = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const ps      = DB.getObj('primarySales');
+  const wf      = DB.getObj('warehouseFlow');
+  const targets = DB.getObj('productTargets');
+  const prods   = DB.get('products') || [];
 
-  const psTotal  = Object.entries(ps).filter(([k]) => k.startsWith(year+'__')).reduce((s,[,v]) => s+Number(v), 0);
-  const secTotal = Object.entries(wf).filter(([k]) => k.startsWith(year+'__') && !k.includes('__prim') && k.split('__').length === 4).reduce((s,[,v]) => s+Number(v), 0);
-  const flowRate = psTotal > 0 ? (secTotal / psTotal * 100).toFixed(1) : '—';
+  // ── Primary YTD ──
+  const psTotal = Object.entries(ps)
+    .filter(([k]) => k.startsWith(year+'__'))
+    .reduce((s,[,v]) => s+Number(v), 0);
+
+  // ── Secondary YTD ──
+  const secTotal = Object.entries(wf)
+    .filter(([k]) => k.startsWith(year+'__') && !k.includes('__prim') && k.split('__').length === 4)
+    .reduce((s,[,v]) => s+Number(v), 0);
+
+  // ── Target YTD (حتى الشهر الحالي) ──
+  let targetYTD = 0;
+  prods.forEach(p => {
+    const annTarget = targets[`${year}__${p.name}__Basra`] || p.annualTarget || 0;
+    targetYTD += Math.round(annTarget / 12 * month);
+  });
+
+  // ── Achievement % ──
+  const achievement = targetYTD > 0 ? (psTotal / targetYTD * 100) : 0;
+  const flowRate    = psTotal > 0 ? (secTotal / psTotal * 100) : 0;
+
+  // ── Primary this month ──
+  const psMonth = Object.entries(ps)
+    .filter(([k]) => k.startsWith(`${year}__`) && k.endsWith(`__${month}`))
+    .reduce((s,[,v]) => s+Number(v), 0);
+
+  // ── Target this month ──
+  const targetMonth = prods.reduce((s,p) => {
+    const ann = targets[`${year}__${p.name}__Basra`] || p.annualTarget || 0;
+    return s + Math.round(ann/12);
+  }, 0);
+
+  const achMonth = targetMonth > 0 ? (psMonth / targetMonth * 100) : 0;
 
   el.innerHTML = `
     <div class="fade-up">
-      <div class="kpi-grid" style="margin-bottom:20px">
-        <div class="kpi-card">
-          <div class="kpi-label">Primary Sales YTD</div>
+
+      <!-- ── KPI Row 1 ── -->
+      <div class="kpi-grid" style="margin-bottom:12px">
+
+        <div class="kpi-card" style="border-color:rgba(79,142,247,.3)">
+          <div class="kpi-label">Primary YTD</div>
           <div class="kpi-value">${fmt(psTotal)}</div>
+          <div style="margin-top:8px">
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:4px">
+              <span>Target YTD: ${fmt(targetYTD)}</span>
+              <span style="color:${achievement>=100?'var(--accent2)':achievement>=80?'var(--warn)':'var(--danger)'};font-weight:700">${achievement.toFixed(1)}%</span>
+            </div>
+            <div style="height:4px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden">
+              <div style="width:${Math.min(achievement,100).toFixed(0)}%;height:100%;background:${achievement>=100?'var(--accent2)':achievement>=80?'var(--warn)':'var(--danger)'};border-radius:999px;transition:width .5s"></div>
+            </div>
+          </div>
         </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Secondary Sales YTD</div>
+
+        <div class="kpi-card" style="border-color:rgba(167,139,250,.3)">
+          <div class="kpi-label">هذا الشهر</div>
+          <div class="kpi-value">${fmt(psMonth)}</div>
+          <div style="margin-top:8px">
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:4px">
+              <span>Target: ${fmt(targetMonth)}</span>
+              <span style="color:${achMonth>=100?'var(--accent2)':achMonth>=80?'var(--warn)':'var(--danger)'};font-weight:700">${achMonth.toFixed(1)}%</span>
+            </div>
+            <div style="height:4px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden">
+              <div style="width:${Math.min(achMonth,100).toFixed(0)}%;height:100%;background:${achMonth>=100?'var(--accent2)':achMonth>=80?'var(--warn)':'var(--danger)'};border-radius:999px;transition:width .5s"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="kpi-card" style="border-color:rgba(52,211,153,.3)">
+          <div class="kpi-label">Secondary YTD</div>
           <div class="kpi-value" style="color:var(--accent)">${fmtSec(secTotal)}</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--muted)">
+            Flow Rate: <span style="color:${flowRate>=80?'var(--accent2)':flowRate>=50?'var(--warn)':'var(--danger)'};font-weight:700">${flowRate.toFixed(1)}%</span>
+          </div>
         </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Flow Rate%</div>
-          <div class="kpi-value" style="color:${flowRate>=80?'var(--accent2)':flowRate>=50?'var(--warn)':'var(--danger)'}">${flowRate}%</div>
-        </div>
+
         <div class="kpi-card">
           <div class="kpi-label">أوردرات المجمعات</div>
           <div class="kpi-value" id="kpi-orders">⏳</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--muted)" id="kpi-orders-month">—</div>
         </div>
+
         <div class="kpi-card">
           <div class="kpi-label">قيمة الأوردرات</div>
           <div class="kpi-value" id="kpi-orders-val">⏳</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--muted)" id="kpi-orders-month-val">—</div>
+        </div>
+
+      </div>
+
+      <!-- ── Line Breakdown ── -->
+      <div class="card" style="margin-bottom:14px">
+        <h2>📊 أداء اللاينات</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+          ${['Derma','Optha','General Line','CM Line'].map(line => {
+            const lineProds = prods.filter(p=>p.line===line);
+            const linePrimary = lineProds.reduce((s,p) => {
+              return s + Object.entries(ps).filter(([k])=>k.startsWith(`${year}__${p.name}__`)).reduce((ss,[,v])=>ss+Number(v),0);
+            },0);
+            const lineTarget = lineProds.reduce((s,p) => {
+              const ann = targets[`${year}__${p.name}__Basra`] || p.annualTarget || 0;
+              return s + Math.round(ann/12*month);
+            },0);
+            const lineAch = lineTarget > 0 ? (linePrimary/lineTarget*100) : 0;
+            return `
+              <div style="padding:12px;background:rgba(255,255,255,.02);border:1px solid ${lc(line)}30;border-radius:12px">
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                  <span style="font-size:11px;font-weight:700;color:${lc(line)}">${line}</span>
+                  <span style="font-size:11px;font-weight:700;color:${lineAch>=100?'var(--accent2)':lineAch>=80?'var(--warn)':'var(--danger)'}">${lineAch.toFixed(0)}%</span>
+                </div>
+                <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:4px">${fmt(linePrimary)}</div>
+                <div style="font-size:10px;color:var(--muted)">Target: ${fmt(lineTarget)}</div>
+                <div style="height:3px;background:rgba(255,255,255,.06);border-radius:999px;margin-top:8px;overflow:hidden">
+                  <div style="width:${Math.min(lineAch,100).toFixed(0)}%;height:100%;background:${lc(line)};border-radius:999px"></div>
+                </div>
+              </div>`;
+          }).join('')}
         </div>
       </div>
 
+      <!-- ── Recent Orders ── -->
       <div class="card">
         <h2>📦 آخر الأوردرات</h2>
-        <div id="dash-orders">
-          <div class="loader"><div class="spinner"></div></div>
-        </div>
+        <div id="dash-orders"><div class="loader"><div class="spinner"></div></div></div>
       </div>
+
     </div>`;
 
+  // تحميل الأوردرات
   apiGet('getOrders', {}, function(data) {
     if (!data || !data.success) return;
     const orders = data.orders;
 
-    const kpiOrders = document.getElementById('kpi-orders');
-    const kpiVal    = document.getElementById('kpi-orders-val');
-    const dashOrds  = document.getElementById('dash-orders');
-    if (!kpiOrders) return; // الصفحة تغيرت قبل ما يرجع الـ request
+    const kpiOrders    = document.getElementById('kpi-orders');
+    const kpiVal       = document.getElementById('kpi-orders-val');
+    const kpiOrdMonth  = document.getElementById('kpi-orders-month');
+    const kpiValMonth  = document.getElementById('kpi-orders-month-val');
+    const dashOrds     = document.getElementById('dash-orders');
+    if (!kpiOrders) return;
+
+    // هذا الشهر
+    const thisMonthOrds = orders.filter(o => {
+      const d = new Date(o.date);
+      return d.getMonth()+1 === month && d.getFullYear() === year;
+    });
 
     kpiOrders.textContent = fmt(orders.length);
-    const totalVal = orders.reduce((s,o) => {
-      return s + (Number(o.quantity||0) + Number(o.bonusQty||0)) * Number(o.unitPrice||0);
-    }, 0);
+    const totalVal = orders.reduce((s,o) => s+(Number(o.quantity||0)+Number(o.bonusQty||0))*Number(o.unitPrice||0), 0);
     if (kpiVal) kpiVal.textContent = fmtV(totalVal);
 
-    // Group and show last 5
+    const monthVal = thisMonthOrds.reduce((s,o) => s+(Number(o.quantity||0)+Number(o.bonusQty||0))*Number(o.unitPrice||0), 0);
+    if (kpiOrdMonth) kpiOrdMonth.textContent = `هذا الشهر: ${fmt(thisMonthOrds.length)}`;
+    if (kpiValMonth) kpiValMonth.textContent = `هذا الشهر: ${fmtV(monthVal)}`;
+
+    // آخر 5 أوردرات
     const grouped = {};
     orders.forEach(o => {
       const d   = formatDate(o.date);
       const key = `${d}__${o.pharmacy}__${o.rep}`;
       if (!grouped[key]) grouped[key] = { date:d, pharmacy:o.pharmacy, rep:o.rep, total:0, lines:new Set() };
-      const line = o.line || getLineByProduct(o.product);
-      grouped[key].lines.add(line);
-      grouped[key].total += (Number(o.quantity||0) + Number(o.bonusQty||0)) * Number(o.unitPrice||0);
+      grouped[key].lines.add(o.line || getLineByProduct(o.product));
+      grouped[key].total += (Number(o.quantity||0)+Number(o.bonusQty||0))*Number(o.unitPrice||0);
     });
 
-    const recent = Object.values(grouped).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 5);
+    const recent = Object.values(grouped).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
 
     if (dashOrds) dashOrds.innerHTML = recent.map(o => `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
@@ -580,9 +685,7 @@ function renderDashboard(el) {
           <div style="font-size:11px;color:var(--muted);margin-top:3px">👤 ${o.rep||'—'} • 📅 ${o.date}</div>
         </div>
         <div style="text-align:left">
-          ${[...o.lines].filter(Boolean).map(l =>
-            `<span style="background:${lc(l)}18;color:${lc(l)};border-radius:999px;padding:2px 8px;font-size:10px;font-weight:600;border:1px solid ${lc(l)}30;margin-right:4px">${l}</span>`
-          ).join('')}
+          ${[...o.lines].filter(Boolean).map(l=>`<span style="background:${lc(l)}18;color:${lc(l)};border-radius:999px;padding:2px 8px;font-size:10px;font-weight:600;margin-right:4px">${l}</span>`).join('')}
           <div style="font-size:13px;font-weight:700;color:var(--accent2);margin-top:4px">${fmtV(o.total)}</div>
         </div>
       </div>`).join('') || '<div class="empty">لا توجد بيانات</div>';
@@ -1450,42 +1553,20 @@ function loadRepOrders() {
     });
 
     const rows = Object.entries(byProd).sort((a,b)=>b[1].value-a[1].value);
-    const isSubline = (name) => repData?.subline?.includes(name);
 
     listEl.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-        <!-- Total -->
-        <div>
-          <div style="font-size:12px;font-weight:700;color:var(--accent2);margin-bottom:8px">📊 Total Orders</div>
-          <div class="table-wrap"><table>
-            <thead><tr>
-              <th style="text-align:right">Product</th><th>Line</th><th>Qty</th><th>Bonus</th><th>Value</th>
-            </tr></thead><tbody>
-            ${rows.map(([name,d])=>`<tr>
-              <td style="text-align:right;font-weight:600;font-size:11px">${name}</td>
-              <td><span style="background:${lc(d.line)}18;color:${lc(d.line)};border-radius:999px;padding:1px 6px;font-size:9px">${d.line}</span></td>
-              <td>${fmt(d.qty)}</td>
-              <td style="color:var(--warn)">${fmt(d.bonusQty)}</td>
-              <td style="color:var(--accent2);font-weight:700">${fmtV(d.value)}</td>
-            </tr>`).join('')}
-            </tbody></table></div>
-        </div>
-        <!-- By Line -->
-        <div>
-          <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">🎯 مواده فقط (${repData?.line||'—'})</div>
-          <div class="table-wrap"><table>
-            <thead><tr>
-              <th style="text-align:right">Product</th><th>Qty</th><th>Bonus</th><th>Value</th>
-            </tr></thead><tbody>
-            ${rows.filter(([name])=>isSubline(name)).map(([name,d])=>`<tr>
-              <td style="text-align:right;font-weight:600;font-size:11px">${name}</td>
-              <td>${fmt(d.qty)}</td>
-              <td style="color:var(--warn)">${fmt(d.bonusQty)}</td>
-              <td style="color:var(--accent2);font-weight:700">${fmtV(d.value)}</td>
-            </tr>`).join('') || '<tr><td colspan="4" class="empty">لا توجد مواد مخصصة</td></tr>'}
-            </tbody></table></div>
-        </div>
-      </div>`;
+      <div class="table-wrap"><table>
+        <thead><tr>
+          <th style="text-align:right">Product</th><th>Line</th><th>Qty</th><th>Bonus</th><th>Value</th>
+        </tr></thead><tbody>
+        ${rows.map(([name,d])=>`<tr>
+          <td style="text-align:right;font-weight:600;font-size:11px">${name}</td>
+          <td><span style="background:${lc(d.line)}18;color:${lc(d.line)};border-radius:999px;padding:1px 6px;font-size:9px">${d.line}</span></td>
+          <td>${fmt(d.qty)}</td>
+          <td style="color:var(--warn)">${fmt(d.bonusQty)}</td>
+          <td style="color:var(--accent2);font-weight:700">${fmtV(d.value)}</td>
+        </tr>`).join('')}
+        </tbody></table></div>`;
   } else {
     // عرض كل المندوبين
     const byRep = {};
