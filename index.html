@@ -505,38 +505,43 @@ function apiPost(body) {
 function renderDashboard(el) {
   const now    = new Date();
   const year   = now.getFullYear();
-  const month  = now.getMonth() + 1;
+  const curM   = now.getMonth() + 1;
   const areas  = DB.get('areas') || ['Basra'];
   const sublines = DB.getObj('sublines') || {};
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
   el.innerHTML = `
     <div class="fade-up">
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:16px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:16px">
-        <div class="form-group"><label>Year</label>
-          <select id="db-year" onchange="refreshDashboard()">
-            ${[2024,2025,2026,2027,2028].map(y=>`<option${y===year?' selected':''}>${y}</option>`).join('')}
-          </select>
-        </div>
-        <div class="form-group"><label>Region</label>
-          <select id="db-area" onchange="refreshDashboard()">
-            ${areas.map(a=>`<option>${a}</option>`).join('')}
-          </select>
-        </div>
-        <div class="form-group"><label>From Month</label>
-          <select id="db-from" onchange="refreshDashboard()">
-            ${['January','February','March','April','May','June','July','August','September','October','November','December'].map((m,i)=>`<option value="${i+1}"${i===0?' selected':''}>${m}</option>`).join('')}
-          </select>
-        </div>
-        <div class="form-group"><label>To Month</label>
-          <select id="db-to" onchange="refreshDashboard()">
-            ${['January','February','March','April','May','June','July','August','September','October','November','December'].map((m,i)=>`<option value="${i+1}"${i===new Date().getMonth()?' selected':''}>${m}</option>`).join('')}
-          </select>
-        </div>
-        <div class="form-group"><label>Sub-line</label>
-          <select id="db-subline" onchange="refreshDashboard()">
-            <option value="all">All Lines</option>
-            ${Object.keys(sublines).map(s=>`<option value="${s}">${s}</option>`).join('')}
-          </select>
+
+      <!-- ── Filters ── -->
+      <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:16px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px">
+          <div class="form-group"><label>Year</label>
+            <select id="db-year" onchange="refreshDashboard()">
+              ${[2024,2025,2026,2027,2028].map(y=>`<option${y===year?' selected':''}>${y}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>Region</label>
+            <select id="db-area" onchange="refreshDashboard()">
+              ${areas.map(a=>`<option>${a}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>From</label>
+            <select id="db-from" onchange="refreshDashboard()">
+              ${months.map((m,i)=>`<option value="${i+1}"${i===0?' selected':''}>${m}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>To</label>
+            <select id="db-to" onchange="refreshDashboard()">
+              ${months.map((m,i)=>`<option value="${i+1}"${i===curM-1?' selected':''}>${m}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>Sub-line</label>
+            <select id="db-subline" onchange="refreshDashboard()">
+              <option value="all">All Lines</option>
+              ${Object.keys(sublines).map(s=>`<option value="${s}">${s}</option>`).join('')}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -556,10 +561,12 @@ function renderDashboard(el) {
   refreshDashboard();
 }
 
-function _getPeriodMonths(from, to) {
-  const months = [];
-  for (let m = from; m <= to; m++) months.push(m);
-  return months;
+function setDbPeriod(from, to) {
+  const f = document.getElementById('db-from');
+  const t = document.getElementById('db-to');
+  if (f) f.value = from;
+  if (t) t.value = to;
+  refreshDashboard();
 }
 
 function refreshDashboard() {
@@ -569,11 +576,14 @@ function refreshDashboard() {
   const toM      = Number(document.getElementById('db-to')?.value    || new Date().getMonth()+1);
   const sublineF = document.getElementById('db-subline')?.value      || 'all';
 
-  const months   = _getPeriodMonths(fromM, toM);
+  const months   = [];
+  for (let m = fromM; m <= toM; m++) months.push(m);
+
   const ps       = DB.getObj('primarySales');
   const wf       = DB.getObj('warehouseFlow');
   const targets  = DB.getObj('productTargets');
   const sublines = DB.getObj('sublines') || {};
+  const achColor = c => c>=100?'var(--accent2)':c>=80?'var(--warn)':'var(--danger)';
 
   let prods = DB.get('products') || [];
   if (sublineF !== 'all' && sublines[sublineF]) {
@@ -581,29 +591,55 @@ function refreshDashboard() {
     prods = prods.filter(p => slProds.includes(p.name));
   }
 
-  let psTotal = 0, secTotal = 0, targetPeriod = 0;
+  // ── Primary (Qty) ──
+  let psQty = 0;
   prods.forEach(p => {
     months.forEach(m => {
-      psTotal  += Number(ps[`${year}__${p.name}__${area}__${m}`] || 0);
+      psQty += Number(ps[`${year}__${p.name}__${area}__${m}`] || 0);
+    });
+  });
+
+  // ── Primary Value = Qty × Price ──
+  let psValue = 0;
+  prods.forEach(p => {
+    const price = Number(p.price || 0);
+    months.forEach(m => {
+      psValue += Number(ps[`${year}__${p.name}__${area}__${m}`] || 0) * price;
+    });
+  });
+
+  // ── Target Value = Target Qty × Price ──
+  let targetValue = 0, targetQty = 0;
+  prods.forEach(p => {
+    const price  = Number(p.price || 0);
+    const ann    = targets[`${year}__${p.name}__${area}`] || p.annualTarget || 0;
+    const tMonth = Math.round(ann / 12 * months.length);
+    targetQty   += tMonth;
+    targetValue += tMonth * price;
+  });
+
+  // ── Secondary ──
+  let secTotal = 0;
+  prods.forEach(p => {
+    months.forEach(m => {
       const key = `${year}__${p.name}__${area}__${m}`;
       if (wf[key] !== undefined) secTotal += Number(wf[key]);
     });
-    const ann = targets[`${year}__${p.name}__${area}`] || p.annualTarget || 0;
-    targetPeriod += Math.round(ann / 12 * months.length);
   });
 
-  const achievement = targetPeriod > 0 ? (psTotal / targetPeriod * 100) : 0;
-  const flowRate    = psTotal > 0 ? (secTotal / psTotal * 100) : 0;
-  const achColor    = c => c>=100?'var(--accent2)':c>=80?'var(--warn)':'var(--danger)';
+  const achievement = targetValue > 0 ? (psValue / targetValue * 100) : 0;
+  const flowRate    = psQty > 0 ? (secTotal / psQty * 100) : 0;
 
+  // ── KPIs ──
   const kpisEl = document.getElementById('db-kpis');
   if (kpisEl) kpisEl.innerHTML = `
     <div class="kpi-card" style="border-color:rgba(79,142,247,.3)">
-      <div class="kpi-label">Primary Sales</div>
-      <div class="kpi-value">${fmt(psTotal)}</div>
+      <div class="kpi-label">Primary Sales Value</div>
+      <div class="kpi-value" style="font-size:20px">${fmtV(psValue)}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Qty: ${fmt(psQty)}</div>
       <div style="margin-top:8px">
         <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:4px">
-          <span>Target: ${fmt(targetPeriod)}</span>
+          <span>Target: ${fmtV(targetValue)}</span>
           <span style="color:${achColor(achievement)};font-weight:700">${achievement.toFixed(1)}%</span>
         </div>
         <div style="height:4px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden">
@@ -611,6 +647,7 @@ function refreshDashboard() {
         </div>
       </div>
     </div>
+
     <div class="kpi-card" style="border-color:rgba(52,211,153,.3)">
       <div class="kpi-label">Secondary Sales</div>
       <div class="kpi-value" style="color:var(--accent)">${fmtSec(secTotal)}</div>
@@ -618,18 +655,19 @@ function refreshDashboard() {
         Flow Rate: <span style="color:${achColor(flowRate)};font-weight:700">${flowRate>0?flowRate.toFixed(1)+'%':'—'}</span>
       </div>
     </div>
+
     <div class="kpi-card">
       <div class="kpi-label">أوردرات المجمعات</div>
       <div class="kpi-value" id="kpi-orders">⏳</div>
       <div style="margin-top:8px;font-size:11px;color:var(--muted)" id="kpi-orders-sub"></div>
     </div>
+
     <div class="kpi-card">
       <div class="kpi-label">قيمة الأوردرات</div>
       <div class="kpi-value" id="kpi-orders-val">⏳</div>
-      <div style="margin-top:8px;font-size:11px;color:var(--muted)" id="kpi-orders-val-sub"></div>
     </div>`;
 
-  // Line breakdown
+  // ── Line Breakdown ──
   const linesEl = document.getElementById('db-lines');
   if (linesEl) {
     const lines = sublineF !== 'all'
@@ -639,27 +677,35 @@ function refreshDashboard() {
     linesEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
       ${lines.map(line => {
         const lp = prods.filter(p=>p.line===line);
-        let lPrim=0, lTgt=0;
+        let lVal=0, lTgtVal=0, lQty=0;
         lp.forEach(p => {
-          months.forEach(m => { lPrim += Number(ps[`${year}__${p.name}__${area}__${m}`]||0); });
-          lTgt += Math.round((targets[`${year}__${p.name}__${area}`]||p.annualTarget||0)/12*months.length);
+          const price = Number(p.price||0);
+          const ann   = targets[`${year}__${p.name}__${area}`] || p.annualTarget || 0;
+          const tM    = Math.round(ann/12*months.length);
+          lTgtVal += tM * price;
+          months.forEach(m => {
+            const q = Number(ps[`${year}__${p.name}__${area}__${m}`]||0);
+            lVal  += q * price;
+            lQty  += q;
+          });
         });
-        const lAch = lTgt>0?(lPrim/lTgt*100):0;
+        const lAch = lTgtVal>0?(lVal/lTgtVal*100):0;
         return `<div style="padding:12px;background:rgba(255,255,255,.02);border:1px solid ${lc(line)}30;border-radius:12px">
           <div style="display:flex;justify-content:space-between;margin-bottom:6px">
             <span style="font-size:11px;font-weight:700;color:${lc(line)}">${line}</span>
             <span style="font-size:11px;font-weight:700;color:${achColor(lAch)}">${lAch.toFixed(0)}%</span>
           </div>
-          <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:4px">${fmt(lPrim)}</div>
-          <div style="font-size:10px;color:var(--muted)">Target: ${fmt(lTgt)}</div>
+          <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:2px">${fmtV(lVal)}</div>
+          <div style="font-size:10px;color:var(--muted)">Qty: ${fmt(lQty)} • Target: ${fmtV(lTgtVal)}</div>
           <div style="height:3px;background:rgba(255,255,255,.06);border-radius:999px;margin-top:8px;overflow:hidden">
             <div style="width:${Math.min(lAch,100).toFixed(0)}%;height:100%;background:${lc(line)};border-radius:999px"></div>
           </div>
           <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px">
             ${lp.slice(0,4).map(p=>{
-              let pP=0; months.forEach(m=>{pP+=Number(ps[`${year}__${p.name}__${area}__${m}`]||0);});
-              const pT=Math.round((targets[`${year}__${p.name}__${area}`]||p.annualTarget||0)/12*months.length);
-              const pA=pT>0?(pP/pT*100):0;
+              const price=Number(p.price||0);
+              let pV=0; months.forEach(m=>{pV+=Number(ps[`${year}__${p.name}__${area}__${m}`]||0)*price;});
+              const pT=Math.round((targets[`${year}__${p.name}__${area}`]||p.annualTarget||0)/12*months.length)*price;
+              const pA=pT>0?(pV/pT*100):0;
               return `<span style="font-size:9px;background:rgba(255,255,255,.04);padding:2px 6px;border-radius:999px;color:var(--muted)">${p.name.split(' ')[0]} ${pA.toFixed(0)}%</span>`;
             }).join('')}
           </div>
@@ -668,7 +714,7 @@ function refreshDashboard() {
     </div>`;
   }
 
-  // Orders
+  // ── Orders ──
   apiGet('getOrders', {}, function(data) {
     if (!data || !data.success) return;
     const orders = data.orders;
@@ -743,7 +789,7 @@ function renderProducts(el) {
         </div>
         <div class="table-wrap">
           <table><thead><tr>
-            <th style="text-align:right">المنتج</th><th>Line</th><th>الهدف السنوي</th><th>السعر</th><th>إجراء</th>
+            <th style="text-align:right">المنتج</th><th>Line</th><th>الهدف السنوي</th><th>NSP ($)</th><th>إجراء</th>
           </tr></thead><tbody id="prod-tbody"></tbody></table>
         </div>
       </div>
@@ -770,7 +816,7 @@ function renderProductsTable() {
       <td><input type="number" value="${target}" min="0"
         style="width:90px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:8px;font-size:12px;text-align:center;font-family:inherit;outline:none"
         onchange="saveTarget('${p.name.replace(/'/g,"\\'")}','${year}','${area}',this.value)"></td>
-      <td style="color:var(--accent2)">${p.price ? Number(p.price).toLocaleString()+' IQD' : '—'}</td>
+      <td style="color:var(--accent2)">${p.price ? '$'+Number(p.price).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'}</td>
       <td style="display:flex;gap:4px">
         <button class="btn btn-ghost btn-sm" onclick="editProd(${i})">✏️</button>
         <button class="btn btn-danger btn-sm" onclick="deleteProd(${i})">🗑</button>
