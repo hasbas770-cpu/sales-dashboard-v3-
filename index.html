@@ -3757,6 +3757,217 @@ function calcTrend() {
     cont.innerHTML = html;
   });
 }
+/* ──────────────────────────────────────
+   PERFORMANCE — Line & Product Detail
+────────────────────────────────────── */
+function renderPerformance(el) {
+  const now     = new Date();
+  const year    = now.getFullYear();
+  const curM    = now.getMonth() + 1;
+  const areas   = DB.get('areas') || ['Basra'];
+  const sublines = DB.getObj('sublines') || {};
+  const savedReps = DB.getObj('repsData') || {};
+  const months  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  // اجمع أسماء المندوبين من repsData
+  const repNames = [...new Set(Object.keys(savedReps).map(k=>k.split('__')[0]))].sort();
+
+  el.innerHTML = `
+    <div class="fade-up">
+      <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:16px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px">
+          <div class="form-group"><label>Year</label>
+            <select id="pf-year" onchange="renderPerfTable()">
+              ${[2024,2025,2026,2027,2028].map(y=>`<option${y===year?' selected':''}>${y}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>Region</label>
+            <select id="pf-area" onchange="renderPerfTable()">
+              ${areas.map(a=>`<option>${a}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>From</label>
+            <select id="pf-from" onchange="renderPerfTable()">
+              ${months.map((m,i)=>`<option value="${i+1}"${i===0?' selected':''}>${m}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>To</label>
+            <select id="pf-to" onchange="renderPerfTable()">
+              ${months.map((m,i)=>`<option value="${i+1}"${i===curM-1?' selected':''}>${m}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>Sub-line</label>
+            <select id="pf-subline" onchange="renderPerfTable()">
+              <option value="all">All Lines</option>
+              ${Object.keys(sublines).map(s=>`<option value="${s}">${s}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>Rep (اختياري)</label>
+            <select id="pf-rep" onchange="renderPerfTable()">
+              <option value="">All Reps</option>
+              ${repNames.map(r=>`<option>${r}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+      </div>
+      <div id="pf-table"></div>
+    </div>`;
+
+  renderPerfTable();
+}
+
+function renderPerfTable() {
+  const year     = Number(document.getElementById('pf-year')?.value  || new Date().getFullYear());
+  const area     = document.getElementById('pf-area')?.value         || 'Basra';
+  const fromM    = Number(document.getElementById('pf-from')?.value  || 1);
+  const toM      = Number(document.getElementById('pf-to')?.value    || new Date().getMonth()+1);
+  const sublineF = document.getElementById('pf-subline')?.value      || 'all';
+  const repF     = document.getElementById('pf-rep')?.value          || '';
+
+  const months    = [];
+  for (let m = fromM; m <= toM; m++) months.push(m);
+
+  const ps        = DB.getObj('primarySales');
+  const targets   = DB.getObj('productTargets');
+  const sublines  = DB.getObj('sublines') || {};
+  const savedReps = DB.getObj('repsData') || {};
+  const cont      = document.getElementById('pf-table');
+  if (!cont) return;
+
+  // المواد
+  let prods = DB.get('products') || [];
+  if (sublineF !== 'all' && sublines[sublineF]) {
+    prods = prods.filter(p => (sublines[sublineF].products||[]).includes(p.name));
+  }
+
+  // لو اختار مندوب — فلتر بمواده
+  if (repF) {
+    const repData = savedReps[`${repF}__${year}`];
+    if (repData?.subline?.length) {
+      prods = prods.filter(p => repData.subline.includes(p.name));
+    }
+  }
+
+  // تجميع حسب Line
+  const byLine = {};
+  prods.forEach(p => {
+    if (!byLine[p.line]) byLine[p.line] = [];
+    byLine[p.line].push(p);
+  });
+
+  const achColor = c => c>=100?'var(--accent2)':c>=80?'var(--warn)':'var(--danger)';
+
+  let html = '';
+
+  Object.entries(byLine).forEach(([line, lineProds]) => {
+    // حساب totals للـ Line
+    let linePrimQty=0, linePrimVal=0, lineTgtQty=0, lineTgtVal=0;
+    const prodRows = lineProds.map(p => {
+      const price = Number(p.price || 0);
+      const ann   = targets[`${year}__${p.name}__${area}`] || p.annualTarget || 0;
+      const tQty  = Math.round(ann / 12 * months.length);
+      const tVal  = tQty * price;
+      let pQty = 0;
+      months.forEach(m => { pQty += Number(ps[`${year}__${p.name}__${area}__${m}`]||0); });
+      const pVal  = pQty * price;
+      const ach   = tVal > 0 ? (pVal/tVal*100) : 0;
+
+      // لو اختار مندوب — يعرض target المندوب
+      let repTgtQty = tQty, repTgtVal = tVal;
+      if (repF) {
+        const repData = savedReps[`${repF}__${year}`];
+        if (repData?.targets?.[p.name] != null) {
+          repTgtQty = Math.round(Number(repData.targets[p.name]) / 12 * months.length);
+          repTgtVal = repTgtQty * price;
+        }
+      }
+      const repAch = repTgtVal > 0 ? (pVal/repTgtVal*100) : ach;
+
+      linePrimQty += pQty;
+      linePrimVal += pVal;
+      lineTgtQty  += repF ? repTgtQty : tQty;
+      lineTgtVal  += repF ? repTgtVal : tVal;
+
+      return { p, pQty, pVal, tQty:repF?repTgtQty:tQty, tVal:repF?repTgtVal:tVal, ach:repF?repAch:ach };
+    });
+
+    const lineAch = lineTgtVal > 0 ? (linePrimVal/lineTgtVal*100) : 0;
+
+    html += `
+      <div class="card" style="margin-bottom:14px">
+        <!-- Line Header -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="width:10px;height:10px;border-radius:50%;background:${lc(line)};display:inline-block"></span>
+            <h2 style="margin:0;color:${lc(line)}">${line}</h2>
+          </div>
+          <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+            <div style="text-align:center">
+              <div style="font-size:10px;color:var(--muted)">Primary Value</div>
+              <div style="font-weight:700;color:#fff">${fmtV(linePrimVal)}</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:10px;color:var(--muted)">Target Value</div>
+              <div style="font-weight:700;color:var(--muted)">${fmtV(lineTgtVal)}</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:10px;color:var(--muted)">Achievement</div>
+              <div style="font-weight:700;font-size:18px;color:${achColor(lineAch)}">${lineAch.toFixed(1)}%</div>
+            </div>
+          </div>
+        </div>
+        <!-- Progress -->
+        <div style="height:4px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden;margin-bottom:14px">
+          <div style="width:${Math.min(lineAch,100).toFixed(0)}%;height:100%;background:${lc(line)};border-radius:999px"></div>
+        </div>
+        <!-- Products Table -->
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th style="text-align:right">Product</th>
+              <th>NSP ($)</th>
+              <th>Sales Qty</th>
+              <th>Sales Value</th>
+              <th>Target Qty</th>
+              <th>Target Value</th>
+              <th>Achievement%</th>
+            </tr></thead>
+            <tbody>
+              ${prodRows.map(({p,pQty,pVal,tQty,tVal,ach}) => `<tr>
+                <td style="text-align:right;font-weight:600">${p.name}</td>
+                <td style="color:var(--muted)">${p.price?'$'+Number(p.price).toFixed(2):'—'}</td>
+                <td style="font-weight:600">${fmt(pQty)}</td>
+                <td style="color:var(--accent2);font-weight:700">${fmtV(pVal)}</td>
+                <td style="color:var(--muted)">${fmt(tQty)}</td>
+                <td style="color:var(--muted)">${fmtV(tVal)}</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div style="flex:1;height:5px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden;min-width:60px">
+                      <div style="width:${Math.min(ach,100).toFixed(0)}%;height:100%;background:${achColor(ach)};border-radius:999px"></div>
+                    </div>
+                    <span style="font-weight:700;color:${achColor(ach)};min-width:45px">${ach.toFixed(1)}%</span>
+                  </div>
+                </td>
+              </tr>`).join('')}
+              <!-- Line Total -->
+              <tr style="background:rgba(255,255,255,.04);font-weight:700;border-top:2px solid var(--border)">
+                <td style="text-align:right;color:${lc(line)}">Total ${line}</td>
+                <td></td>
+                <td style="color:#fff">${fmt(linePrimQty)}</td>
+                <td style="color:var(--accent2)">${fmtV(linePrimVal)}</td>
+                <td style="color:var(--muted)">${fmt(lineTgtQty)}</td>
+                <td style="color:var(--muted)">${fmtV(lineTgtVal)}</td>
+                <td style="color:${achColor(lineAch)};font-size:14px">${lineAch.toFixed(1)}%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  });
+
+  cont.innerHTML = html || '<div class="empty">لا توجد بيانات</div>';
+}
+
 
 /* === ROUTER === */
 
@@ -3780,7 +3991,7 @@ const PAGES = {
   targets:     { title:'الأهداف',                sub:'إدارة الأهداف السنوية',                  render: el => el.innerHTML='<div class="fade-up"><div class="card"><h2>🎯 الأهداف</h2><p style="color:var(--muted)">قريباً</p></div></div>' },
   penetration: { title:'Penetration',            sub:'نسبة تغطية الأطباء لكل مادة',             render: renderPenetration },
   pen_trend:   { title:'Penetration Trend',      sub:'تغير نسبة التغطية عبر الزمن',              render: renderPenetrationTrend },
-  performance: { title:'الأداء',                 sub:'تحليل أداء الفريق',                       render: el => el.innerHTML='<div class="fade-up"><div class="card"><h2>📊 الأداء</h2><p style="color:var(--muted)">قريباً</p></div></div>' },
+  performance: { title:'الأداء',                 sub:'تفاصيل أداء اللاينات والمواد',             render: renderPerformance },
 };
 
 function navigate(page, el) {
