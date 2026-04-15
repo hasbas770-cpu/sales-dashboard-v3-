@@ -3999,20 +3999,28 @@ function renderPerfTable() {
         const p     = allProds.find(x=>x.name===pn); if (!p) return null;
         const price = Number(p.price||0);
 
-        // Primary هذه الفترة
-        let pQty = 0;
-        months.forEach(m => { pQty += Number(ps[`${year}__${pn}__${area}__${m}`]||0); });
-        const pVal = pQty * price;
+        // Primary المنطقة الكلي
+        let totalAreaQty = 0;
+        months.forEach(m => { totalAreaQty += Number(ps[`${year}__${pn}__${area}__${m}`]||0); });
 
-        // Primary الشهر السابق
-        let prevQty = 0;
-        prevMonths.forEach(({m,y}) => { prevQty += Number(ps[`${y}__${pn}__${area}__${m}`]||0); });
+        // نسبة المندوب = Target المندوب ÷ Target المنطقة الكلي
+        const annTotal  = targets[`${year}__${pn}__${area}`] || p.annualTarget || 0;
+        const tQtyTotal = Math.round(annTotal/12*months.length);
+
+        const repAnnTarget = repData.targets?.[pn] != null ? Number(repData.targets[pn]) : annTotal;
+        const tQty = Math.round(repAnnTarget/12*months.length);
+
+        // حصة المندوب من Primary
+        const repRatio = tQtyTotal > 0 ? (tQty / tQtyTotal) : 1;
+        const pQty     = Math.round(totalAreaQty * repRatio);
+        const pVal     = pQty * price;
+
+        // Primary الشهر السابق (بنفس النسبة)
+        let prevAreaQty = 0;
+        prevMonths.forEach(({m,y}) => { prevAreaQty += Number(ps[`${y}__${pn}__${area}__${m}`]||0); });
+        const prevQty = Math.round(prevAreaQty * repRatio);
 
         // Target
-        const ann   = targets[`${year}__${pn}__${area}`] || p.annualTarget || 0;
-        const tQty  = repData.targets?.[pn] != null
-          ? Math.round(Number(repData.targets[pn])/12*months.length)
-          : Math.round(ann/12*months.length);
         const tVal  = tQty * price;
         const ach   = tVal > 0 ? (pVal/tVal*100) : 0;
 
