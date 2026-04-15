@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -8,7 +9,6 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <!-- JS Modules -->
-
 
 <style>
 /* ═══════════════════
@@ -240,10 +240,12 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
 }
 
 </style>
+
 </head>
 <body>
 
 <!-- ═══════════════════ SIDEBAR ═══════════════════ -->
+
 <div class="sidebar" id="sidebar">
   <div class="sidebar-logo">
     <div class="logo-icon">📊</div>
@@ -255,63 +257,65 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
 
   <nav class="sidebar-nav">
 
-    <!-- Dashboard -->
-    <div class="nav-item">
-      <button class="nav-link active" onclick="navigate('dashboard',this)">
-        <div class="icon">📈</div><span>Dashboard</span>
-      </button>
-    </div>
+```
+<!-- Dashboard -->
+<div class="nav-item">
+  <button class="nav-link active" onclick="navigate('dashboard',this)">
+    <div class="icon">📈</div><span>Dashboard</span>
+  </button>
+</div>
 
-    <!-- Master Data -->
-    <div class="nav-item">
-      <button class="nav-link" onclick="toggleMenu('menu-master',this)">
-        <div class="icon">🗂</div><span>Master Data</span><span class="arrow">›</span>
-      </button>
-      <div class="sub-menu" id="menu-master">
-        <button class="sub-link" onclick="navigate('products',this)">المنتجات</button>
-        <button class="sub-link" onclick="navigate('pharmacies',this)">الصيدليات</button>
-        <button class="sub-link" onclick="navigate('doctors',this)">الأطباء</button>
-        <button class="sub-link" onclick="navigate('reps',this)">المندوبين</button>
-        <button class="sub-link" onclick="navigate('sublines',this)">Sub-lines</button>
-        <button class="sub-link" onclick="navigate('regions',this)">المناطق</button>
-      </div>
-    </div>
+<!-- Master Data -->
+<div class="nav-item">
+  <button class="nav-link" onclick="toggleMenu('menu-master',this)">
+    <div class="icon">🗂</div><span>Master Data</span><span class="arrow">›</span>
+  </button>
+  <div class="sub-menu" id="menu-master">
+    <button class="sub-link" onclick="navigate('products',this)">المنتجات</button>
+    <button class="sub-link" onclick="navigate('pharmacies',this)">الصيدليات</button>
+    <button class="sub-link" onclick="navigate('doctors',this)">الأطباء</button>
+    <button class="sub-link" onclick="navigate('reps',this)">المندوبين</button>
+    <button class="sub-link" onclick="navigate('sublines',this)">Sub-lines</button>
+    <button class="sub-link" onclick="navigate('regions',this)">المناطق</button>
+  </div>
+</div>
 
-    <!-- Warehouses -->
-    <div class="nav-item">
-      <button class="nav-link" onclick="toggleMenu('menu-warehouses',this)">
-        <div class="icon">🏭</div><span>Warehouses</span><span class="arrow">›</span>
-      </button>
-      <div class="sub-menu" id="menu-warehouses">
-        <button class="sub-link" onclick="navigate('warehouses',this)">Warehouses</button>
-        <button class="sub-link" onclick="navigate('stock',this)">Stock Entry</button>
-      </div>
-    </div>
+<!-- Warehouses -->
+<div class="nav-item">
+  <button class="nav-link" onclick="toggleMenu('menu-warehouses',this)">
+    <div class="icon">🏭</div><span>Warehouses</span><span class="arrow">›</span>
+  </button>
+  <div class="sub-menu" id="menu-warehouses">
+    <button class="sub-link" onclick="navigate('warehouses',this)">Warehouses</button>
+    <button class="sub-link" onclick="navigate('stock',this)">Stock Entry</button>
+  </div>
+</div>
 
-    <!-- Sales -->
-    <div class="nav-item">
-      <button class="nav-link" onclick="toggleMenu('menu-sales',this)">
-        <div class="icon">💰</div><span>Sales</span><span class="arrow">›</span>
-      </button>
-      <div class="sub-menu" id="menu-sales">
-        <button class="sub-link" onclick="navigate('primary',this)">Primary Sales</button>
-        <button class="sub-link" onclick="navigate('secondary',this)">Secondary Sales</button>
-        <button class="sub-link" onclick="navigate('orders',this)">Pharmacy Orders</button>
-      </div>
-    </div>
+<!-- Sales -->
+<div class="nav-item">
+  <button class="nav-link" onclick="toggleMenu('menu-sales',this)">
+    <div class="icon">💰</div><span>Sales</span><span class="arrow">›</span>
+  </button>
+  <div class="sub-menu" id="menu-sales">
+    <button class="sub-link" onclick="navigate('primary',this)">Primary Sales</button>
+    <button class="sub-link" onclick="navigate('secondary',this)">Secondary Sales</button>
+    <button class="sub-link" onclick="navigate('orders',this)">Pharmacy Orders</button>
+  </div>
+</div>
 
-    <!-- Targets -->
-    <div class="nav-item">
-      <button class="nav-link" onclick="toggleMenu('menu-targets',this)">
-        <div class="icon">🎯</div><span>Targets & Performance</span><span class="arrow">›</span>
-      </button>
-      <div class="sub-menu" id="menu-targets">
-        <button class="sub-link" onclick="navigate('targets',this)">الأهداف</button>
-        <button class="sub-link" onclick="navigate('penetration',this)">Penetration</button>
-        <button class="sub-link" onclick="navigate('pen_trend',this)">Penetration Trend</button>
-        <button class="sub-link" onclick="navigate('performance',this)">الأداء</button>
-      </div>
-    </div>
+<!-- Targets -->
+<div class="nav-item">
+  <button class="nav-link" onclick="toggleMenu('menu-targets',this)">
+    <div class="icon">🎯</div><span>Targets & Performance</span><span class="arrow">›</span>
+  </button>
+  <div class="sub-menu" id="menu-targets">
+    <button class="sub-link" onclick="navigate('targets',this)">الأهداف</button>
+    <button class="sub-link" onclick="navigate('penetration',this)">Penetration</button>
+    <button class="sub-link" onclick="navigate('pen_trend',this)">Penetration Trend</button>
+    <button class="sub-link" onclick="navigate('performance',this)">الأداء</button>
+  </div>
+</div>
+```
 
   </nav>
 
@@ -326,6 +330,7 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
 <!-- ═══════════════════ MAIN ═══════════════════ -->
+
 <div class="main">
   <div class="topbar">
     <div>
@@ -341,7 +346,6 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
 </div>
 
 <div id="toast">✓ Done</div>
-
 
 <script>
 
@@ -552,6 +556,11 @@ function renderDashboard(el) {
         <div id="db-lines"></div>
       </div>
 
+      <div class="card" style="margin-bottom:14px">
+        <h2>👥 أداء المندوبين</h2>
+        <div id="db-reps"><div class="loader"><div class="spinner"></div></div></div>
+      </div>
+
       <div class="card">
         <h2>📦 آخر الأوردرات</h2>
         <div id="dash-orders"><div class="loader"><div class="spinner"></div></div></div>
@@ -636,7 +645,6 @@ function refreshDashboard() {
     <div class="kpi-card" style="border-color:rgba(79,142,247,.3)">
       <div class="kpi-label">Primary Sales Value</div>
       <div class="kpi-value" style="font-size:20px">${fmtV(psValue)}</div>
-      <div style="font-size:11px;color:var(--muted);margin-top:4px">Qty: ${fmt(psQty)}</div>
       <div style="margin-top:8px">
         <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:4px">
           <span>Target: ${fmtV(targetValue)}</span>
@@ -696,7 +704,7 @@ function refreshDashboard() {
             <span style="font-size:11px;font-weight:700;color:${achColor(lAch)}">${lAch.toFixed(0)}%</span>
           </div>
           <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:2px">${fmtV(lVal)}</div>
-          <div style="font-size:10px;color:var(--muted)">Qty: ${fmt(lQty)} • Target: ${fmtV(lTgtVal)}</div>
+          <div style="font-size:10px;color:var(--muted)">Target: ${fmtV(lTgtVal)}</div>
           <div style="height:3px;background:rgba(255,255,255,.06);border-radius:999px;margin-top:8px;overflow:hidden">
             <div style="width:${Math.min(lAch,100).toFixed(0)}%;height:100%;background:${lc(line)};border-radius:999px"></div>
           </div>
@@ -712,6 +720,89 @@ function refreshDashboard() {
         </div>`;
       }).join('')}
     </div>`;
+  }
+
+  // ── Reps Performance ──
+  const repsEl    = document.getElementById('db-reps');
+  const savedReps = DB.getObj('repsData') || {};
+
+  const repRows = Object.entries(savedReps)
+    .filter(([k]) => k.endsWith(`__${year}`))
+    .map(([k, repData]) => {
+      const repName = k.replace(`__${year}`,'');
+      const repProds = (repData.subline||[]);
+      if (!repProds.length) return null;
+
+      // فلتر حسب Sub-line
+      let filteredProds = repProds;
+      if (sublineF !== 'all' && sublines[sublineF]) {
+        filteredProds = repProds.filter(pn => (sublines[sublineF].products||[]).includes(pn));
+      }
+      if (!filteredProds.length) return null;
+
+      let rVal=0, rTgtVal=0;
+      const prodDetails = filteredProds.map(pn => {
+        const p     = prods.find(x=>x.name===pn); if (!p) return null;
+        const price = Number(p.price||0);
+        let pQty = 0;
+        months.forEach(m => { pQty += Number(ps[`${year}__${pn}__${area}__${m}`]||0); });
+        const pVal  = pQty * price;
+        const ann   = targets[`${year}__${pn}__${area}`] || p.annualTarget || 0;
+        const tQ    = repData.targets?.[pn] != null
+          ? Math.round(Number(repData.targets[pn])/12*months.length)
+          : Math.round(ann/12*months.length);
+        const tVal  = tQ * price;
+        const ach   = tVal>0?(pVal/tVal*100):0;
+        rVal    += pVal;
+        rTgtVal += tVal;
+        return { name:pn, pVal, tVal, ach };
+      }).filter(Boolean);
+
+      const rAch = rTgtVal>0?(rVal/rTgtVal*100):0;
+      const best = [...prodDetails].sort((a,b)=>b.pVal-a.pVal)[0];
+      const worst = [...prodDetails].filter(p=>p.tVal>0).sort((a,b)=>a.ach-b.ach)[0];
+
+      return { repName, line:repData.line||'—', rVal, rTgtVal, rAch, best, worst, prodDetails };
+    }).filter(Boolean).sort((a,b) => b.rAch - a.rAch);
+
+  if (repsEl) {
+    if (!repRows.length) {
+      repsEl.innerHTML = '<div style="color:var(--muted);font-size:12px">لا توجد مندوبين مضافين — أضف من Master Data → المندوبين</div>';
+    } else {
+      repsEl.innerHTML = `<div class="table-wrap"><table>
+        <thead><tr>
+          <th style="text-align:right">المندوب</th>
+          <th>Line</th>
+          <th>Sales Value</th>
+          <th>Target Value</th>
+          <th>Achievement%</th>
+          <th style="text-align:right">أفضل مادة</th>
+          <th style="text-align:right">أضعف مادة</th>
+        </tr></thead>
+        <tbody>
+          ${repRows.map(r => `<tr>
+            <td style="text-align:right;font-weight:700">👤 ${r.repName}</td>
+            <td><span style="background:${lc(r.line)}18;color:${lc(r.line)};border-radius:999px;padding:2px 8px;font-size:10px;font-weight:600">${r.line}</span></td>
+            <td style="color:var(--accent2);font-weight:700">${fmtV(r.rVal)}</td>
+            <td style="color:var(--muted)">${fmtV(r.rTgtVal)}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="flex:1;height:5px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden;min-width:60px">
+                  <div style="width:${Math.min(r.rAch,100).toFixed(0)}%;height:100%;background:${achColor(r.rAch)};border-radius:999px"></div>
+                </div>
+                <span style="font-weight:700;color:${achColor(r.rAch)};min-width:45px">${r.rAch.toFixed(1)}%</span>
+              </div>
+            </td>
+            <td style="text-align:right;font-size:11px">
+              ${r.best ? `<span style="color:var(--accent2)">${r.best.name.split(' ')[0]}</span> <span style="color:var(--muted)">${fmtV(r.best.pVal)}</span>` : '—'}
+            </td>
+            <td style="text-align:right;font-size:11px">
+              ${r.worst ? `<span style="color:var(--danger)">${r.worst.name.split(' ')[0]}</span> <span style="color:var(--muted)">${r.worst.ach.toFixed(0)}%</span>` : '—'}
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>`;
+    }
   }
 
   // ── Orders ──
@@ -3962,6 +4053,63 @@ function renderPerfTable() {
             </tbody>
           </table>
         </div>
+
+        ${(() => {
+          // جدول المندوبين لهذا اللاين
+          const lineRepRows = Object.entries(savedReps)
+            .filter(([k]) => k.endsWith(`__${year}`))
+            .map(([k, repData]) => {
+              const repName = k.replace(`__${year}`,'');
+              if (repData.line !== line) return null;
+              // مواد المندوب في هذا اللاين
+              const repProds = (repData.subline||[]).filter(pn => lineProds.find(p=>p.name===pn));
+              if (!repProds.length) return null;
+              let rVal=0, rTgtVal=0;
+              repProds.forEach(pn => {
+                const p = lineProds.find(x=>x.name===pn); if (!p) return;
+                const price = Number(p.price||0);
+                let pQty = 0;
+                months.forEach(m => { pQty += Number(ps[`${year}__${pn}__${area}__${m}`]||0); });
+                rVal += pQty * price;
+                const ann  = targets[`${year}__${pn}__${area}`] || p.annualTarget || 0;
+                const tQ   = repData.targets?.[pn] != null
+                  ? Math.round(Number(repData.targets[pn])/12*months.length)
+                  : Math.round(ann/12*months.length);
+                rTgtVal += tQ * price;
+              });
+              const rAch = rTgtVal>0?(rVal/rTgtVal*100):0;
+              return { repName, rVal, rTgtVal, rAch };
+            }).filter(Boolean);
+
+          if (!lineRepRows.length) return '';
+          return `
+            <div style="margin-top:12px">
+              <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px">👥 أداء المندوبين</div>
+              <div class="table-wrap"><table>
+                <thead><tr>
+                  <th style="text-align:right">المندوب</th>
+                  <th>Sales Value</th>
+                  <th>Target Value</th>
+                  <th>Achievement%</th>
+                </tr></thead>
+                <tbody>
+                  ${lineRepRows.map(r=>`<tr>
+                    <td style="text-align:right;font-weight:600">👤 ${r.repName}</td>
+                    <td style="color:var(--accent2);font-weight:700">${fmtV(r.rVal)}</td>
+                    <td style="color:var(--muted)">${fmtV(r.rTgtVal)}</td>
+                    <td>
+                      <div style="display:flex;align-items:center;gap:8px">
+                        <div style="flex:1;height:5px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden;min-width:60px">
+                          <div style="width:${Math.min(r.rAch,100).toFixed(0)}%;height:100%;background:${achColor(r.rAch)};border-radius:999px"></div>
+                        </div>
+                        <span style="font-weight:700;color:${achColor(r.rAch)};min-width:45px">${r.rAch.toFixed(1)}%</span>
+                      </div>
+                    </td>
+                  </tr>`).join('')}
+                </tbody>
+              </table></div>
+            </div>`;
+        })()}
       </div>`;
   });
 
@@ -4057,4 +4205,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 </script>
+
 </body>
