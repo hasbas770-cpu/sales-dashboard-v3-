@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -9,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <!-- JS Modules -->
+
 
 <style>
 /* ═══════════════════
@@ -240,12 +240,10 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
 }
 
 </style>
-
 </head>
 <body>
 
 <!-- ═══════════════════ SIDEBAR ═══════════════════ -->
-
 <div class="sidebar" id="sidebar">
   <div class="sidebar-logo">
     <div class="logo-icon">📊</div>
@@ -257,65 +255,63 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
 
   <nav class="sidebar-nav">
 
-```
-<!-- Dashboard -->
-<div class="nav-item">
-  <button class="nav-link active" onclick="navigate('dashboard',this)">
-    <div class="icon">📈</div><span>Dashboard</span>
-  </button>
-</div>
+    <!-- Dashboard -->
+    <div class="nav-item">
+      <button class="nav-link active" onclick="navigate('dashboard',this)">
+        <div class="icon">📈</div><span>Dashboard</span>
+      </button>
+    </div>
 
-<!-- Master Data -->
-<div class="nav-item">
-  <button class="nav-link" onclick="toggleMenu('menu-master',this)">
-    <div class="icon">🗂</div><span>Master Data</span><span class="arrow">›</span>
-  </button>
-  <div class="sub-menu" id="menu-master">
-    <button class="sub-link" onclick="navigate('products',this)">المنتجات</button>
-    <button class="sub-link" onclick="navigate('pharmacies',this)">الصيدليات</button>
-    <button class="sub-link" onclick="navigate('doctors',this)">الأطباء</button>
-    <button class="sub-link" onclick="navigate('reps',this)">المندوبين</button>
-    <button class="sub-link" onclick="navigate('sublines',this)">Sub-lines</button>
-    <button class="sub-link" onclick="navigate('regions',this)">المناطق</button>
-  </div>
-</div>
+    <!-- Master Data -->
+    <div class="nav-item">
+      <button class="nav-link" onclick="toggleMenu('menu-master',this)">
+        <div class="icon">🗂</div><span>Master Data</span><span class="arrow">›</span>
+      </button>
+      <div class="sub-menu" id="menu-master">
+        <button class="sub-link" onclick="navigate('products',this)">المنتجات</button>
+        <button class="sub-link" onclick="navigate('pharmacies',this)">الصيدليات</button>
+        <button class="sub-link" onclick="navigate('doctors',this)">الأطباء</button>
+        <button class="sub-link" onclick="navigate('reps',this)">المندوبين</button>
+        <button class="sub-link" onclick="navigate('sublines',this)">Sub-lines</button>
+        <button class="sub-link" onclick="navigate('regions',this)">المناطق</button>
+      </div>
+    </div>
 
-<!-- Warehouses -->
-<div class="nav-item">
-  <button class="nav-link" onclick="toggleMenu('menu-warehouses',this)">
-    <div class="icon">🏭</div><span>Warehouses</span><span class="arrow">›</span>
-  </button>
-  <div class="sub-menu" id="menu-warehouses">
-    <button class="sub-link" onclick="navigate('warehouses',this)">Warehouses</button>
-    <button class="sub-link" onclick="navigate('stock',this)">Stock Entry</button>
-  </div>
-</div>
+    <!-- Warehouses -->
+    <div class="nav-item">
+      <button class="nav-link" onclick="toggleMenu('menu-warehouses',this)">
+        <div class="icon">🏭</div><span>Warehouses</span><span class="arrow">›</span>
+      </button>
+      <div class="sub-menu" id="menu-warehouses">
+        <button class="sub-link" onclick="navigate('warehouses',this)">Warehouses</button>
+        <button class="sub-link" onclick="navigate('stock',this)">Stock Entry</button>
+      </div>
+    </div>
 
-<!-- Sales -->
-<div class="nav-item">
-  <button class="nav-link" onclick="toggleMenu('menu-sales',this)">
-    <div class="icon">💰</div><span>Sales</span><span class="arrow">›</span>
-  </button>
-  <div class="sub-menu" id="menu-sales">
-    <button class="sub-link" onclick="navigate('primary',this)">Primary Sales</button>
-    <button class="sub-link" onclick="navigate('secondary',this)">Secondary Sales</button>
-    <button class="sub-link" onclick="navigate('orders',this)">Pharmacy Orders</button>
-  </div>
-</div>
+    <!-- Sales -->
+    <div class="nav-item">
+      <button class="nav-link" onclick="toggleMenu('menu-sales',this)">
+        <div class="icon">💰</div><span>Sales</span><span class="arrow">›</span>
+      </button>
+      <div class="sub-menu" id="menu-sales">
+        <button class="sub-link" onclick="navigate('primary',this)">Primary Sales</button>
+        <button class="sub-link" onclick="navigate('secondary',this)">Secondary Sales</button>
+        <button class="sub-link" onclick="navigate('orders',this)">Pharmacy Orders</button>
+      </div>
+    </div>
 
-<!-- Targets -->
-<div class="nav-item">
-  <button class="nav-link" onclick="toggleMenu('menu-targets',this)">
-    <div class="icon">🎯</div><span>Targets & Performance</span><span class="arrow">›</span>
-  </button>
-  <div class="sub-menu" id="menu-targets">
-    <button class="sub-link" onclick="navigate('targets',this)">الأهداف</button>
-    <button class="sub-link" onclick="navigate('penetration',this)">Penetration</button>
-    <button class="sub-link" onclick="navigate('pen_trend',this)">Penetration Trend</button>
-    <button class="sub-link" onclick="navigate('performance',this)">الأداء</button>
-  </div>
-</div>
-```
+    <!-- Targets -->
+    <div class="nav-item">
+      <button class="nav-link" onclick="toggleMenu('menu-targets',this)">
+        <div class="icon">🎯</div><span>Targets & Performance</span><span class="arrow">›</span>
+      </button>
+      <div class="sub-menu" id="menu-targets">
+        <button class="sub-link" onclick="navigate('targets',this)">الأهداف</button>
+        <button class="sub-link" onclick="navigate('penetration',this)">Penetration</button>
+        <button class="sub-link" onclick="navigate('pen_trend',this)">Penetration Trend</button>
+        <button class="sub-link" onclick="navigate('performance',this)">الأداء</button>
+      </div>
+    </div>
 
   </nav>
 
@@ -330,7 +326,6 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
 <!-- ═══════════════════ MAIN ═══════════════════ -->
-
 <div class="main">
   <div class="topbar">
     <div>
@@ -346,6 +341,7 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
 </div>
 
 <div id="toast">✓ Done</div>
+
 
 <script>
 
@@ -4669,5 +4665,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 </script>
-
 </body>
