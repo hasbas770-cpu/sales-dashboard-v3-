@@ -3852,6 +3852,470 @@ function calcTrend() {
    PERFORMANCE — Line & Product Detail
 ────────────────────────────────────── */
 function renderPerformance(el) {
+  const now      = new Date();
+  const year     = now.getFullYear();
+  const curM     = now.getMonth() + 1;
+  const areas    = DB.get('areas') || ['Basra'];
+  const sublines = DB.getObj('sublines') || {};
+  const savedReps= DB.getObj('repsData') || {};
+  const mNames   = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const repNames = [...new Set(Object.keys(savedReps).map(k=>k.split('__')[0]))].sort();
+
+  el.innerHTML = `
+    <div class="fade-up">
+      <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:16px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:10px">
+          <div class="form-group"><label>Year</label>
+            <select id="pf-year" onchange="renderPerfTable()">
+              ${[2024,2025,2026,2027,2028].map(y=>`<option${y===year?' selected':''}>${y}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>Region</label>
+            <select id="pf-area" onchange="renderPerfTable()">
+              ${areas.map(a=>`<option>${a}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>From</label>
+            <select id="pf-from" onchange="renderPerfTable()">
+              ${mNames.map((m,i)=>`<option value="${i+1}"${i===0?' selected':''}>${m}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>To</label>
+            <select id="pf-to" onchange="renderPerfTable()">
+              ${mNames.map((m,i)=>`<option value="${i+1}"${i===curM-1?' selected':''}>${m}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>Sub-line</label>
+            <select id="pf-subline" onchange="renderPerfTable()">
+              <option value="all">All Lines</option>
+              ${Object.keys(sublines).map(s=>`<option value="${s}">${s}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>Sort</label>
+            <select id="pf-sort" onchange="renderPerfTable()">
+              <option value="ach_desc">Ach% ↓ (الأفضل)</option>
+              <option value="ach_asc">Ach% ↑ (الأسوأ)</option>
+              <option value="flow_desc">Flow% ↓</option>
+              <option value="flow_asc">Flow% ↑</option>
+              <option value="val_desc">Value ↓</option>
+            </select>
+          </div>
+        </div>
+        <!-- Rep Multi-select -->
+        <div>
+          <label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:6px">المندوبين</label>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <button id="pf-rep-all" onclick="toggleAllReps(true)"
+              style="padding:5px 10px;font-size:11px;font-family:inherit;border-radius:8px;border:1px solid var(--accent);background:rgba(79,142,247,.1);color:var(--accent);cursor:pointer">
+              الكل
+            </button>
+            ${repNames.map(r=>`
+              <button class="pf-rep-btn" data-rep="${r}" onclick="toggleRepBtn(this)"
+                style="padding:5px 10px;font-size:11px;font-family:inherit;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted);cursor:pointer;transition:.15s">
+                👤 ${r}
+              </button>`).join('')}
+          </div>
+        </div>
+      </div>
+      <div id="pf-table"></div>
+    </div>`;
+
+  renderPerfTable();
+}
+
+function toggleAllReps(selectAll) {
+  document.querySelectorAll('.pf-rep-btn').forEach(btn => {
+    btn.style.borderColor = selectAll ? 'var(--border)' : 'var(--border)';
+    btn.style.background  = 'rgba(255,255,255,.04)';
+    btn.style.color       = 'var(--muted)';
+    btn.dataset.selected  = '';
+  });
+  const allBtn = document.getElementById('pf-rep-all');
+  if (allBtn) { allBtn.style.borderColor='var(--accent)'; allBtn.style.background='rgba(79,142,247,.1)'; allBtn.style.color='var(--accent)'; }
+  renderPerfTable();
+}
+
+function toggleRepBtn(btn) {
+  const allBtn = document.getElementById('pf-rep-all');
+  const isSelected = btn.dataset.selected === '1';
+  if (isSelected) {
+    btn.dataset.selected = '';
+    btn.style.borderColor='var(--border)'; btn.style.background='rgba(255,255,255,.04)'; btn.style.color='var(--muted)';
+  } else {
+    btn.dataset.selected = '1';
+    btn.style.borderColor='var(--accent)'; btn.style.background='rgba(79,142,247,.1)'; btn.style.color='var(--accent)';
+    // deselect "all"
+    if (allBtn) { allBtn.style.borderColor='var(--border)'; allBtn.style.background='rgba(255,255,255,.04)'; allBtn.style.color='var(--muted)'; }
+  }
+  renderPerfTable();
+}
+
+function renderPerfTable() {
+  const year     = Number(document.getElementById('pf-year')?.value  || new Date().getFullYear());
+  const area     = document.getElementById('pf-area')?.value         || 'Basra';
+  const fromM    = Number(document.getElementById('pf-from')?.value  || 1);
+  const toM      = Number(document.getElementById('pf-to')?.value    || new Date().getMonth()+1);
+  const sublineF = document.getElementById('pf-subline')?.value      || 'all';
+  const sortBy   = document.getElementById('pf-sort')?.value         || 'ach_desc';
+
+  // المندوبين المختارين
+  const selectedBtns = [...document.querySelectorAll('.pf-rep-btn[data-selected="1"]')];
+  const selectedReps = selectedBtns.length ? selectedBtns.map(b=>b.dataset.rep) : null; // null = all
+
+  const months  = [];
+  for (let m = fromM; m <= toM; m++) months.push(m);
+
+  // الشهر السابق
+  const prevMonths = [];
+  for (let m = fromM; m <= toM; m++) {
+    const pm = m === 1 ? 12 : m-1;
+    const py = m === 1 ? year-1 : year;
+    prevMonths.push({m:pm, y:py});
+  }
+
+  const ps        = DB.getObj('primarySales');
+  const wf        = DB.getObj('warehouseFlow');
+  const targets   = DB.getObj('productTargets');
+  const sublines  = DB.getObj('sublines') || {};
+  const savedReps = DB.getObj('repsData') || {};
+  const cont      = document.getElementById('pf-table');
+  if (!cont) return;
+
+  const achColor  = c => c>=100?'var(--accent2)':c>=80?'var(--warn)':'var(--danger)';
+
+  // بناء بيانات لكل مندوب
+  const repEntries = Object.entries(savedReps)
+    .filter(([k]) => k.endsWith(`__${year}`))
+    .map(([k, repData]) => {
+      const repName = k.replace(`__${year}`,'');
+      if (selectedReps && !selectedReps.includes(repName)) return null;
+
+      let repProds = (repData.subline||[]);
+      if (sublineF !== 'all' && sublines[sublineF]) {
+        repProds = repProds.filter(pn => (sublines[sublineF].products||[]).includes(pn));
+      }
+      if (!repProds.length) return null;
+
+      const allProds = DB.get('products') || [];
+
+      // بيانات كل مادة
+      const prodData = repProds.map(pn => {
+        const p     = allProds.find(x=>x.name===pn); if (!p) return null;
+        const price = Number(p.price||0);
+
+        // Primary هذه الفترة
+        let pQty = 0;
+        months.forEach(m => { pQty += Number(ps[`${year}__${pn}__${area}__${m}`]||0); });
+        const pVal = pQty * price;
+
+        // Primary الشهر السابق
+        let prevQty = 0;
+        prevMonths.forEach(({m,y}) => { prevQty += Number(ps[`${y}__${pn}__${area}__${m}`]||0); });
+
+        // Target
+        const ann   = targets[`${year}__${pn}__${area}`] || p.annualTarget || 0;
+        const tQty  = repData.targets?.[pn] != null
+          ? Math.round(Number(repData.targets[pn])/12*months.length)
+          : Math.round(ann/12*months.length);
+        const tVal  = tQty * price;
+        const ach   = tVal > 0 ? (pVal/tVal*100) : 0;
+
+        // Secondary هذه الفترة
+        let secTotal = 0;
+        months.forEach(m => {
+          const key = `${year}__${pn}__${area}__${m}`;
+          if (wf[key] !== undefined) secTotal += Number(wf[key]);
+        });
+
+        // Flow Rate = Secondary ÷ Primary × 100
+        const flowRate = pQty > 0 ? (secTotal / pQty * 100) : null;
+
+        // Flow Rate الشهر السابق
+        let prevSec = 0;
+        prevMonths.forEach(({m,y}) => {
+          const key = `${y}__${pn}__${area}__${m}`;
+          if (wf[key] !== undefined) prevSec += Number(wf[key]);
+        });
+        const prevFlowRate = prevQty > 0 ? (prevSec / prevQty * 100) : null;
+        const flowTrend    = flowRate != null && prevFlowRate != null
+          ? flowRate - prevFlowRate : null;
+
+        return { pn, p, price, pQty, pVal, tQty, tVal, ach, secTotal, flowRate, prevFlowRate, flowTrend };
+      }).filter(Boolean);
+
+      // Sort المواد
+      const sorted = [...prodData].sort((a,b) => {
+        if (sortBy==='ach_desc')  return b.ach - a.ach;
+        if (sortBy==='ach_asc')   return a.ach - b.ach;
+        if (sortBy==='flow_desc') return (b.flowRate||0) - (a.flowRate||0);
+        if (sortBy==='flow_asc')  return (a.flowRate||0) - (b.flowRate||0);
+        if (sortBy==='val_desc')  return b.pVal - a.pVal;
+        return 0;
+      });
+
+      // Totals
+      const totPrimVal = prodData.reduce((s,p)=>s+p.pVal,0);
+      const totTgtVal  = prodData.reduce((s,p)=>s+p.tVal,0);
+      const totAch     = totTgtVal>0?(totPrimVal/totTgtVal*100):0;
+      const totSec     = prodData.reduce((s,p)=>s+p.secTotal,0);
+      const totPrimQty = prodData.reduce((s,p)=>s+p.pQty,0);
+      const totFlow    = totPrimQty>0?(totSec/totPrimQty*100):null;
+
+      return { repName, line:repData.line||'—', sorted, totPrimVal, totTgtVal, totAch, totFlow };
+    }).filter(Boolean);
+
+  // Sort المندوبين
+  repEntries.sort((a,b) => {
+    if (sortBy==='ach_desc'||sortBy==='ach_asc') return sortBy==='ach_desc' ? b.totAch-a.totAch : a.totAch-b.totAch;
+    if (sortBy==='flow_desc'||sortBy==='flow_asc') return sortBy==='flow_desc' ? (b.totFlow||0)-(a.totFlow||0) : (a.totFlow||0)-(b.totFlow||0);
+    return b.totPrimVal-a.totPrimVal;
+  });
+
+  if (!repEntries.length) {
+    cont.innerHTML = '<div class="empty">لا توجد بيانات — أضف مندوبين من Master Data</div>';
+    return;
+  }
+
+  cont.innerHTML = repEntries.map(rep => `
+    <div class="card" style="margin-bottom:14px">
+      <!-- Rep Header -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--grad);display:grid;place-items:center;font-size:16px">👤</div>
+          <div>
+            <div style="font-weight:700;font-size:15px;color:#fff">${rep.repName}</div>
+            <div style="font-size:11px;color:var(--muted)">${rep.line}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <div style="text-align:center">
+            <div style="font-size:10px;color:var(--muted)">Primary Value</div>
+            <div style="font-weight:700;color:#fff">${fmtV(rep.totPrimVal)}</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:10px;color:var(--muted)">Target</div>
+            <div style="font-weight:700;color:var(--muted)">${fmtV(rep.totTgtVal)}</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:10px;color:var(--muted)">Ach%</div>
+            <div style="font-weight:700;font-size:18px;color:${achColor(rep.totAch)}">${rep.totAch.toFixed(1)}%</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:10px;color:var(--muted)">Flow Rate</div>
+            <div style="font-weight:700;font-size:18px;color:${rep.totFlow!=null?achColor(rep.totFlow):'var(--muted)'}">${rep.totFlow!=null?rep.totFlow.toFixed(1)+'%':'—'}</div>
+          </div>
+        </div>
+      </div>
+      <!-- Progress -->
+      <div style="height:3px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden;margin-bottom:14px">
+        <div style="width:${Math.min(rep.totAch,100).toFixed(0)}%;height:100%;background:${lc(rep.line)};border-radius:999px"></div>
+      </div>
+      <!-- Products Table -->
+      <div class="table-wrap"><table>
+        <thead><tr>
+          <th style="text-align:right">Product</th>
+          <th>NSP</th>
+          <th>Primary Qty</th>
+          <th>Primary Value</th>
+          <th>Target Value</th>
+          <th>Ach%</th>
+          <th>Secondary</th>
+          <th>Flow Rate%</th>
+          <th>vs Prev</th>
+        </tr></thead>
+        <tbody>
+          ${rep.sorted.map(d=>`<tr>
+            <td style="text-align:right;font-weight:600;white-space:nowrap">${d.pn}</td>
+            <td style="color:var(--muted);font-size:11px">${d.price?'$'+d.price.toFixed(2):'—'}</td>
+            <td>${fmt(d.pQty)}</td>
+            <td style="color:var(--accent2);font-weight:700">${fmtV(d.pVal)}</td>
+            <td style="color:var(--muted)">${fmtV(d.tVal)}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:6px">
+                <div style="width:50px;height:4px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden">
+                  <div style="width:${Math.min(d.ach,100).toFixed(0)}%;height:100%;background:${achColor(d.ach)};border-radius:999px"></div>
+                </div>
+                <span style="font-weight:700;color:${achColor(d.ach)}">${d.ach.toFixed(1)}%</span>
+              </div>
+            </td>
+            <td style="color:${d.secTotal<0?'var(--danger)':d.secTotal>0?'var(--accent)':'var(--muted)'};font-weight:600">${fmtSec(d.secTotal)}</td>
+            <td style="color:${d.flowRate!=null?achColor(d.flowRate):'var(--muted)'};font-weight:700">${d.flowRate!=null?d.flowRate.toFixed(1)+'%':'—'}</td>
+            <td style="font-size:11px">
+              ${d.flowTrend!=null
+                ? `<span style="color:${d.flowTrend>0?'var(--accent2)':d.flowTrend<0?'var(--danger)':'var(--muted)'};font-weight:600">
+                    ${d.flowTrend>0?'↑':d.flowTrend<0?'↓':'→'} ${Math.abs(d.flowTrend).toFixed(1)}%
+                   </span>`
+                : '<span style="color:var(--muted)">—</span>'}
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>
+    </div>`).join('');
+}
+
+/* ──────────────────────────────────────
+   PENETRATION TREND
+────────────────────────────────────── */
+function renderPenetrationTrend(el) {
+  const prods = DB.get('products') || [];
+  const docs  = DB.get('doctors')  || [];
+  const cur   = new Date();
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  el.innerHTML = `
+    <div class="fade-up">
+      <div class="card">
+        <h2>📈 Penetration Trend</h2>
+        <p style="color:var(--muted);font-size:12px;margin-bottom:14px">
+          تغير نسبة تغطية الأطباء لكل مادة عبر الزمن
+        </p>
+        <div class="form-grid" style="margin-bottom:12px">
+          <div class="form-group"><label>Product</label>
+            <select id="pt-product">
+              <option value="all">All Products</option>
+              ${prods.map(p=>`<option value="${p.name}">${p.name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>Line</label>
+            <select id="pt-line">
+              <option value="all">All Lines</option>
+              <option>Derma</option><option>Optha</option><option>General Line</option><option>CM Line</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Year</label>
+            <select id="pt-year">
+              ${[2024,2025,2026].map(y=>`<option${y===cur.getFullYear()?' selected':''}>${y}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>From Month</label>
+            <select id="pt-from">
+              ${months.map((m,i)=>`<option value="${i+1}"${i===0?' selected':''}>${m}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>To Month</label>
+            <select id="pt-to">
+              ${months.map((m,i)=>`<option value="${i+1}"${i===cur.getMonth()?' selected':''}>${m}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="calcTrend()" style="margin-bottom:14px">📊 Calculate Trend</button>
+        <div id="pt-result"><div class="empty">اضغط Calculate لعرض Trend</div></div>
+      </div>
+    </div>`;
+}
+
+function calcTrend() {
+  const prodFilter = document.getElementById('pt-product')?.value || 'all';
+  const lineFilter = document.getElementById('pt-line')?.value    || 'all';
+  const year       = document.getElementById('pt-year')?.value;
+  const fromMonth  = Number(document.getElementById('pt-from')?.value || 1);
+  const toMonth    = Number(document.getElementById('pt-to')?.value   || 12);
+  const cont       = document.getElementById('pt-result');
+
+  cont.innerHTML = '<div class="loader"><div class="spinner"></div><span style="color:var(--muted);font-size:12px;margin-top:8px">جاري التحليل...</span></div>';
+
+  jsonpRequest(`${SHEETS_URL}?action=getOrders`, function(data) {
+    if (!data || !data.success) { cont.innerHTML='<div class="empty">⚠ تعذر تحميل الأوردرات</div>'; return; }
+
+    const docs  = DB.get('doctors')  || [];
+    const prods = DB.get('products') || [];
+    const orders = data.orders;
+
+    // تجميع الأوردرات حسب الشهر
+    const monthOrders = {};
+    orders.forEach(o => {
+      const d = new Date(o.date);
+      if (String(d.getFullYear()) !== String(year)) return;
+      const m = d.getMonth() + 1;
+      if (m < fromMonth || m > toMonth) return;
+      if (!monthOrders[m]) monthOrders[m] = [];
+      monthOrders[m].push(o);
+    });
+
+    const months = [];
+    for (let m = fromMonth; m <= toMonth; m++) months.push(m);
+    const monthNames = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    // المواد المطلوبة
+    let targetProds = prods.filter(p =>
+      (lineFilter==='all' || p.line===lineFilter) &&
+      (prodFilter==='all' || p.name===prodFilter)
+    );
+
+    if (!targetProds.length) { cont.innerHTML='<div class="empty">لا توجد مواد</div>'; return; }
+
+    // حساب Trend لكل مادة
+    const trendData = targetProds.map(p => {
+      const lineDocs  = docs.filter(d => d.line===p.line);
+      const totalDocs = lineDocs.length;
+      if (totalDocs === 0) return null;
+
+      const monthlyData = months.map(m => {
+        const mo = monthOrders[m] || [];
+        // صيدليات سحبت هذه المادة هذا الشهر
+        const phWithProd = new Set(mo.filter(o=>o.product===p.name).map(o=>o.pharmacy));
+        // أطباء يكتبونها
+        const writingDocs = new Set();
+        lineDocs.forEach(doc => {
+          (doc.pharmacies||[]).forEach(ph => {
+            if (phWithProd.has(ph)) writingDocs.add(doc.name);
+          });
+        });
+        const pct = totalDocs > 0 ? (writingDocs.size / totalDocs * 100) : 0;
+        return { month:m, writing:writingDocs.size, total:totalDocs, pct, docs:[...writingDocs] };
+      });
+
+      return { name:p.name, line:p.line, totalDocs, monthlyData };
+    }).filter(Boolean);
+
+    if (!trendData.length) { cont.innerHTML='<div class="empty">لا توجد بيانات</div>'; return; }
+
+    // عرض الجدول
+    let html = `<div class="table-wrap"><table>
+      <thead><tr>
+        <th style="text-align:right">Product</th>
+        <th>Line</th>
+        <th>Doctors</th>
+        ${months.map(m=>`<th>${monthNames[m]}</th>`).join('')}
+        <th>Trend</th>
+      </tr></thead><tbody>`;
+
+    trendData.forEach(p => {
+      const first = p.monthlyData.find(m=>m.writing>0)?.pct || 0;
+      const last  = [...p.monthlyData].reverse().find(m=>m.writing>0)?.pct || 0;
+      const trend = last > first ? '↑' : last < first ? '↓' : '→';
+      const trendColor = last > first ? 'var(--accent2)' : last < first ? 'var(--danger)' : 'var(--muted)';
+
+      html += `<tr>
+        <td style="text-align:right;font-weight:600;white-space:nowrap">
+          <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${lc(p.line)};margin-left:6px"></span>${p.name}
+        </td>
+        <td><span style="background:${lc(p.line)}18;color:${lc(p.line)};border-radius:999px;padding:2px 7px;font-size:10px;font-weight:600">${p.line}</span></td>
+        <td style="color:var(--muted)">${p.totalDocs}</td>
+        ${p.monthlyData.map(m => {
+          const c = m.pct>=60?'var(--accent2)':m.pct>=30?'var(--warn)':m.pct>0?'var(--danger)':'var(--muted)';
+          return `<td>
+            <div style="text-align:center">
+              <div style="font-weight:700;color:${c}">${m.writing}</div>
+              <div style="font-size:10px;color:${c}">${m.pct.toFixed(0)}%</div>
+              <div style="height:3px;background:rgba(255,255,255,.06);border-radius:999px;margin-top:3px">
+                <div style="width:${Math.min(m.pct,100).toFixed(0)}%;height:100%;background:${c};border-radius:999px"></div>
+              </div>
+            </div>
+          </td>`;
+        }).join('')}
+        <td style="font-size:18px;font-weight:700;color:${trendColor}">${trend}</td>
+      </tr>`;
+    });
+
+    html += '</tbody></table></div>';
+    cont.innerHTML = html;
+  });
+}
+/* ──────────────────────────────────────
+   PERFORMANCE — Line & Product Detail
+────────────────────────────────────── */
+function renderPerformance(el) {
   const now     = new Date();
   const year    = now.getFullYear();
   const curM    = now.getMonth() + 1;
