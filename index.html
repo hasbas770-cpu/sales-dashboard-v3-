@@ -846,7 +846,7 @@ function renderDbReps() {
         months.forEach(m => { const key=`${year}__${pn}__${area}__${m}`; if(wf[key]!==undefined) sec+=Number(wf[key]); });
         const flow = pQty>0?(sec/pQty*100):null;
         rVal+=pVal; rTgtVal+=tVal; rQty+=pQty;
-        return { name:pn, line:p.line, pQty, pVal, tVal, ach, sec, flow };
+        return { name:pn, line:p.line, pQty, pVal, tQty, tVal, ach, sec, flow };
       }).filter(Boolean);
 
       if (!prodDetails.length) return null;
@@ -919,7 +919,9 @@ function renderDbReps() {
             <thead><tr>
               <th style="text-align:right">Product</th>
               <th>Line</th>
+              <th>Target Qty</th>
               <th>Target Value</th>
+              <th>Sales Qty</th>
               <th>Sales Value</th>
               <th>Ach%</th>
               <th>Flow%</th>
@@ -928,7 +930,9 @@ function renderDbReps() {
               ${sortedProds.map(p=>`<tr>
                 <td style="text-align:right;font-weight:600;font-size:11px">${p.name}</td>
                 <td><span style="background:${lc(p.line)}18;color:${lc(p.line)};border-radius:999px;padding:1px 5px;font-size:9px">${p.line}</span></td>
+                <td style="color:var(--muted);font-size:11px">${fmt(p.tQty)}</td>
                 <td style="color:var(--muted);font-size:11px">${fmtV(p.tVal)}</td>
+                <td style="font-weight:600;font-size:11px">${fmt(p.pQty)}</td>
                 <td style="color:var(--accent2);font-weight:700;font-size:11px">${fmtV(p.pVal)}</td>
                 <td>
                   <div style="display:flex;align-items:center;gap:5px">
