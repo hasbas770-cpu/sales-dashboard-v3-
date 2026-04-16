@@ -747,6 +747,9 @@ function refreshDashboard() {
           <option value="flow_desc">Flow% ↓</option>
         </select>
       </div>
+      <div class="form-group" style="margin:0;display:flex;align-items:flex-end">
+        <button class="btn btn-success btn-sm" onclick="exportRepsExcel()" style="white-space:nowrap">📥 Export Excel</button>
+      </div>
     </div>
     <div id="db-reps-list"></div>`;
 
@@ -949,6 +952,82 @@ function renderDbReps() {
         </div>
       </div>`;
   }).join('');
+}
+
+function exportRepsExcel() {
+  const d = window._dbRepsData;
+  if (!d) return;
+  const { savedReps, allProds, ps, wf, targets, months, year, area } = d;
+
+  const repF  = document.getElementById('db-rep-filter')?.value || '';
+  const lineF = document.getElementById('db-line-filter')?.value || '';
+  const sortF = document.getElementById('db-rep-sort')?.value || 'ach_desc';
+
+  // بناء CSV
+  const rows = [];
+  rows.push(['Rep','Line','Product','Product Line','Target Qty','Target Value','Sales Qty','Sales Value','Ach%','Flow%']);
+
+  Object.entries(savedReps)
+    .filter(([k]) => k.endsWith(`__${year}`))
+    .forEach(([k, repData]) => {
+      const repName = k.replace(`__${year}`,'');
+      if (repF && repName !== repF) return;
+      if (lineF && repData.line !== lineF) return;
+
+      const repProds = (repData.subline||[]);
+      const prodDetails = repProds.map(pn => {
+        const p = allProds.find(x=>x.name===pn); if (!p) return null;
+        const price     = Number(p.price||0);
+        const annTotal  = targets[`${year}__${pn}__${area}`] || p.annualTarget || 0;
+        const tQtyTotal = Math.round(annTotal/12*months.length);
+        const repAnn    = repData.targets?.[pn] != null ? Number(repData.targets[pn]) : annTotal;
+        const tQty      = Math.round(repAnn/12*months.length);
+        const repRatio  = tQtyTotal>0?(tQty/tQtyTotal):1;
+        let areaQty=0;
+        months.forEach(m => { areaQty += Number(ps[`${year}__${pn}__${area}__${m}`]||0); });
+        const pQty = Math.round(areaQty * repRatio);
+        const pVal = pQty * price;
+        const tVal = tQty * price;
+        const ach  = tVal>0?((pVal/tVal)*100):0;
+        let sec=0;
+        months.forEach(m => { const key=`${year}__${pn}__${area}__${m}`; if(wf[key]!==undefined) sec+=Number(wf[key]); });
+        const flow = pQty>0?((sec/pQty)*100):null;
+        return { name:pn, line:p.line, pQty, pVal, tQty, tVal, ach, flow };
+      }).filter(Boolean).sort((a,b) => {
+        if (sortF==='ach_asc')   return a.ach-b.ach;
+        if (sortF==='val_desc')  return b.pVal-a.pVal;
+        if (sortF==='flow_desc') return (b.flow||0)-(a.flow||0);
+        return b.ach-a.ach;
+      });
+
+      prodDetails.forEach(p => {
+        rows.push([
+          repName,
+          repData.line||'—',
+          p.name,
+          p.line,
+          p.tQty,
+          p.tVal.toFixed(2),
+          p.pQty,
+          p.pVal.toFixed(2),
+          p.ach.toFixed(1)+'%',
+          p.flow!=null?p.flow.toFixed(1)+'%':'—'
+        ]);
+      });
+      rows.push([]); // سطر فاصل بين المندوبين
+    });
+
+  // تحويل لـ CSV
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const BOM  = '\uFEFF';
+  const blob = new Blob([BOM+csv], {type:'text/csv;charset=utf-8;'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `rep-performance-${year}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('✓ تم التصدير');
 }
 
 
