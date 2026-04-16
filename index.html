@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -8,7 +9,6 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <!-- JS Modules -->
-
 
 <style>
 /* ═══════════════════
@@ -240,10 +240,12 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
 }
 
 </style>
+
 </head>
 <body>
 
 <!-- ═══════════════════ SIDEBAR ═══════════════════ -->
+
 <div class="sidebar" id="sidebar">
   <div class="sidebar-logo">
     <div class="logo-icon">📊</div>
@@ -255,70 +257,72 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
 
   <nav class="sidebar-nav">
 
-    <!-- Dashboard -->
-    <div class="nav-item">
-      <button class="nav-link active" onclick="navigate('dashboard',this)">
-        <div class="icon">📈</div><span data-i18n="dashboard">Dashboard</span>
-      </button>
-    </div>
+```
+<!-- Dashboard -->
+<div class="nav-item">
+  <button class="nav-link active" onclick="navigate('dashboard',this)">
+    <div class="icon">📈</div><span data-i18n="dashboard">Dashboard</span>
+  </button>
+</div>
 
-    <!-- Master Data -->
-    <div class="nav-item">
-      <button class="nav-link" onclick="toggleMenu('menu-master',this)">
-        <div class="icon">🗂</div><span data-i18n="masterData">Master Data</span><span class="arrow">›</span>
-      </button>
-      <div class="sub-menu" id="menu-master">
-        <button class="sub-link" onclick="navigate('products',this)"><span data-i18n="products">المنتجات</span></button>
-        <button class="sub-link" onclick="navigate('pharmacies',this)"><span data-i18n="pharmacies">الصيدليات</span></button>
-        <button class="sub-link" onclick="navigate('doctors',this)"><span data-i18n="doctors">الأطباء</span></button>
-        <button class="sub-link" onclick="navigate('reps',this)"><span data-i18n="reps">المندوبين</span></button>
-        <button class="sub-link" onclick="navigate('sublines',this)"><span data-i18n="sublines">Sub-lines</span></button>
-        <button class="sub-link" onclick="navigate('regions',this)"><span data-i18n="regions">المناطق</span></button>
-      </div>
-    </div>
+<!-- Master Data -->
+<div class="nav-item">
+  <button class="nav-link" onclick="toggleMenu('menu-master',this)">
+    <div class="icon">🗂</div><span data-i18n="masterData">Master Data</span><span class="arrow">›</span>
+  </button>
+  <div class="sub-menu" id="menu-master">
+    <button class="sub-link" onclick="navigate('products',this)"><span data-i18n="products">المنتجات</span></button>
+    <button class="sub-link" onclick="navigate('pharmacies',this)"><span data-i18n="pharmacies">الصيدليات</span></button>
+    <button class="sub-link" onclick="navigate('doctors',this)"><span data-i18n="doctors">الأطباء</span></button>
+    <button class="sub-link" onclick="navigate('reps',this)"><span data-i18n="reps">المندوبين</span></button>
+    <button class="sub-link" onclick="navigate('sublines',this)"><span data-i18n="sublines">Sub-lines</span></button>
+    <button class="sub-link" onclick="navigate('regions',this)"><span data-i18n="regions">المناطق</span></button>
+  </div>
+</div>
 
-    <!-- Warehouses -->
-    <div class="nav-item">
-      <button class="nav-link" onclick="toggleMenu('menu-warehouses',this)">
-        <div class="icon">🏭</div><span data-i18n="warehouses">Warehouses</span><span class="arrow">›</span>
-      </button>
-      <div class="sub-menu" id="menu-warehouses">
-        <button class="sub-link" onclick="navigate('warehouses',this)"><span data-i18n="warehouses">Warehouses</span></button>
-        <button class="sub-link" onclick="navigate('stock',this)">Stock Entry</button>
-      </div>
-    </div>
+<!-- Warehouses -->
+<div class="nav-item">
+  <button class="nav-link" onclick="toggleMenu('menu-warehouses',this)">
+    <div class="icon">🏭</div><span data-i18n="warehouses">Warehouses</span><span class="arrow">›</span>
+  </button>
+  <div class="sub-menu" id="menu-warehouses">
+    <button class="sub-link" onclick="navigate('warehouses',this)"><span data-i18n="warehouses">Warehouses</span></button>
+    <button class="sub-link" onclick="navigate('stock',this)">Stock Entry</button>
+  </div>
+</div>
 
-    <!-- Sales -->
-    <div class="nav-item">
-      <button class="nav-link" onclick="toggleMenu('menu-sales',this)">
-        <div class="icon">💰</div><span>Sales</span><span class="arrow">›</span>
-      </button>
-      <div class="sub-menu" id="menu-sales">
-        <button class="sub-link" onclick="navigate('primary',this)">Primary Sales</button>
-        <button class="sub-link" onclick="navigate('secondary',this)">Secondary Sales</button>
-        <button class="sub-link" onclick="navigate('orders',this)"><span data-i18n="pharmacyOrders">Pharmacy Orders</span></button>
-      </div>
-    </div>
+<!-- Sales -->
+<div class="nav-item">
+  <button class="nav-link" onclick="toggleMenu('menu-sales',this)">
+    <div class="icon">💰</div><span>Sales</span><span class="arrow">›</span>
+  </button>
+  <div class="sub-menu" id="menu-sales">
+    <button class="sub-link" onclick="navigate('primary',this)">Primary Sales</button>
+    <button class="sub-link" onclick="navigate('secondary',this)">Secondary Sales</button>
+    <button class="sub-link" onclick="navigate('orders',this)"><span data-i18n="pharmacyOrders">Pharmacy Orders</span></button>
+  </div>
+</div>
 
-    <!-- Targets -->
-    <div class="nav-item">
-      <button class="nav-link" onclick="toggleMenu('menu-targets',this)">
-        <div class="icon">🎯</div><span data-i18n="targetsPerf">Targets & Performance</span><span class="arrow">›</span>
-      </button>
-      <div class="sub-menu" id="menu-targets">
-        <button class="sub-link" onclick="navigate('targets',this)"><span data-i18n="targets">الأهداف</span></button>
-        <button class="sub-link" onclick="navigate('penetration',this)"><span data-i18n="penetration">Penetration</span></button>
-        <button class="sub-link" onclick="navigate('pen_trend',this)">Penetration Trend</button>
-        <button class="sub-link" onclick="navigate('performance',this)"><span data-i18n="performance">الأداء</span></button>
-      </div>
-    </div>
+<!-- Targets -->
+<div class="nav-item">
+  <button class="nav-link" onclick="toggleMenu('menu-targets',this)">
+    <div class="icon">🎯</div><span data-i18n="targetsPerf">Targets & Performance</span><span class="arrow">›</span>
+  </button>
+  <div class="sub-menu" id="menu-targets">
+    <button class="sub-link" onclick="navigate('targets',this)"><span data-i18n="targets">الأهداف</span></button>
+    <button class="sub-link" onclick="navigate('penetration',this)"><span data-i18n="penetration">Penetration</span></button>
+    <button class="sub-link" onclick="navigate('pen_trend',this)">Penetration Trend</button>
+    <button class="sub-link" onclick="navigate('performance',this)"><span data-i18n="performance">الأداء</span></button>
+  </div>
+</div>
 
-    <!-- Settings -->
-    <div class="nav-item">
-      <button class="nav-link" onclick="navigate('settings',this)">
-        <div class="icon">⚙️</div><span data-i18n="settings">Settings</span>
-      </button>
-    </div>
+<!-- Settings -->
+<div class="nav-item">
+  <button class="nav-link" onclick="navigate('settings',this)">
+    <div class="icon">⚙️</div><span data-i18n="settings">Settings</span>
+  </button>
+</div>
+```
 
   </nav>
 
@@ -333,6 +337,7 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
 <!-- ═══════════════════ MAIN ═══════════════════ -->
+
 <div class="main">
   <div class="topbar">
     <div>
@@ -340,6 +345,10 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
       <div class="page-subtitle" id="topbar-sub">نظرة عامة على الأداء</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
+      <button class="topbar-btn" onclick="refreshAllData()" title="تحديث البيانات"
+        style="padding:8px 14px;font-size:12px;font-family:inherit;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text);cursor:pointer">
+        <span id="refresh-icon" style="display:inline-block;transition:transform .5s">🔄</span>
+      </button>
       <button class="topbar-btn sidebar-toggle" onclick="openSidebar()"
         style="padding:8px 14px;font-size:12px;font-family:inherit;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text);cursor:pointer">☰</button>
     </div>
@@ -348,7 +357,6 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
 </div>
 
 <div id="toast">✓ Done</div>
-
 
 <script>
 
@@ -474,22 +482,31 @@ function getFuzzyKey(data, year, prodName, area, month, warehouse) {
 /* ── Theme ── */
 function applyTheme(theme) {
   const root = document.documentElement;
+  document.body.setAttribute('data-theme', theme);
   if (theme === 'light') {
-    root.style.setProperty('--bg',      '#f0f2f7');
-    root.style.setProperty('--bg2',     '#ffffff');
-    root.style.setProperty('--surface', '#e8eaf0');
-    root.style.setProperty('--border',  'rgba(0,0,0,.1)');
-    root.style.setProperty('--text',    '#1a1f36');
-    root.style.setProperty('--muted',   '#6b7280');
-    root.style.setProperty('--sidebar', '#1e2a4a');
+    root.style.setProperty('--bg',       '#f5f7fa');
+    root.style.setProperty('--bg2',      '#ffffff');
+    root.style.setProperty('--surface',  '#ffffff');
+    root.style.setProperty('--border',   'rgba(15,23,42,.08)');
+    root.style.setProperty('--text',     '#0f172a');
+    root.style.setProperty('--muted',    '#64748b');
+    root.style.setProperty('--sidebar',  '#ffffff');
+    root.style.setProperty('--accent',   '#3b82f6');
+    root.style.setProperty('--accent2',  '#10b981');
+    root.style.setProperty('--warn',     '#f59e0b');
+    root.style.setProperty('--danger',   '#ef4444');
   } else {
-    root.style.setProperty('--bg',      '#0a0f1e');
-    root.style.setProperty('--bg2',     '#111827');
-    root.style.setProperty('--surface', '#1a2236');
-    root.style.setProperty('--border',  'rgba(255,255,255,.06)');
-    root.style.setProperty('--text',    '#e2e8f0');
-    root.style.setProperty('--muted',   '#64748b');
-    root.style.setProperty('--sidebar', '#0c1226');
+    root.style.setProperty('--bg',       '#0a0f1e');
+    root.style.setProperty('--bg2',      '#111827');
+    root.style.setProperty('--surface',  '#1a2236');
+    root.style.setProperty('--border',   'rgba(255,255,255,.06)');
+    root.style.setProperty('--text',     '#e2e8f0');
+    root.style.setProperty('--muted',    '#64748b');
+    root.style.setProperty('--sidebar',  '#0c1226');
+    root.style.setProperty('--accent',   '#4f8ef7');
+    root.style.setProperty('--accent2',  '#34d399');
+    root.style.setProperty('--warn',     '#fbbf24');
+    root.style.setProperty('--danger',   '#ef4444');
   }
   localStorage.setItem('theme', theme);
 }
@@ -499,6 +516,121 @@ function applyTheme(theme) {
   const saved = localStorage.getItem('theme') || 'dark';
   if (saved === 'light') applyTheme('light');
 })();
+
+/* ═══════════════════════════════════════
+   CONFIRMATION DIALOG
+═══════════════════════════════════════ */
+function confirmDialog(message, onConfirm, options = {}) {
+  const { title = '⚠ تأكيد', confirmText, cancelText, type = 'warn' } = options;
+  const existing = document.getElementById('confirm-modal');
+  if (existing) existing.remove();
+
+  const colors = {
+    warn:   { icon:'⚠️', color:'var(--warn)',   bg:'rgba(251,191,36,.1)' },
+    danger: { icon:'🗑️', color:'var(--danger)', bg:'rgba(239,68,68,.1)' },
+    info:   { icon:'ℹ️', color:'var(--accent)', bg:'rgba(79,142,247,.1)' },
+  };
+  const c = colors[type] || colors.warn;
+
+  const modal = document.createElement('div');
+  modal.id = 'confirm-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeUp .2s ease-out';
+
+  modal.innerHTML = `
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:28px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.4);animation:fadeUp .25s ease-out">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+        <div style="width:48px;height:48px;border-radius:50%;background:${c.bg};display:grid;place-items:center;font-size:22px;flex-shrink:0">
+          ${c.icon}
+        </div>
+        <h3 style="margin:0;color:var(--text);font-size:16px;font-weight:700">${title}</h3>
+      </div>
+      <p style="color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 22px 0">${message}</p>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button onclick="closeConfirmDialog()"
+          class="btn btn-ghost btn-sm"
+          style="padding:9px 18px;font-size:13px">
+          ${cancelText || (localStorage.getItem('lang')==='en'?'Cancel':'إلغاء')}
+        </button>
+        <button id="confirm-btn"
+          style="padding:9px 20px;font-size:13px;font-weight:600;font-family:inherit;border-radius:10px;border:none;background:${c.color};color:#fff;cursor:pointer;transition:transform .1s,opacity .15s"
+          onmouseover="this.style.opacity='.9'"
+          onmouseout="this.style.opacity='1'">
+          ${confirmText || (localStorage.getItem('lang')==='en'?'Confirm':'تأكيد')}
+        </button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(modal);
+
+  // Click outside to close
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeConfirmDialog();
+  });
+
+  // ESC to close
+  const escHandler = (e) => {
+    if (e.key === 'Escape') { closeConfirmDialog(); document.removeEventListener('keydown', escHandler); }
+  };
+  document.addEventListener('keydown', escHandler);
+
+  // Confirm action
+  document.getElementById('confirm-btn').addEventListener('click', () => {
+    closeConfirmDialog();
+    if (typeof onConfirm === 'function') onConfirm();
+  });
+}
+
+function closeConfirmDialog() {
+  const m = document.getElementById('confirm-modal');
+  if (m) m.remove();
+}
+
+
+/* Override confirm() to use dialog */
+const _nativeConfirm = window.confirm;
+window.asyncConfirm = function(message, onYes, onNo) {
+  confirmDialog(message, onYes, { type: 'warn' });
+};
+
+/* ═══════ SKELETON HELPERS ═══════ */
+function skeletonKPIs(count = 4) {
+  return '<div class="skeleton-grid">' +
+    Array(count).fill(0).map(() => '<div class="skeleton skeleton-kpi"></div>').join('') +
+    '</div>';
+}
+
+function skeletonTable(rows = 5) {
+  return '<div><div class="skeleton skeleton-title"></div>' +
+    Array(rows).fill(0).map(() => '<div class="skeleton skeleton-row"></div>').join('') +
+    '</div>';
+}
+
+function skeletonCards(count = 3) {
+  return Array(count).fill(0).map(() => '<div class="skeleton skeleton-card"></div>').join('');
+}
+
+/* ═══════ REFRESH ═══════ */
+function refreshAllData() {
+  const icon = document.getElementById('refresh-icon');
+  if (icon) icon.style.transform = 'rotate(360deg)';
+
+  // امسح الكاش
+  if (typeof clearApiCache === 'function') clearApiCache();
+
+  // أعد رسم الصفحة الحالية
+  const activeBtn = document.querySelector('.nav-link.active, .sub-link.active');
+  if (activeBtn) {
+    const match = activeBtn.getAttribute('onclick')?.match(/navigate\('(.+?)'/);
+    if (match) {
+      const page = match[1];
+      setTimeout(() => {
+        navigate(page, activeBtn);
+        if (icon) icon.style.transform = '';
+        toast('✓ '+(localStorage.getItem('lang')==='en'?'Refreshed':'تم التحديث'));
+      }, 300);
+    }
+  }
+}
 
 
 /* === JS/I18N.JS === */
@@ -554,6 +686,182 @@ const TRANSLATIONS = {
     language:        'اللغة',
     arabic:          'العربية',
     english:         'English',
+
+    // Dashboard
+    year:            'السنة',
+    region:          'المنطقة',
+    from:            'من',
+    to:              'إلى',
+    subline:         'Sub-line',
+    allLines:        'All Lines',
+    primarySalesVal: 'Primary Sales Value',
+    secondarySalesKpi:'Secondary Sales',
+    pharmacyOrdersKpi:'أوردرات المجمعات',
+    ordersValue:     'قيمة الأوردرات',
+    linesPerf:       'أداء اللاينات',
+    warehousesKpi:   'المخازن',
+    repsPerf:        'أداء المندوبين',
+    recentOrders:    'آخر الأوردرات',
+    target:          'Target',
+    achievement:     'Achievement',
+    flowRate:        'Flow Rate',
+    noData:          'لا توجد بيانات',
+    loading:         'جاري التحميل...',
+    product:         'Product',
+    line:            'Line',
+    opening:         'Opening',
+    closing:         'Closing',
+    forecast:        'Forecast',
+    suggestedOrder:  'مقترح التنزيل',
+    enough:          'كافي',
+    monthsSupply:    'احتياطي',
+    rep:             'Rep',
+    sortBy:          'ترتيب',
+    achDesc:         'Ach% تنازلي',
+    achAsc:          'Ach% تصاعدي',
+    valDesc:         'Value تنازلي',
+    flowDesc:        'Flow% تنازلي',
+    allReps:         'All Reps',
+    allProducts:     'All Products',
+    units:           'وحدة',
+    month:           'شهر',
+    months:          'أشهر',
+
+    // Dashboard
+    year:            'Year',
+    region:          'Region',
+    from:            'From',
+    to:              'To',
+    subline:         'Sub-line',
+    allLines:        'All Lines',
+    primarySalesVal: 'Primary Sales Value',
+    secondarySalesKpi:'Secondary Sales',
+    pharmacyOrdersKpi:'Pharmacy Orders',
+    ordersValue:     'Orders Value',
+    linesPerf:       'Lines Performance',
+    warehousesKpi:   'Warehouses',
+    repsPerf:        'Reps Performance',
+    recentOrders:    'Recent Orders',
+    target:          'Target',
+    achievement:     'Achievement',
+    flowRate:        'Flow Rate',
+    noData:          'No data',
+    loading:         'Loading...',
+    product:         'Product',
+    line:            'Line',
+    opening:         'Opening',
+    closing:         'Closing',
+    forecast:        'Forecast',
+    suggestedOrder:  'Suggested Order',
+    enough:          'Enough',
+    monthsSupply:    'Supply',
+    rep:             'Rep',
+    sortBy:          'Sort by',
+    achDesc:         'Ach% ↓',
+    achAsc:          'Ach% ↑',
+    valDesc:         'Value ↓',
+    flowDesc:        'Flow% ↓',
+    allReps:         'All Reps',
+    allProducts:     'All Products',
+    units:           'units',
+    month:           'month',
+    months:          'months',
+
+    // Master Data — Products
+    productsTitle:   'المنتجات والأهداف',
+    migrateData:     'تحديث البيانات',
+    clearOldData:    'حذف البيانات القديمة',
+    productName:     'المنتج',
+    annualTarget:    'الهدف السنوي',
+    nsp:             'NSP ($)',
+    action:          'إجراء',
+    noProducts:      'لا توجد منتجات',
+    addProduct:      'إضافة منتج',
+    enterName:       'ادخل الاسم',
+    // Master Data — Pharmacies
+    pharmaciesTitle: 'الصيدليات',
+    pharmacyName:    'اسم الصيدلية',
+    pharmacyLocation:'الموقع',
+    addPharmacy:     'إضافة صيدلية',
+    noPharmacies:    'لا توجد صيدليات',
+    // Master Data — Doctors
+    doctorsTitle:    'الأطباء',
+    doctorName:      'اسم الطبيب',
+    specialty:       'التخصص',
+    addDoctor:       'إضافة طبيب',
+    noDoctors:       'لا يوجد أطباء',
+    linkedPharmacies:'الصيدليات المرتبطة',
+    // Master Data — Reps
+    repsTitle:       'المندوبين',
+    repLine:         'Line',
+    repProducts:     'المواد المسؤول عنها',
+    availableTarget: 'المتاح',
+    allocated:       'موزّع',
+    totalTarget:     'الكلي',
+    // Master Data — Sub-lines
+    sublinesTitle:   'Sub-lines',
+    sublineName:     'اسم Sub-line',
+    sublineProds:    'المواد',
+    addSubline:      'إضافة Sub-line',
+    noSublines:      'لا توجد Sub-lines',
+    productCount:    'عدد المواد',
+    // Master Data — Regions
+    regionsTitle:    'المناطق',
+    regionName:      'اسم المنطقة',
+    addRegion:       'إضافة منطقة',
+    noRegions:       'لا توجد مناطق',
+    confirmDelete:   'تأكيد الحذف؟',
+    saved:           'تم الحفظ',
+    deleted:         'تم الحذف',
+    updated:         'تم التحديث',
+
+    // Master Data — Products
+    productsTitle:   'Products & Targets',
+    migrateData:     'Migrate Data',
+    clearOldData:    'Clear Old Data',
+    productName:     'Product',
+    annualTarget:    'Annual Target',
+    nsp:             'NSP ($)',
+    action:          'Action',
+    noProducts:      'No products',
+    addProduct:      'Add Product',
+    enterName:       'Enter name',
+    // Master Data — Pharmacies
+    pharmaciesTitle: 'Pharmacies',
+    pharmacyName:    'Pharmacy Name',
+    pharmacyLocation:'Location',
+    addPharmacy:     'Add Pharmacy',
+    noPharmacies:    'No pharmacies',
+    // Master Data — Doctors
+    doctorsTitle:    'Doctors',
+    doctorName:      'Doctor Name',
+    specialty:       'Specialty',
+    addDoctor:       'Add Doctor',
+    noDoctors:       'No doctors',
+    linkedPharmacies:'Linked Pharmacies',
+    // Master Data — Reps
+    repsTitle:       'Reps',
+    repLine:         'Line',
+    repProducts:     'Assigned Products',
+    availableTarget: 'Available',
+    allocated:       'Allocated',
+    totalTarget:     'Total',
+    // Master Data — Sub-lines
+    sublinesTitle:   'Sub-lines',
+    sublineName:     'Sub-line Name',
+    sublineProds:    'Products',
+    addSubline:      'Add Sub-line',
+    noSublines:      'No sub-lines',
+    productCount:    'Products Count',
+    // Master Data — Regions
+    regionsTitle:    'Regions',
+    regionName:      'Region Name',
+    addRegion:       'Add Region',
+    noRegions:       'No regions',
+    confirmDelete:   'Confirm delete?',
+    saved:           'Saved',
+    deleted:         'Deleted',
+    updated:         'Updated',
 
     // Area Manager info
     areaManager:     'Area Manager',
@@ -647,10 +955,12 @@ function applyLanguage(lang) {
 /* === JS/API.JS === */
 
 /* ═══════════════════════════════════════
-   API.JS — Google Sheets JSONP
+   API.JS — Google Sheets JSONP with Cache
 ═══════════════════════════════════════ */
 
 let _cbIdx = 0;
+const _apiCache = {};
+const CACHE_TTL = 5 * 60 * 1000; // 5 دقائق
 
 function jsonpRequest(url, cb) {
   const name = `__cb_${++_cbIdx}`;
@@ -662,17 +972,50 @@ function jsonpRequest(url, cb) {
   document.head.appendChild(s);
 }
 
-function apiGet(action, params, cb) {
+function apiGet(action, params, cb, opts = {}) {
+  const { skipCache = false } = opts;
+  const cacheKey = action + JSON.stringify(params || {});
+  const now = Date.now();
+
+  // تحقق من الكاش
+  if (!skipCache && _apiCache[cacheKey]) {
+    const entry = _apiCache[cacheKey];
+    if (now - entry.time < CACHE_TTL) {
+      // نفّذ callback مباشرة من الكاش
+      setTimeout(() => cb(entry.data), 0);
+      return;
+    }
+  }
+
+  // بناء URL والطلب من الخادم
   let url = `${SHEETS_URL}?action=${action}`;
   if (params) Object.entries(params).forEach(([k,v]) => url += `&${k}=${encodeURIComponent(v)}`);
-  jsonpRequest(url, cb);
+
+  jsonpRequest(url, (data) => {
+    // احفظ في الكاش فقط لو النتيجة ناجحة
+    if (data && data.success !== false) {
+      _apiCache[cacheKey] = { data, time: now };
+    }
+    cb(data);
+  });
 }
 
 function apiPost(body) {
+  // امسح الكاش بعد أي POST
+  clearApiCache();
   return fetch(SHEETS_URL, {
     method: 'POST',
     body: JSON.stringify(body),
   }).then(r => r.json());
+}
+
+function clearApiCache() {
+  Object.keys(_apiCache).forEach(k => delete _apiCache[k]);
+}
+
+function apiRefresh(action, params, cb) {
+  // طلب متجاهل الكاش (للـ pull-to-refresh)
+  apiGet(action, params, cb, { skipCache: true });
 }
 
 /* === JS/DASHBOARD.JS === */
@@ -695,29 +1038,29 @@ function renderDashboard(el) {
       <!-- ── Filters ── -->
       <div style="padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:16px">
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px">
-          <div class="form-group"><label>Year</label>
+          <div class="form-group"><label>${t("year")}</label>
             <select id="db-year" onchange="refreshDashboard()">
               ${[2024,2025,2026,2027,2028].map(y=>`<option${y===year?' selected':''}>${y}</option>`).join('')}
             </select>
           </div>
-          <div class="form-group"><label>Region</label>
+          <div class="form-group"><label>${t("region")}</label>
             <select id="db-area" onchange="refreshDashboard()">
               ${areas.map(a=>`<option>${a}</option>`).join('')}
             </select>
           </div>
-          <div class="form-group"><label>From</label>
+          <div class="form-group"><label>${t("from")}</label>
             <select id="db-from" onchange="refreshDashboard()">
               ${months.map((m,i)=>`<option value="${i+1}"${i===0?' selected':''}>${m}</option>`).join('')}
             </select>
           </div>
-          <div class="form-group"><label>To</label>
+          <div class="form-group"><label>${t("to")}</label>
             <select id="db-to" onchange="refreshDashboard()">
               ${months.map((m,i)=>`<option value="${i+1}"${i===curM-1?' selected':''}>${m}</option>`).join('')}
             </select>
           </div>
-          <div class="form-group"><label>Sub-line</label>
+          <div class="form-group"><label>${t("subline")}</label>
             <select id="db-subline" onchange="refreshDashboard()">
-              <option value="all">All Lines</option>
+              <option value="all">${t("allLines")}</option>
               ${Object.keys(sublines).map(s=>`<option value="${s}">${s}</option>`).join('')}
             </select>
           </div>
@@ -727,23 +1070,23 @@ function renderDashboard(el) {
       <div id="db-kpis" class="kpi-grid" style="margin-bottom:14px"></div>
 
       <div class="card" style="margin-bottom:14px">
-        <h2>📊 أداء اللاينات</h2>
+        <h2>📊 ${t("linesPerf")}</h2>
         <div id="db-lines"></div>
       </div>
 
       <div class="card" style="margin-bottom:14px">
-        <h2>🏭 المخازن</h2>
-        <div id="db-warehouses"></div>
+        <h2>🏭 ${t("warehousesKpi")}</h2>
+        <div id="db-warehouses">${skeletonCards(3)}</div>
       </div>
 
       <div class="card" style="margin-bottom:14px">
-        <h2>👥 أداء المندوبين</h2>
-        <div id="db-reps"><div class="loader"><div class="spinner"></div></div></div>
+        <h2>👥 ${t("repsPerf")}</h2>
+        <div id="db-reps">${skeletonCards(3)}</div>
       </div>
 
       <div class="card">
-        <h2>📦 آخر الأوردرات</h2>
-        <div id="dash-orders"><div class="loader"><div class="spinner"></div></div></div>
+        <h2>📦 ${t("recentOrders")}</h2>
+        <div id="dash-orders">${skeletonTable(4)}</div>
       </div>
     </div>`;
 
@@ -823,7 +1166,7 @@ function refreshDashboard() {
   const kpisEl = document.getElementById('db-kpis');
   if (kpisEl) kpisEl.innerHTML = `
     <div class="kpi-card" style="border-color:rgba(79,142,247,.3)">
-      <div class="kpi-label">Primary Sales Value</div>
+      <div class="kpi-label">${t("primarySalesVal")}</div>
       <div class="kpi-value" style="font-size:20px">${fmtV(psValue)}</div>
       <div style="margin-top:8px">
         <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:4px">
@@ -837,7 +1180,7 @@ function refreshDashboard() {
     </div>
 
     <div class="kpi-card" style="border-color:rgba(52,211,153,.3)">
-      <div class="kpi-label">Secondary Sales</div>
+      <div class="kpi-label">${t("secondarySalesKpi")}</div>
       <div class="kpi-value" style="color:var(--accent)">${fmtSec(secTotal)}</div>
       <div style="margin-top:8px;font-size:11px;color:var(--muted)">
         Flow Rate: <span style="color:${achColor(flowRate)};font-weight:700">${flowRate>0?flowRate.toFixed(1)+'%':'—'}</span>
@@ -845,13 +1188,13 @@ function refreshDashboard() {
     </div>
 
     <div class="kpi-card">
-      <div class="kpi-label">أوردرات المجمعات</div>
+      <div class="kpi-label">${t("pharmacyOrdersKpi")}</div>
       <div class="kpi-value" id="kpi-orders">⏳</div>
       <div style="margin-top:8px;font-size:11px;color:var(--muted)" id="kpi-orders-sub"></div>
     </div>
 
     <div class="kpi-card">
-      <div class="kpi-label">قيمة الأوردرات</div>
+      <div class="kpi-label">${t("ordersValue")}</div>
       <div class="kpi-value" id="kpi-orders-val">⏳</div>
     </div>`;
 
@@ -967,15 +1310,15 @@ function refreshDashboard() {
     } else {
       whEl.innerHTML = `
         <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;align-items:flex-end">
-          <div class="form-group" style="margin:0;flex:1;min-width:130px"><label>Product</label>
+          <div class="form-group" style="margin:0;flex:1;min-width:130px"><label>${t("product")}</label>
             <select id="db-wh-prod" onchange="refreshDashboard()" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none">
-              <option value="">All Products</option>
+              <option value="">${t("allProducts")}</option>
               ${prods.map(p=>`<option value="${p.name}">${p.name}</option>`).join('')}
             </select>
           </div>
-          <div class="form-group" style="margin:0;flex:1;min-width:130px"><label>Line</label>
+          <div class="form-group" style="margin:0;flex:1;min-width:130px"><label>${t("line")}</label>
             <select id="db-wh-line" onchange="refreshDashboard()" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none">
-              <option value="">All Lines</option>
+              <option value="">${t("allLines")}</option>
               <option>Derma</option><option>Optha</option><option>General Line</option><option>CM Line</option>
             </select>
           </div>
@@ -1074,24 +1417,24 @@ function refreshDashboard() {
   if (repsEl) repsEl.innerHTML = `
     <!-- فلاتر مستقلة -->
     <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px">
-      <div class="form-group" style="margin:0;flex:1;min-width:130px"><label>Rep</label>
+      <div class="form-group" style="margin:0;flex:1;min-width:130px"><label>${t("rep")}</label>
         <select id="db-rep-filter" onchange="renderDbReps()" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none">
-          <option value="">All Reps</option>
+          <option value="">${t("allReps")}</option>
           ${repNames2.map(r=>`<option>${r}</option>`).join('')}
         </select>
       </div>
-      <div class="form-group" style="margin:0;flex:1;min-width:130px"><label>Line</label>
+      <div class="form-group" style="margin:0;flex:1;min-width:130px"><label>${t("line")}</label>
         <select id="db-line-filter" onchange="renderDbReps()" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none">
-          <option value="">All Lines</option>
+          <option value="">${t("allLines")}</option>
           <option>Derma</option><option>Optha</option><option>General Line</option><option>CM Line</option>
         </select>
       </div>
-      <div class="form-group" style="margin:0;flex:1;min-width:130px"><label>Sort by</label>
+      <div class="form-group" style="margin:0;flex:1;min-width:130px"><label>${t("sortBy")}</label>
         <select id="db-rep-sort" onchange="renderDbReps()" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none">
-          <option value="ach_desc">Ach% ↓</option>
-          <option value="ach_asc">Ach% ↑</option>
-          <option value="val_desc">Value ↓</option>
-          <option value="flow_desc">Flow% ↓</option>
+          <option value="ach_desc">${t("achDesc")}</option>
+          <option value="ach_asc">${t("achAsc")}</option>
+          <option value="val_desc">${t("valDesc")}</option>
+          <option value="flow_desc">${t("flowDesc")}</option>
         </select>
       </div>
       <div class="form-group" style="margin:0;display:flex;align-items:flex-end">
@@ -1142,7 +1485,7 @@ function refreshDashboard() {
           ${[...o.lines].filter(Boolean).map(l=>`<span style="background:${lc(l)}18;color:${lc(l)};border-radius:999px;padding:2px 8px;font-size:10px;font-weight:600;margin-right:4px">${l}</span>`).join('')}
           <div style="font-size:13px;font-weight:700;color:var(--accent2);margin-top:4px">${fmtV(o.total)}</div>
         </div>
-      </div>`).join('') || '<div class="empty">لا توجد بيانات</div>';
+      </div>`).join('') || '<div class="empty">'+t('noData')+'</div>';
   });
 }
 
@@ -1409,17 +1752,17 @@ function renderProducts(el) {
     <div class="fade-up">
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-          <h2 style="margin:0">💊 المنتجات والأهداف</h2>
-          <button class="btn btn-warn btn-sm" onclick="migrateProductKeys()" title="تحديث البيانات المخزنة لتطابق أسماء المنتجات الحالية">🔄 Migrate Data</button>
-          <button class="btn btn-danger btn-sm" onclick="if(confirm('حذف كل البيانات القديمة؟'))clearOldStockData()">🗑 Clear Old Data</button>
+          <h2 style="margin:0">💊 ${t("productsTitle")}</h2>
+          <button class="btn btn-warn btn-sm" onclick="migrateProductKeys()" title="تحديث البيانات المخزنة لتطابق أسماء المنتجات الحالية">🔄 ${t("migrateData")}</button>
+          <button class="btn btn-danger btn-sm" onclick="confirmDialog('حذف كل البيانات القديمة؟ هذا الإجراء لا يمكن التراجع عنه.', clearOldStockData, {type:'danger', title:'حذف البيانات'})">🗑 ${t("clearOldData")}</button>
         </div>
         <div class="form-grid" style="margin-bottom:14px">
-          <div class="form-group"><label>السنة</label>
+          <div class="form-group"><label>${t("year")}</label>
             <select id="cfg-year" onchange="renderProductsTable()">
               ${[2024,2025,2026,2027,2028].map(y=>`<option${y===2026?' selected':''}>${y}</option>`).join('')}
             </select>
           </div>
-          <div class="form-group"><label>المنطقة</label>
+          <div class="form-group"><label>${t("region")}</label>
             <select id="cfg-area" onchange="renderProductsTable()">
               ${DB.get('areas').map(a=>`<option>${a}</option>`).join('')||'<option>Basra</option>'}
             </select>
@@ -1427,7 +1770,7 @@ function renderProducts(el) {
         </div>
         <div class="table-wrap">
           <table><thead><tr>
-            <th style="text-align:right">المنتج</th><th>Line</th><th>الهدف السنوي</th><th>NSP ($)</th><th>إجراء</th>
+            <th style="text-align:right">${t("productName")}</th><th>${t("line")}</th><th>${t("annualTarget")}</th><th>${t("nsp")}</th><th>${t("action")}</th>
           </tr></thead><tbody id="prod-tbody"></tbody></table>
         </div>
       </div>
@@ -1577,7 +1920,7 @@ function saveProdEdit(i) {
   DB.set('products', prods);
   document.getElementById('prod-edit-modal').remove();
   renderProductsTable();
-  toast('✓ تم التحديث');
+  toast('✓ '+t('updated'));
 }
 
 function deleteProd(i) {
@@ -1586,7 +1929,7 @@ function deleteProd(i) {
   prods.splice(i, 1);
   DB.set('products', prods);
   renderProductsTable();
-  toast('✓ تم الحذف');
+  toast('✓ '+t('deleted'));
 }
 
 /* ──────────────────────────────────────
@@ -1598,12 +1941,12 @@ function renderPharmacies(el) {
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
           <h2 style="margin:0">🏪 الصيدليات</h2>
-          <button class="btn btn-primary btn-sm" onclick="showAddPharmacy()">➕ إضافة</button>
+          <button class="btn btn-primary btn-sm" onclick="showAddPharmacy()">➕ ${t("add")}</button>
         </div>
         <div id="ph-form" style="display:none;margin-bottom:14px;padding:14px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px">
           <div class="form-grid">
             <div class="form-group"><label>الاسم</label><input type="text" id="ph-name" placeholder="اسم الصيدلية"></div>
-            <div class="form-group"><label>المنطقة</label>
+            <div class="form-group"><label>${t("region")}</label>
               <select id="ph-area">${DB.get('areas').map(a=>`<option>${a}</option>`).join('')}</select>
             </div>
             <div class="form-group"><label>الموقع</label><input type="text" id="ph-loc" placeholder="محلة/شارع"></div>
@@ -1635,7 +1978,7 @@ function addPharmacy() {
   document.getElementById('ph-form').style.display = 'none';
   document.getElementById('ph-name').value = '';
   renderPhTable();
-  toast('✓ تم الحفظ');
+  toast('✓ '+t('saved'));
 }
 
 function renderPhTable() {
@@ -1656,7 +1999,7 @@ function deletePh(i) {
   phs.splice(i, 1);
   DB.set('pharmacies', phs);
   renderPhTable();
-  toast('✓ تم الحذف');
+  toast('✓ '+t('deleted'));
 }
 
 /* ──────────────────────────────────────
@@ -1674,7 +2017,7 @@ function renderDoctors(el) {
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
           <h2 style="margin:0">👨‍⚕️ الأطباء</h2>
-          <button class="btn btn-primary btn-sm" onclick="showDocForm()">➕ إضافة طبيب</button>
+          <button class="btn btn-primary btn-sm" onclick="showDocForm()">➕ ${t("addDoctor")}</button>
         </div>
 
         <!-- Add Form -->
@@ -1689,7 +2032,7 @@ function renderDoctors(el) {
                 <option>Derma</option><option>Optha</option><option>General Line</option><option>CM Line</option>
               </select>
             </div>
-            <div class="form-group"><label>المنطقة</label>
+            <div class="form-group"><label>${t("region")}</label>
               <select id="doc-area">
                 ${areas.map(a=>`<option>${a}</option>`).join('')}
               </select>
@@ -1763,7 +2106,7 @@ function addDoctor() {
   document.getElementById('doc-form').style.display='none';
   document.getElementById('doc-name').value='';
   renderDocTable(_docFilter);
-  toast('✓ تم الحفظ');
+  toast('✓ '+t('saved'));
 }
 
 function filterDocs(line, btn) {
@@ -1820,7 +2163,7 @@ function editDoc(name) {
             ${['Derma','Optha','General Line','CM Line'].map(l=>`<option${l===doc.line?' selected':''}>${l}</option>`).join('')}
           </select>
         </div>
-        <div class="form-group"><label>المنطقة</label>
+        <div class="form-group"><label>${t("region")}</label>
           <input type="text" id="edit-doc-area" value="${doc.area||''}">
         </div>
       </div>
@@ -1870,7 +2213,7 @@ function saveDocEdit(oldName) {
 
   document.getElementById('doc-edit-modal').remove();
   renderDocTable(_docFilter);
-  toast('✓ تم التحديث');
+  toast('✓ '+t('updated'));
 }
 
 function _deleteDocDuplicate(name) {
@@ -1880,7 +2223,7 @@ function _deleteDocDuplicate(name) {
   DB.set('pharmacies', phs);
   DB.set('doctors', DB.get('doctors').filter(d=>d.name!==name));
   renderDocTable(_docFilter);
-  toast('✓ تم الحذف');
+  toast('✓ '+t('deleted'));
 }
 
 /* ──────────────────────────────────────
@@ -1928,7 +2271,7 @@ function renderReps(el) {
     <div class="fade-up">
       <div class="card" style="margin-bottom:14px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-          <h2 style="margin:0">👥 المندوبين</h2>
+          <h2 style="margin:0">👥 ${t("repsTitle")}</h2>
           <div style="display:flex;gap:8px;align-items:center">
             <div class="form-group" style="margin:0"><label style="font-size:10px">السنة</label>
               <select id="reps-year" onchange="renderRepsMaster()" style="background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:10px;font-size:12px;font-family:inherit;outline:none">
@@ -2076,7 +2419,7 @@ function editRepData(repName, year) {
             ${lines.map(l=>`<option${l===data.line?' selected':''}>${l}</option>`).join('')}
           </select>
         </div>
-        <div class="form-group"><label>المنطقة</label>
+        <div class="form-group"><label>${t("region")}</label>
           <select id="re-area">
             ${areas.map(a=>`<option${a===data.area?' selected':''}>${a}</option>`).join('')}
           </select>
@@ -2160,7 +2503,7 @@ function saveRepData(repName, year) {
   DB.setObj('repsData', savedReps);
   document.getElementById('rep-edit-modal').remove();
   renderRepsMaster();
-  toast('✓ تم الحفظ');
+  toast('✓ '+t('saved'));
 }
 
 function loadRepOrders() {
@@ -2311,8 +2654,8 @@ function renderSublines(el) {
     <div class="fade-up">
       <div class="card" style="margin-bottom:14px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-          <h2 style="margin:0">🗂 Sub-lines</h2>
-          <button class="btn btn-primary btn-sm" onclick="showSublinesForm()">➕ إضافة Sub-line</button>
+          <h2 style="margin:0">🗂 ${t("sublinesTitle")}</h2>
+          <button class="btn btn-primary btn-sm" onclick="showSublinesForm()">➕ ${t("addSubline")}</button>
         </div>
 
         <!-- Add Form -->
@@ -2417,7 +2760,7 @@ function saveSubline() {
   DB.setObj('sublines', sublines);
   document.getElementById('sl-form').style.display = 'none';
   renderSublinesList();
-  toast('✓ تم الحفظ');
+  toast('✓ '+t('saved'));
 }
 
 function renderSublinesList() {
@@ -2487,7 +2830,7 @@ function saveSublineEdit(name) {
   DB.setObj('sublines', sublines);
   document.getElementById('sl-edit-modal').remove();
   renderSublinesList();
-  toast('✓ تم التحديث');
+  toast('✓ '+t('updated'));
 }
 
 function deleteSubline(name) {
@@ -2496,7 +2839,7 @@ function deleteSubline(name) {
   delete sublines[name];
   DB.setObj('sublines', sublines);
   renderSublinesList();
-  toast('✓ تم الحذف');
+  toast('✓ '+t('deleted'));
 }
 
 /* ──────────────────────────────────────
@@ -2506,11 +2849,11 @@ function renderRegions(el) {
   el.innerHTML = `
     <div class="fade-up">
       <div class="card">
-        <h2>📍 المناطق</h2>
+        <h2>📍 ${t("regionsTitle")}</h2>
         <div style="display:flex;gap:10px;margin-bottom:14px">
           <input type="text" id="area-input" placeholder="اسم المنطقة"
             style="background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:12px;font-size:13px;font-family:inherit;outline:none;flex:1">
-          <button class="btn btn-primary" onclick="addArea()">➕ إضافة</button>
+          <button class="btn btn-primary" onclick="addArea()">➕ ${t("add")}</button>
         </div>
         <div id="areas-list" style="display:flex;flex-wrap:wrap;gap:8px"></div>
       </div>
@@ -2536,7 +2879,7 @@ function addArea() {
   DB.set('areas', areas);
   document.getElementById('area-input').value = '';
   renderAreasList();
-  toast('✓ تم الحفظ');
+  toast('✓ '+t('saved'));
 }
 
 function deleteArea(i) {
@@ -2636,7 +2979,6 @@ function changeLang(lang) {
   renderSettings(document.getElementById('content'));
   toast(lang==='en'?'🇬🇧 English':'🇮🇶 العربية');
 }
-
 
 /* === JS/WAREHOUSES.JS === */
 
@@ -5350,8 +5692,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-
-// Apply saved language
-if (typeof applyLanguage === "function") applyLanguage(localStorage.getItem("lang") || "ar");
 </script>
+
 </body>
