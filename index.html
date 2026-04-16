@@ -4057,15 +4057,14 @@ function renderPerfTable() {
         return 0;
       });
 
-      // Totals
+      const totPrimQty = prodData.reduce((s,p)=>s+p.pQty,0);
       const totPrimVal = prodData.reduce((s,p)=>s+p.pVal,0);
       const totTgtVal  = prodData.reduce((s,p)=>s+p.tVal,0);
       const totAch     = totTgtVal>0?(totPrimVal/totTgtVal*100):0;
       const totSec     = prodData.reduce((s,p)=>s+p.secTotal,0);
-      const totPrimQty = prodData.reduce((s,p)=>s+p.pQty,0);
       const totFlow    = totPrimQty>0?(totSec/totPrimQty*100):null;
 
-      return { repName, line:repData.line||'—', sorted, totPrimVal, totTgtVal, totAch, totFlow };
+      return { repName, line:repData.line||'—', sorted, totPrimQty, totPrimVal, totTgtVal, totAch, totFlow };
     }).filter(Boolean);
 
   // Sort المندوبين
@@ -4080,81 +4079,138 @@ function renderPerfTable() {
     return;
   }
 
-  cont.innerHTML = repEntries.map(rep => `
+  cont.innerHTML = repEntries.map((rep, ri) => {
+    const safeRep = rep.repName.replace(/[^a-zA-Z0-9]/g,'_');
+    return `
     <div class="card" style="margin-bottom:14px">
-      <!-- Rep Header -->
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div style="width:36px;height:36px;border-radius:50%;background:var(--grad);display:grid;place-items:center;font-size:16px">👤</div>
-          <div>
-            <div style="font-weight:700;font-size:15px;color:#fff">${rep.repName}</div>
-            <div style="font-size:11px;color:var(--muted)">${rep.line}</div>
+      <!-- Rep Header — clickable -->
+      <div onclick="toggleRepPerfDetail('${safeRep}')" style="cursor:pointer">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;border-radius:50%;background:var(--grad);display:grid;place-items:center;font-size:16px">👤</div>
+            <div>
+              <div style="font-weight:700;font-size:15px;color:#fff">${rep.repName}</div>
+              <div style="font-size:11px;color:var(--muted)">${rep.line}</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+            <div style="text-align:center">
+              <div style="font-size:10px;color:var(--muted)">Primary Qty</div>
+              <div style="font-weight:700;color:#fff">${fmt(rep.totPrimQty)}</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:10px;color:var(--muted)">Primary Value</div>
+              <div style="font-weight:700;color:#fff">${fmtV(rep.totPrimVal)}</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:10px;color:var(--muted)">Target</div>
+              <div style="font-weight:700;color:var(--muted)">${fmtV(rep.totTgtVal)}</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:10px;color:var(--muted)">Ach%</div>
+              <div style="font-weight:700;font-size:18px;color:${achColor(rep.totAch)}">${rep.totAch.toFixed(1)}%</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:10px;color:var(--muted)">Flow Rate</div>
+              <div style="font-weight:700;font-size:18px;color:${rep.totFlow!=null?achColor(rep.totFlow):'var(--muted)'}">${rep.totFlow!=null?rep.totFlow.toFixed(1)+'%':'—'}</div>
+            </div>
+            <span style="color:var(--muted);font-size:18px" id="arr-${safeRep}">›</span>
           </div>
         </div>
-        <div style="display:flex;gap:16px;flex-wrap:wrap">
-          <div style="text-align:center">
-            <div style="font-size:10px;color:var(--muted)">Primary Value</div>
-            <div style="font-weight:700;color:#fff">${fmtV(rep.totPrimVal)}</div>
-          </div>
-          <div style="text-align:center">
-            <div style="font-size:10px;color:var(--muted)">Target</div>
-            <div style="font-weight:700;color:var(--muted)">${fmtV(rep.totTgtVal)}</div>
-          </div>
-          <div style="text-align:center">
-            <div style="font-size:10px;color:var(--muted)">Ach%</div>
-            <div style="font-weight:700;font-size:18px;color:${achColor(rep.totAch)}">${rep.totAch.toFixed(1)}%</div>
-          </div>
-          <div style="text-align:center">
-            <div style="font-size:10px;color:var(--muted)">Flow Rate</div>
-            <div style="font-weight:700;font-size:18px;color:${rep.totFlow!=null?achColor(rep.totFlow):'var(--muted)'}">${rep.totFlow!=null?rep.totFlow.toFixed(1)+'%':'—'}</div>
-          </div>
+        <!-- Progress -->
+        <div style="height:3px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden">
+          <div style="width:${Math.min(rep.totAch,100).toFixed(0)}%;height:100%;background:${lc(rep.line)};border-radius:999px"></div>
         </div>
       </div>
-      <!-- Progress -->
-      <div style="height:3px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden;margin-bottom:14px">
-        <div style="width:${Math.min(rep.totAch,100).toFixed(0)}%;height:100%;background:${lc(rep.line)};border-radius:999px"></div>
+
+      <!-- Products Detail — collapsible -->
+      <div id="repd-${safeRep}" style="display:none;margin-top:14px">
+        <!-- Sort buttons -->
+        <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+          <span style="font-size:10px;color:var(--muted);align-self:center">Sort:</span>
+          ${[
+            {label:'Ach% ↓',key:'ach_desc'},{label:'Ach% ↑',key:'ach_asc'},
+            {label:'Value ↓',key:'val_desc'},{label:'Flow% ↓',key:'flow_desc'},
+          ].map(s=>`<button onclick="sortRepProds('${safeRep}','${s.key}')"
+            style="padding:4px 8px;font-size:10px;font-family:inherit;border-radius:6px;
+            border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted);cursor:pointer"
+            onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">${s.label}</button>`).join('')}
+        </div>
+        <div id="repdt-${safeRep}" class="table-wrap"><table>
+          <thead><tr>
+            <th style="text-align:right">Product</th>
+            <th>NSP</th>
+            <th>Qty</th>
+            <th>Value</th>
+            <th>Target Value</th>
+            <th>Ach%</th>
+            <th>Secondary</th>
+            <th>Flow%</th>
+            <th>vs Prev</th>
+          </tr></thead>
+          <tbody id="reprows-${safeRep}">
+            ${_buildRepProdRows(rep.sorted, achColor)}
+          </tbody>
+        </table></div>
       </div>
-      <!-- Products Table -->
-      <div class="table-wrap"><table>
-        <thead><tr>
-          <th style="text-align:right">Product</th>
-          <th>NSP</th>
-          <th>Primary Qty</th>
-          <th>Primary Value</th>
-          <th>Target Value</th>
-          <th>Ach%</th>
-          <th>Secondary</th>
-          <th>Flow Rate%</th>
-          <th>vs Prev</th>
-        </tr></thead>
-        <tbody>
-          ${rep.sorted.map(d=>`<tr>
-            <td style="text-align:right;font-weight:600;white-space:nowrap">${d.pn}</td>
-            <td style="color:var(--muted);font-size:11px">${d.price?'$'+d.price.toFixed(2):'—'}</td>
-            <td>${fmt(d.pQty)}</td>
-            <td style="color:var(--accent2);font-weight:700">${fmtV(d.pVal)}</td>
-            <td style="color:var(--muted)">${fmtV(d.tVal)}</td>
-            <td>
-              <div style="display:flex;align-items:center;gap:6px">
-                <div style="width:50px;height:4px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden">
-                  <div style="width:${Math.min(d.ach,100).toFixed(0)}%;height:100%;background:${achColor(d.ach)};border-radius:999px"></div>
-                </div>
-                <span style="font-weight:700;color:${achColor(d.ach)}">${d.ach.toFixed(1)}%</span>
-              </div>
-            </td>
-            <td style="color:${d.secTotal<0?'var(--danger)':d.secTotal>0?'var(--accent)':'var(--muted)'};font-weight:600">${fmtSec(d.secTotal)}</td>
-            <td style="color:${d.flowRate!=null?achColor(d.flowRate):'var(--muted)'};font-weight:700">${d.flowRate!=null?d.flowRate.toFixed(1)+'%':'—'}</td>
-            <td style="font-size:11px">
-              ${d.flowTrend!=null
-                ? `<span style="color:${d.flowTrend>0?'var(--accent2)':d.flowTrend<0?'var(--danger)':'var(--muted)'};font-weight:600">
-                    ${d.flowTrend>0?'↑':d.flowTrend<0?'↓':'→'} ${Math.abs(d.flowTrend).toFixed(1)}%
-                   </span>`
-                : '<span style="color:var(--muted)">—</span>'}
-            </td>
-          </tr>`).join('')}
-        </tbody>
-      </table></div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
+
+  // حفظ بيانات المندوبين للـ sort
+  window._repPerfData = {};
+  repEntries.forEach(rep => {
+    window._repPerfData[rep.repName.replace(/[^a-zA-Z0-9]/g,'_')] = rep.sorted;
+  });
+}
+
+function _buildRepProdRows(sorted, achColor) {
+  if (!achColor) achColor = c => c>=100?'var(--accent2)':c>=80?'var(--warn)':'var(--danger)';
+  return sorted.map(d=>`<tr>
+    <td style="text-align:right;font-weight:600;white-space:nowrap">${d.pn}</td>
+    <td style="color:var(--muted);font-size:11px">${d.price?'$'+d.price.toFixed(2):'—'}</td>
+    <td style="font-weight:600">${fmt(d.pQty)}</td>
+    <td style="color:var(--accent2);font-weight:700">${fmtV(d.pVal)}</td>
+    <td style="color:var(--muted)">${fmtV(d.tVal)}</td>
+    <td>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div style="width:50px;height:4px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden">
+          <div style="width:${Math.min(d.ach,100).toFixed(0)}%;height:100%;background:${achColor(d.ach)};border-radius:999px"></div>
+        </div>
+        <span style="font-weight:700;color:${achColor(d.ach)}">${d.ach.toFixed(1)}%</span>
+      </div>
+    </td>
+    <td style="color:${d.secTotal<0?'var(--danger)':d.secTotal>0?'var(--accent)':'var(--muted)'};font-weight:600">${fmtSec(d.secTotal)}</td>
+    <td style="color:${d.flowRate!=null?achColor(d.flowRate):'var(--muted)'};font-weight:700">${d.flowRate!=null?d.flowRate.toFixed(1)+'%':'—'}</td>
+    <td style="font-size:11px">
+      ${d.flowTrend!=null
+        ? `<span style="color:${d.flowTrend>0?'var(--accent2)':d.flowTrend<0?'var(--danger)':'var(--muted)'};font-weight:600">${d.flowTrend>0?'↑':d.flowTrend<0?'↓':'→'} ${Math.abs(d.flowTrend).toFixed(1)}%</span>`
+        : '<span style="color:var(--muted)">—</span>'}
+    </td>
+  </tr>`).join('');
+}
+
+function toggleRepPerfDetail(safeRep) {
+  const el  = document.getElementById('repd-'+safeRep);
+  const arr = document.getElementById('arr-'+safeRep);
+  if (!el) return;
+  const open = el.style.display === 'none';
+  el.style.display  = open ? 'block' : 'none';
+  if (arr) arr.style.transform = open ? 'rotate(90deg)' : '';
+}
+
+function sortRepProds(safeRep, sortKey) {
+  const data = window._repPerfData?.[safeRep];
+  if (!data) return;
+  const sorted = [...data].sort((a,b) => {
+    if (sortKey==='ach_desc')  return b.ach - a.ach;
+    if (sortKey==='ach_asc')   return a.ach - b.ach;
+    if (sortKey==='val_desc')  return b.pVal - a.pVal;
+    if (sortKey==='flow_desc') return (b.flowRate||0) - (a.flowRate||0);
+    return 0;
+  });
+  const tbody = document.getElementById('reprows-'+safeRep);
+  if (tbody) tbody.innerHTML = _buildRepProdRows(sorted);
 }
 
 /* ──────────────────────────────────────
