@@ -258,32 +258,32 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
     <!-- Dashboard -->
     <div class="nav-item">
       <button class="nav-link active" onclick="navigate('dashboard',this)">
-        <div class="icon">📈</div><span>Dashboard</span>
+        <div class="icon">📈</div><span data-i18n="dashboard">Dashboard</span>
       </button>
     </div>
 
     <!-- Master Data -->
     <div class="nav-item">
       <button class="nav-link" onclick="toggleMenu('menu-master',this)">
-        <div class="icon">🗂</div><span>Master Data</span><span class="arrow">›</span>
+        <div class="icon">🗂</div><span data-i18n="masterData">Master Data</span><span class="arrow">›</span>
       </button>
       <div class="sub-menu" id="menu-master">
-        <button class="sub-link" onclick="navigate('products',this)">المنتجات</button>
-        <button class="sub-link" onclick="navigate('pharmacies',this)">الصيدليات</button>
-        <button class="sub-link" onclick="navigate('doctors',this)">الأطباء</button>
-        <button class="sub-link" onclick="navigate('reps',this)">المندوبين</button>
-        <button class="sub-link" onclick="navigate('sublines',this)">Sub-lines</button>
-        <button class="sub-link" onclick="navigate('regions',this)">المناطق</button>
+        <button class="sub-link" onclick="navigate('products',this)"><span data-i18n="products">المنتجات</span></button>
+        <button class="sub-link" onclick="navigate('pharmacies',this)"><span data-i18n="pharmacies">الصيدليات</span></button>
+        <button class="sub-link" onclick="navigate('doctors',this)"><span data-i18n="doctors">الأطباء</span></button>
+        <button class="sub-link" onclick="navigate('reps',this)"><span data-i18n="reps">المندوبين</span></button>
+        <button class="sub-link" onclick="navigate('sublines',this)"><span data-i18n="sublines">Sub-lines</span></button>
+        <button class="sub-link" onclick="navigate('regions',this)"><span data-i18n="regions">المناطق</span></button>
       </div>
     </div>
 
     <!-- Warehouses -->
     <div class="nav-item">
       <button class="nav-link" onclick="toggleMenu('menu-warehouses',this)">
-        <div class="icon">🏭</div><span>Warehouses</span><span class="arrow">›</span>
+        <div class="icon">🏭</div><span data-i18n="warehouses">Warehouses</span><span class="arrow">›</span>
       </button>
       <div class="sub-menu" id="menu-warehouses">
-        <button class="sub-link" onclick="navigate('warehouses',this)">Warehouses</button>
+        <button class="sub-link" onclick="navigate('warehouses',this)"><span data-i18n="warehouses">Warehouses</span></button>
         <button class="sub-link" onclick="navigate('stock',this)">Stock Entry</button>
       </div>
     </div>
@@ -296,21 +296,28 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
       <div class="sub-menu" id="menu-sales">
         <button class="sub-link" onclick="navigate('primary',this)">Primary Sales</button>
         <button class="sub-link" onclick="navigate('secondary',this)">Secondary Sales</button>
-        <button class="sub-link" onclick="navigate('orders',this)">Pharmacy Orders</button>
+        <button class="sub-link" onclick="navigate('orders',this)"><span data-i18n="pharmacyOrders">Pharmacy Orders</span></button>
       </div>
     </div>
 
     <!-- Targets -->
     <div class="nav-item">
       <button class="nav-link" onclick="toggleMenu('menu-targets',this)">
-        <div class="icon">🎯</div><span>Targets & Performance</span><span class="arrow">›</span>
+        <div class="icon">🎯</div><span data-i18n="targetsPerf">Targets & Performance</span><span class="arrow">›</span>
       </button>
       <div class="sub-menu" id="menu-targets">
-        <button class="sub-link" onclick="navigate('targets',this)">الأهداف</button>
-        <button class="sub-link" onclick="navigate('penetration',this)">Penetration</button>
+        <button class="sub-link" onclick="navigate('targets',this)"><span data-i18n="targets">الأهداف</span></button>
+        <button class="sub-link" onclick="navigate('penetration',this)"><span data-i18n="penetration">Penetration</span></button>
         <button class="sub-link" onclick="navigate('pen_trend',this)">Penetration Trend</button>
-        <button class="sub-link" onclick="navigate('performance',this)">الأداء</button>
+        <button class="sub-link" onclick="navigate('performance',this)"><span data-i18n="performance">الأداء</span></button>
       </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="nav-item">
+      <button class="nav-link" onclick="navigate('settings',this)">
+        <div class="icon">⚙️</div><span data-i18n="settings">Settings</span>
+      </button>
     </div>
 
   </nav>
@@ -318,7 +325,7 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
   <div class="sidebar-footer">
     <div class="user-chip">
       <div class="user-avatar">👤</div>
-      <div class="user-info"><p>Area Manager</p><span>Basra Region</span></div>
+      <div class="user-info"><p data-i18n="areaManager">Area Manager</p><span data-i18n="basraRegion">Basra Region</span></div>
     </div>
   </div>
 </div>
@@ -464,6 +471,178 @@ function getFuzzyKey(data, year, prodName, area, month, warehouse) {
   );
   return match || exactKey;
 }
+/* ── Theme ── */
+function applyTheme(theme) {
+  const root = document.documentElement;
+  if (theme === 'light') {
+    root.style.setProperty('--bg',      '#f0f2f7');
+    root.style.setProperty('--bg2',     '#ffffff');
+    root.style.setProperty('--surface', '#e8eaf0');
+    root.style.setProperty('--border',  'rgba(0,0,0,.1)');
+    root.style.setProperty('--text',    '#1a1f36');
+    root.style.setProperty('--muted',   '#6b7280');
+    root.style.setProperty('--sidebar', '#1e2a4a');
+  } else {
+    root.style.setProperty('--bg',      '#0a0f1e');
+    root.style.setProperty('--bg2',     '#111827');
+    root.style.setProperty('--surface', '#1a2236');
+    root.style.setProperty('--border',  'rgba(255,255,255,.06)');
+    root.style.setProperty('--text',    '#e2e8f0');
+    root.style.setProperty('--muted',   '#64748b');
+    root.style.setProperty('--sidebar', '#0c1226');
+  }
+  localStorage.setItem('theme', theme);
+}
+
+// تطبيق الثيم عند التحميل
+(function() {
+  const saved = localStorage.getItem('theme') || 'dark';
+  if (saved === 'light') applyTheme('light');
+})();
+
+
+/* === JS/I18N.JS === */
+
+/* ═══════════════════════════════════════
+   I18N — Language Support
+═══════════════════════════════════════ */
+
+const TRANSLATIONS = {
+  ar: {
+    // Sidebar
+    dashboard:       'Dashboard',
+    masterData:      'Master Data',
+    products:        'المنتجات',
+    pharmacies:      'الصيدليات',
+    doctors:         'الأطباء',
+    reps:            'المندوبين',
+    sublines:        'Sub-lines',
+    regions:         'المناطق',
+    warehouses:      'Warehouses',
+    stockEntry:      'Stock Entry',
+    sales:           'Sales',
+    primarySales:    'Primary Sales',
+    secondarySales:  'Secondary Sales',
+    pharmacyOrders:  'Pharmacy Orders',
+    targetsPerf:     'Targets & Performance',
+    targets:         'الأهداف',
+    penetration:     'Penetration',
+    penetrationTrend:'Penetration Trend',
+    performance:     'الأداء',
+    settings:        'Settings',
+
+    // Common buttons
+    save:            'حفظ',
+    cancel:          'إلغاء',
+    add:             'إضافة',
+    edit:            'تعديل',
+    delete:          'حذف',
+    search:          'بحث',
+    apply:           'تطبيق',
+    reset:           'إعادة',
+    close:           'إغلاق',
+    confirm:         'تأكيد',
+    export:          'تصدير',
+    import:          'استيراد',
+
+    // Settings
+    theme:           'المظهر',
+    dark:            'Dark',
+    light:           'Light',
+    darkDesc:        'الوضع الليلي',
+    lightDesc:       'الوضع النهاري',
+    language:        'اللغة',
+    arabic:          'العربية',
+    english:         'English',
+
+    // Area Manager info
+    areaManager:     'Area Manager',
+    basraRegion:     'Basra Region',
+  },
+  en: {
+    // Sidebar
+    dashboard:       'Dashboard',
+    masterData:      'Master Data',
+    products:        'Products',
+    pharmacies:      'Pharmacies',
+    doctors:         'Doctors',
+    reps:            'Reps',
+    sublines:        'Sub-lines',
+    regions:         'Regions',
+    warehouses:      'Warehouses',
+    stockEntry:      'Stock Entry',
+    sales:           'Sales',
+    primarySales:    'Primary Sales',
+    secondarySales:  'Secondary Sales',
+    pharmacyOrders:  'Pharmacy Orders',
+    targetsPerf:     'Targets & Performance',
+    targets:         'Targets',
+    penetration:     'Penetration',
+    penetrationTrend:'Penetration Trend',
+    performance:     'Performance',
+    settings:        'Settings',
+
+    // Common buttons
+    save:            'Save',
+    cancel:          'Cancel',
+    add:             'Add',
+    edit:            'Edit',
+    delete:          'Delete',
+    search:          'Search',
+    apply:           'Apply',
+    reset:           'Reset',
+    close:           'Close',
+    confirm:         'Confirm',
+    export:          'Export',
+    import:          'Import',
+
+    // Settings
+    theme:           'Theme',
+    dark:            'Dark',
+    light:           'Light',
+    darkDesc:        'Night mode',
+    lightDesc:       'Day mode',
+    language:        'Language',
+    arabic:          'العربية',
+    english:         'English',
+
+    // Area Manager info
+    areaManager:     'Area Manager',
+    basraRegion:     'Basra Region',
+  }
+};
+
+function t(key) {
+  const lang = localStorage.getItem('lang') || 'ar';
+  return TRANSLATIONS[lang]?.[key] || TRANSLATIONS.ar[key] || key;
+}
+
+function setLanguage(lang) {
+  localStorage.setItem('lang', lang);
+  applyLanguage(lang);
+}
+
+function applyLanguage(lang) {
+  // Update direction
+  document.documentElement.dir  = lang === 'ar' ? 'rtl' : 'ltr';
+  document.documentElement.lang = lang;
+
+  // Update all elements with data-i18n
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.textContent = t(key);
+  });
+}
+
+// Apply on load
+(function() {
+  const savedLang = localStorage.getItem('lang') || 'ar';
+  if (savedLang === 'en') {
+    document.documentElement.dir = 'ltr';
+    document.documentElement.lang = 'en';
+  }
+})();
+
 
 /* === JS/API.JS === */
 
@@ -550,6 +729,11 @@ function renderDashboard(el) {
       <div class="card" style="margin-bottom:14px">
         <h2>📊 أداء اللاينات</h2>
         <div id="db-lines"></div>
+      </div>
+
+      <div class="card" style="margin-bottom:14px">
+        <h2>🏭 المخازن</h2>
+        <div id="db-warehouses"></div>
       </div>
 
       <div class="card" style="margin-bottom:14px">
@@ -718,7 +902,170 @@ function refreshDashboard() {
     </div>`;
   }
 
-  // ── Reps Performance ──
+  // ── Warehouses ──
+  const whEl   = document.getElementById('db-warehouses');
+  const stock  = DB.getObj('stockEntry');
+  const whs    = DB.get('warehouses') || [];
+  const curM   = toM; // آخر شهر محدد = الشهر الحالي للعرض
+
+  const whProdF = document.getElementById('db-wh-prod')?.value  || '';
+  const whLineF = document.getElementById('db-wh-line')?.value  || '';
+  const safeMonths = Number(document.getElementById('db-wh-months')?.value || 3);
+
+  if (whEl) {
+    const whData = whs.map(wh => {
+      let totalClose=0, totalOpen=0, totalSec=0, totalPrim=0;
+      const prodRows = [];
+
+      // فلتر المواد
+      let filteredProds = prods;
+      if (whProdF) filteredProds = prods.filter(p=>p.name===whProdF);
+      if (whLineF) filteredProds = filteredProds.filter(p=>p.line===whLineF);
+
+      filteredProds.forEach(p => {
+        const closeKey = `${year}__${p.name}__${area}__${curM}__${wh.name}`;
+        const openKey  = `${year}__${p.name}__${area}__${curM}__${wh.name}`;
+        // open = closing الشهر السابق
+        const prevM    = curM===1?12:curM-1;
+        const prevY    = curM===1?year-1:year;
+        const openVal  = Number(stock[`${prevY}__${p.name}__${area}__${prevM}__${wh.name}`]?.close ?? stock[`${year}__${p.name}__${area}__${curM}__${wh.name}`]?.open ?? 0);
+        const closeVal = Number(stock[closeKey]?.close ?? 0);
+        const primVal  = Number(stock[`${year}__${p.name}__${area}__${curM}__${wh.name}__prim`] ?? 0);
+
+        // Secondary = Open + Primary - Close
+        const secVal = openVal + primVal - closeVal;
+
+        if (openVal===0 && closeVal===0 && primVal===0) return;
+
+        totalOpen  += openVal;
+        totalClose += closeVal;
+        totalPrim  += primVal;
+        totalSec   += secVal > 0 ? secVal : 0;
+
+        // Flow Rate = Secondary ÷ Primary × 100
+        const flowRate = primVal > 0 ? (secVal / primVal * 100) : null;
+
+        // Forecast = Closing ÷ avg monthly secondary
+        const avgMonthlySec = secVal > 0 ? secVal / months.length : 0;
+        const forecastMonths = avgMonthlySec > 0 ? (closeVal / avgMonthlySec).toFixed(1) : '—';
+        const isLow = closeVal > 0 && avgMonthlySec > 0 && closeVal < avgMonthlySec;
+
+        prodRows.push({ name:p.name, openVal, closeVal, primVal, secVal, flowRate, forecastMonths, isLow });
+      });
+
+      if (!prodRows.length) return null;
+
+      prodRows.sort((a,b) => a.closeVal - b.closeVal);
+      const lowStock  = prodRows.filter(p=>p.isLow);
+      const totalFlow = totalPrim>0?(totalSec/totalPrim*100):null;
+
+      return { name:wh.name, type:wh.type, totalOpen, totalClose, totalPrim, totalSec, totalFlow, prodRows, lowStock };
+    }).filter(Boolean);
+
+    if (!whData.length) {
+      whEl.innerHTML = '<div style="color:var(--muted);font-size:12px">لا توجد بيانات Stock Entry</div>';
+    } else {
+      whEl.innerHTML = `
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;align-items:flex-end">
+          <div class="form-group" style="margin:0;flex:1;min-width:130px"><label>Product</label>
+            <select id="db-wh-prod" onchange="refreshDashboard()" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none">
+              <option value="">All Products</option>
+              ${prods.map(p=>`<option value="${p.name}">${p.name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group" style="margin:0;flex:1;min-width:130px"><label>Line</label>
+            <select id="db-wh-line" onchange="refreshDashboard()" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none">
+              <option value="">All Lines</option>
+              <option>Derma</option><option>Optha</option><option>General Line</option><option>CM Line</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0"><label>احتياطي</label>
+            <select id="db-wh-months" onchange="refreshDashboard()" style="background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:12px;font-size:12px;font-family:inherit;outline:none">
+              <option value="1">1 شهر</option>
+              <option value="2">2 شهر</option>
+              <option value="3" selected>3 أشهر</option>
+              <option value="6">6 أشهر</option>
+            </select>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">شهر: ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][curM-1]} ${year}</div>
+        ${whData.map(wh => {
+          const safe = wh.name.replace(/[^a-zA-Z0-9]/g,'_');
+          return `
+          <div style="margin-bottom:10px;border:1px solid var(--border);border-radius:14px;overflow:hidden">
+            <div onclick="toggleDbWh('${safe}')"
+              style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;cursor:pointer;background:rgba(255,255,255,.02)"
+              onmouseover="this.style.background='rgba(255,255,255,.05)'" onmouseout="this.style.background='rgba(255,255,255,.02)'">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="font-size:20px">🏭</div>
+                <div>
+                  <div style="font-weight:700;color:#fff">${wh.name}</div>
+                  <div style="font-size:10px;color:var(--muted)">${wh.type||'—'} • ${wh.prodRows.length} مادة
+                    ${wh.lowStock.length ? `<span style="color:var(--danger);font-weight:700"> ⚠ ${wh.lowStock.length} مخزون منخفض</span>` : ''}
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+                <div style="text-align:center">
+                  <div style="font-size:9px;color:var(--muted)">Opening</div>
+                  <div style="font-weight:600;color:var(--muted)">${fmt(wh.totalOpen)}</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="font-size:9px;color:var(--muted)">Primary Sales</div>
+                  <div style="font-weight:600;color:var(--accent2)">${fmt(wh.totalPrim)}</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="font-size:9px;color:var(--muted)">Closing</div>
+                  <div style="font-weight:700;color:#fff">${fmt(wh.totalClose)}</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="font-size:9px;color:var(--muted)">Flow Rate</div>
+                  <div style="font-weight:700;color:${wh.totalFlow!=null?(wh.totalFlow>=80?'var(--accent2)':wh.totalFlow>=50?'var(--warn)':'var(--danger)'):'var(--muted)'}">${wh.totalFlow!=null?wh.totalFlow.toFixed(1)+'%':'—'}</div>
+                </div>
+                <span id="wharr-${safe}" style="color:var(--muted);font-size:16px;transition:.2s">›</span>
+              </div>
+            </div>
+            <div id="dbwh-${safe}" style="display:none;border-top:1px solid var(--border);padding:12px 16px;background:rgba(0,0,0,.06)">
+              <div class="table-wrap"><table>
+                <thead><tr>
+                  <th style="text-align:right">Product</th>
+                  <th>Opening</th>
+                  <th>Primary Sales</th>
+                  <th>Closing</th>
+                  <th>Flow Rate%</th>
+                  <th>Forecast</th>
+                  <th>مقترح التنزيل</th>
+                </tr></thead>
+                <tbody>
+                  ${wh.prodRows.map(p=>{
+                    const avgMonthlySec = months.length > 0 ? p.secVal / months.length : 0;
+                    const needed    = Math.ceil(avgMonthlySec * safeMonths);
+                    const suggested = Math.max(0, needed - p.closeVal);
+                    const forecastM = avgMonthlySec > 0 ? (p.closeVal / avgMonthlySec).toFixed(1) : '—';
+                    return `<tr style="${p.isLow?'background:rgba(239,68,68,.06)':''}">
+                    <td style="text-align:right;font-weight:600;font-size:11px">
+                      ${p.isLow?'⚠ ':''}${p.name}
+                    </td>
+                    <td style="color:var(--muted);font-size:11px">${fmt(p.openVal)}</td>
+                    <td style="color:var(--accent2);font-size:11px">${fmt(p.primVal)}</td>
+                    <td style="font-weight:700;color:${p.isLow?'var(--danger)':'#fff'};font-size:11px">${fmt(p.closeVal)}</td>
+                    <td style="font-size:11px;color:${p.flowRate!=null?(p.flowRate>=80?'var(--accent2)':p.flowRate>=50?'var(--warn)':'var(--danger)'):'var(--muted)'};font-weight:700">
+                      ${p.flowRate!=null?p.flowRate.toFixed(1)+'%':'—'}
+                    </td>
+                    <td style="font-size:11px;color:${forecastM==='—'?'var(--muted)':Number(forecastM)<1?'var(--danger)':Number(forecastM)<2?'var(--warn)':'var(--accent2)'}">
+                      ${forecastM==='—'?'—':forecastM+' شهر'}
+                    </td>
+                    <td style="font-weight:700;font-size:12px;color:${suggested>0?'var(--warn)':'var(--accent2)'}">
+                      ${suggested>0?'📦 '+fmt(suggested):'✓ كافي'}
+                    </td>
+                  </tr>`;}).join('')}
+                </tbody>
+              </table></div>
+            </div>
+          </div>`;
+        }).join('')}`;
+    }
+  }
   const repsEl    = document.getElementById('db-reps');
   const savedReps = DB.getObj('repsData') || {};
   const allProds  = DB.get('products') || [];
@@ -797,6 +1144,19 @@ function refreshDashboard() {
         </div>
       </div>`).join('') || '<div class="empty">لا توجد بيانات</div>';
   });
+}
+
+function refreshWarehouseSection() {
+  refreshDashboard();
+}
+
+function toggleDbWh(safe) {
+  const el  = document.getElementById('dbwh-'+safe);
+  const arr = document.getElementById('wharr-'+safe);
+  if (!el) return;
+  const open = el.style.display === 'none';
+  el.style.display = open ? 'block' : 'none';
+  if (arr) arr.style.transform = open ? 'rotate(90deg)' : '';
 }
 
 function toggleDbRep(safe) {
@@ -2207,6 +2567,76 @@ function clearOldStockData() {
   
   toast('✓ تم حذف البيانات القديمة');
 }
+/* ──────────────────────────────────────
+   SETTINGS
+────────────────────────────────────── */
+function renderSettings(el) {
+  const currentTheme = localStorage.getItem('theme') || 'dark';
+  const currentLang  = localStorage.getItem('lang')  || 'ar';
+
+  el.innerHTML = `
+    <div class="fade-up">
+      <div class="card" style="max-width:500px">
+        <h2 style="margin-bottom:20px">⚙️ Settings</h2>
+
+        <!-- Theme -->
+        <div style="margin-bottom:24px">
+          <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:12px">🎨 ${t('theme')}</div>
+          <div style="display:flex;gap:12px">
+            <div onclick="setTheme('dark')"
+              style="flex:1;padding:16px;border-radius:14px;cursor:pointer;border:2px solid ${currentTheme==='dark'?'var(--accent)':'var(--border)'};background:${currentTheme==='dark'?'rgba(79,142,247,.08)':'rgba(255,255,255,.02)'};transition:.15s;text-align:center">
+              <div style="font-size:28px;margin-bottom:6px">🌙</div>
+              <div style="font-size:12px;font-weight:600;color:${currentTheme==='dark'?'var(--accent)':'var(--muted)'}">${t('dark')}</div>
+              <div style="font-size:10px;color:var(--muted)">${t('darkDesc')}</div>
+            </div>
+            <div onclick="setTheme('light')"
+              style="flex:1;padding:16px;border-radius:14px;cursor:pointer;border:2px solid ${currentTheme==='light'?'var(--accent)':'var(--border)'};background:${currentTheme==='light'?'rgba(79,142,247,.08)':'rgba(255,255,255,.02)'};transition:.15s;text-align:center">
+              <div style="font-size:28px;margin-bottom:6px">☀️</div>
+              <div style="font-size:12px;font-weight:600;color:${currentTheme==='light'?'var(--accent)':'var(--muted)'}">${t('light')}</div>
+              <div style="font-size:10px;color:var(--muted)">${t('lightDesc')}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Language -->
+        <div style="margin-bottom:24px">
+          <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:12px">🌐 ${t('language')}</div>
+          <div style="display:flex;gap:12px">
+            <div onclick="changeLang('ar')"
+              style="flex:1;padding:16px;border-radius:14px;cursor:pointer;border:2px solid ${currentLang==='ar'?'var(--accent)':'var(--border)'};background:${currentLang==='ar'?'rgba(79,142,247,.08)':'rgba(255,255,255,.02)'};transition:.15s;text-align:center">
+              <div style="font-size:24px;margin-bottom:6px">🇮🇶</div>
+              <div style="font-size:12px;font-weight:600;color:${currentLang==='ar'?'var(--accent)':'var(--muted)'}">العربية</div>
+              <div style="font-size:10px;color:var(--muted)">Arabic</div>
+            </div>
+            <div onclick="changeLang('en')"
+              style="flex:1;padding:16px;border-radius:14px;cursor:pointer;border:2px solid ${currentLang==='en'?'var(--accent)':'var(--border)'};background:${currentLang==='en'?'rgba(79,142,247,.08)':'rgba(255,255,255,.02)'};transition:.15s;text-align:center">
+              <div style="font-size:24px;margin-bottom:6px">🇬🇧</div>
+              <div style="font-size:12px;font-weight:600;color:${currentLang==='en'?'var(--accent)':'var(--muted)'}">English</div>
+              <div style="font-size:10px;color:var(--muted)">الإنجليزية</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Version -->
+        <div style="padding:12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;font-size:11px;color:var(--muted)">
+          Sales Dashboard v4 • Basra Region
+        </div>
+      </div>
+    </div>`;
+}
+
+function setTheme(theme) {
+  applyTheme(theme);
+  renderSettings(document.getElementById('content'));
+  toast(theme==='light'?'☀️ Light Mode':'🌙 Dark Mode');
+}
+
+function changeLang(lang) {
+  setLanguage(lang);
+  renderSettings(document.getElementById('content'));
+  toast(lang==='en'?'🇬🇧 English':'🇮🇶 العربية');
+}
+
 
 /* === JS/WAREHOUSES.JS === */
 
@@ -4846,6 +5276,7 @@ const PAGES = {
   wh_summary:  { title:'Warehouse Summary',      sub:'تقرير المخازن — Opening + Primary + Closing + Secondary', render: renderWhSummary },
   wh_add:      { title:'Add Warehouse',           sub:'إضافة مخزن جديد',                         render: renderWhAdd       },
   sublines:    { title:'Sub-lines',           sub:'إدارة مجموعات المواد',                    render: renderSublines    },
+  settings:    { title:'Settings',              sub:'إعدادات النظام',                          render: renderSettings },
   regions:     { title:'المناطق',                sub:'إدارة المناطق',                           render: renderRegions     },
   primary:     { title:'Primary Sales',          sub:'مبيعات المستودع الشهرية',                render: renderPrimary     },
   secondary:   { title:'Secondary Sales',        sub:'مبيعات الصيدليات — محسوبة من Stock',    render: renderSecondary   },
@@ -4919,5 +5350,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
+
+// Apply saved language
+if (typeof applyLanguage === "function") applyLanguage(localStorage.getItem("lang") || "ar");
 </script>
 </body>
