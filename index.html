@@ -721,83 +721,138 @@ function refreshDashboard() {
   // ── Reps Performance ──
   const repsEl    = document.getElementById('db-reps');
   const savedReps = DB.getObj('repsData') || {};
+  const allProds  = DB.get('products') || [];
 
   const repRows = Object.entries(savedReps)
     .filter(([k]) => k.endsWith(`__${year}`))
     .map(([k, repData]) => {
       const repName = k.replace(`__${year}`,'');
-      const repProds = (repData.subline||[]);
+      let repProds  = (repData.subline||[]);
+      if (sublineF !== 'all' && sublines[sublineF]) {
+        repProds = repProds.filter(pn => (sublines[sublineF].products||[]).includes(pn));
+      }
       if (!repProds.length) return null;
 
-      // فلتر حسب Sub-line
-      let filteredProds = repProds;
-      if (sublineF !== 'all' && sublines[sublineF]) {
-        filteredProds = repProds.filter(pn => (sublines[sublineF].products||[]).includes(pn));
-      }
-      if (!filteredProds.length) return null;
-
-      let rVal=0, rTgtVal=0;
-      const prodDetails = filteredProds.map(pn => {
-        const p     = prods.find(x=>x.name===pn); if (!p) return null;
+      let rVal=0, rTgtVal=0, rQty=0;
+      const prodDetails = repProds.map(pn => {
+        const p     = allProds.find(x=>x.name===pn); if (!p) return null;
         const price = Number(p.price||0);
-        let pQty = 0;
-        months.forEach(m => { pQty += Number(ps[`${year}__${pn}__${area}__${m}`]||0); });
+        // نسبة المندوب
+        const annTotal = targets[`${year}__${pn}__${area}`] || p.annualTarget || 0;
+        const tQtyTotal = Math.round(annTotal/12*months.length);
+        const repAnn    = repData.targets?.[pn] != null ? Number(repData.targets[pn]) : annTotal;
+        const tQty      = Math.round(repAnn/12*months.length);
+        const repRatio  = tQtyTotal>0?(tQty/tQtyTotal):1;
+        let areaQty = 0;
+        months.forEach(m => { areaQty += Number(ps[`${year}__${pn}__${area}__${m}`]||0); });
+        const pQty  = Math.round(areaQty * repRatio);
         const pVal  = pQty * price;
-        const ann   = targets[`${year}__${pn}__${area}`] || p.annualTarget || 0;
-        const tQ    = repData.targets?.[pn] != null
-          ? Math.round(Number(repData.targets[pn])/12*months.length)
-          : Math.round(ann/12*months.length);
-        const tVal  = tQ * price;
+        const tVal  = tQty * price;
         const ach   = tVal>0?(pVal/tVal*100):0;
-        rVal    += pVal;
-        rTgtVal += tVal;
-        return { name:pn, pVal, tVal, ach };
+        // Secondary
+        let sec = 0;
+        months.forEach(m => { const key=`${year}__${pn}__${area}__${m}`; if(wf[key]!==undefined) sec+=Number(wf[key]); });
+        const flow = pQty>0?(sec/pQty*100):null;
+        rVal    += pVal; rTgtVal += tVal; rQty += pQty;
+        return { name:pn, line:p.line, pQty, pVal, tVal, ach, sec, flow };
       }).filter(Boolean);
 
-      const rAch = rTgtVal>0?(rVal/rTgtVal*100):0;
-      const best = [...prodDetails].sort((a,b)=>b.pVal-a.pVal)[0];
-      const worst = [...prodDetails].filter(p=>p.tVal>0).sort((a,b)=>a.ach-b.ach)[0];
+      const rAch  = rTgtVal>0?(rVal/rTgtVal*100):0;
+      const rFlow = rQty>0?(prodDetails.reduce((s,p)=>s+p.sec,0)/rQty*100):null;
 
-      return { repName, line:repData.line||'—', rVal, rTgtVal, rAch, best, worst, prodDetails };
+      // تجميع حسب Line
+      const byLine = {};
+      prodDetails.forEach(p => {
+        if (!byLine[p.line]) byLine[p.line] = [];
+        byLine[p.line].push(p);
+      });
+
+      return { repName, line:repData.line||'—', rVal, rTgtVal, rQty, rAch, rFlow, byLine };
     }).filter(Boolean).sort((a,b) => b.rAch - a.rAch);
 
   if (repsEl) {
     if (!repRows.length) {
-      repsEl.innerHTML = '<div style="color:var(--muted);font-size:12px">لا توجد مندوبين مضافين — أضف من Master Data → المندوبين</div>';
+      repsEl.innerHTML = '<div style="color:var(--muted);font-size:12px">لا توجد مندوبين مضافين</div>';
     } else {
-      repsEl.innerHTML = `<div class="table-wrap"><table>
-        <thead><tr>
-          <th style="text-align:right">المندوب</th>
-          <th>Line</th>
-          <th>Sales Value</th>
-          <th>Target Value</th>
-          <th>Achievement%</th>
-          <th style="text-align:right">أفضل مادة</th>
-          <th style="text-align:right">أضعف مادة</th>
-        </tr></thead>
-        <tbody>
-          ${repRows.map(r => `<tr>
-            <td style="text-align:right;font-weight:700">👤 ${r.repName}</td>
-            <td><span style="background:${lc(r.line)}18;color:${lc(r.line)};border-radius:999px;padding:2px 8px;font-size:10px;font-weight:600">${r.line}</span></td>
-            <td style="color:var(--accent2);font-weight:700">${fmtV(r.rVal)}</td>
-            <td style="color:var(--muted)">${fmtV(r.rTgtVal)}</td>
-            <td>
-              <div style="display:flex;align-items:center;gap:8px">
-                <div style="flex:1;height:5px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden;min-width:60px">
-                  <div style="width:${Math.min(r.rAch,100).toFixed(0)}%;height:100%;background:${achColor(r.rAch)};border-radius:999px"></div>
+      repsEl.innerHTML = repRows.map(r => {
+        const safe = r.repName.replace(/[^a-zA-Z0-9]/g,'_');
+        return `
+          <div style="margin-bottom:10px;border:1px solid var(--border);border-radius:14px;overflow:hidden">
+            <!-- Header -->
+            <div onclick="toggleDbRep('${safe}')"
+              style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;cursor:pointer;background:rgba(255,255,255,.02);transition:.15s"
+              onmouseover="this.style.background='rgba(255,255,255,.05)'" onmouseout="this.style.background='rgba(255,255,255,.02)'">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:32px;height:32px;border-radius:50%;background:var(--grad);display:grid;place-items:center;font-size:14px">👤</div>
+                <div>
+                  <div style="font-weight:700;color:#fff">${r.repName}</div>
+                  <div style="font-size:10px;color:var(--muted)">${r.line} • ${fmt(r.rQty)} وحدة</div>
                 </div>
-                <span style="font-weight:700;color:${achColor(r.rAch)};min-width:45px">${r.rAch.toFixed(1)}%</span>
               </div>
-            </td>
-            <td style="text-align:right;font-size:11px">
-              ${r.best ? `<span style="color:var(--accent2)">${r.best.name.split(' ')[0]}</span> <span style="color:var(--muted)">${fmtV(r.best.pVal)}</span>` : '—'}
-            </td>
-            <td style="text-align:right;font-size:11px">
-              ${r.worst ? `<span style="color:var(--danger)">${r.worst.name.split(' ')[0]}</span> <span style="color:var(--muted)">${r.worst.ach.toFixed(0)}%</span>` : '—'}
-            </td>
-          </tr>`).join('')}
-        </tbody>
-      </table></div>`;
+              <div style="display:flex;gap:14px;align-items:center">
+                <div style="text-align:center">
+                  <div style="font-size:9px;color:var(--muted)">Value</div>
+                  <div style="font-weight:700;font-size:13px;color:#fff">${fmtV(r.rVal)}</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="font-size:9px;color:var(--muted)">Target</div>
+                  <div style="font-size:12px;color:var(--muted)">${fmtV(r.rTgtVal)}</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="font-size:9px;color:var(--muted)">Ach%</div>
+                  <div style="font-weight:700;font-size:16px;color:${achColor(r.rAch)}">${r.rAch.toFixed(1)}%</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="font-size:9px;color:var(--muted)">Flow%</div>
+                  <div style="font-weight:700;font-size:16px;color:${r.rFlow!=null?achColor(r.rFlow):'var(--muted)'}">${r.rFlow!=null?r.rFlow.toFixed(1)+'%':'—'}</div>
+                </div>
+                <span id="dbarr-${safe}" style="color:var(--muted);font-size:16px;transition:.2s">›</span>
+              </div>
+            </div>
+            <!-- Detail by Line -->
+            <div id="dbrepd-${safe}" style="display:none;border-top:1px solid var(--border);background:rgba(0,0,0,.08)">
+              ${Object.entries(r.byLine).map(([line, lp]) => {
+                const lVal = lp.reduce((s,p)=>s+p.pVal,0);
+                const lTgt = lp.reduce((s,p)=>s+p.tVal,0);
+                const lAch = lTgt>0?(lVal/lTgt*100):0;
+                return `
+                  <div style="padding:10px 16px 6px">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                      <span style="font-size:11px;font-weight:700;color:${lc(line)}">${line}</span>
+                      <span style="font-size:11px;color:${achColor(lAch)};font-weight:700">${lAch.toFixed(0)}% • ${fmtV(lVal)}</span>
+                    </div>
+                    <div class="table-wrap" style="margin-bottom:8px"><table>
+                      <thead><tr>
+                        <th style="text-align:right;font-size:10px">Product</th>
+                        <th style="font-size:10px">Qty</th>
+                        <th style="font-size:10px">Value</th>
+                        <th style="font-size:10px">Target</th>
+                        <th style="font-size:10px">Ach%</th>
+                        <th style="font-size:10px">Flow%</th>
+                      </tr></thead>
+                      <tbody>
+                        ${lp.sort((a,b)=>b.ach-a.ach).map(p=>`<tr>
+                          <td style="text-align:right;font-weight:600;font-size:11px">${p.name}</td>
+                          <td style="font-size:11px">${fmt(p.pQty)}</td>
+                          <td style="color:var(--accent2);font-weight:600;font-size:11px">${fmtV(p.pVal)}</td>
+                          <td style="color:var(--muted);font-size:11px">${fmtV(p.tVal)}</td>
+                          <td>
+                            <div style="display:flex;align-items:center;gap:4px">
+                              <div style="width:36px;height:3px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden">
+                                <div style="width:${Math.min(p.ach,100).toFixed(0)}%;height:100%;background:${achColor(p.ach)};border-radius:999px"></div>
+                              </div>
+                              <span style="font-size:11px;font-weight:700;color:${achColor(p.ach)}">${p.ach.toFixed(0)}%</span>
+                            </div>
+                          </td>
+                          <td style="font-size:11px;color:${p.flow!=null?achColor(p.flow):'var(--muted)'};font-weight:600">${p.flow!=null?p.flow.toFixed(0)+'%':'—'}</td>
+                        </tr>`).join('')}
+                      </tbody>
+                    </table></div>
+                  </div>`;
+              }).join('')}
+            </div>
+          </div>`;
+      }).join('');
     }
   }
 
@@ -841,6 +896,15 @@ function refreshDashboard() {
         </div>
       </div>`).join('') || '<div class="empty">لا توجد بيانات</div>';
   });
+}
+
+function toggleDbRep(safe) {
+  const el  = document.getElementById('dbrepd-'+safe);
+  const arr = document.getElementById('dbarr-'+safe);
+  if (!el) return;
+  const open = el.style.display === 'none';
+  el.style.display = open ? 'block' : 'none';
+  if (arr) arr.style.transform = open ? 'rotate(90deg)' : '';
 }
 
 
