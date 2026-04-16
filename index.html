@@ -963,9 +963,8 @@ function exportRepsExcel() {
   const lineF = document.getElementById('db-line-filter')?.value || '';
   const sortF = document.getElementById('db-rep-sort')?.value || 'ach_desc';
 
-  // بناء CSV
   const rows = [];
-  rows.push(['Rep','Line','Product','Product Line','Target Qty','Target Value','Sales Qty','Sales Value','Ach%','Flow%']);
+  rows.push(['Rep','Product','Target Qty','Target Value','Sales Qty','Sales Value','Ach%','Flow%']);
 
   Object.entries(savedReps)
     .filter(([k]) => k.endsWith(`__${year}`))
@@ -992,7 +991,7 @@ function exportRepsExcel() {
         let sec=0;
         months.forEach(m => { const key=`${year}__${pn}__${area}__${m}`; if(wf[key]!==undefined) sec+=Number(wf[key]); });
         const flow = pQty>0?((sec/pQty)*100):null;
-        return { name:pn, line:p.line, pQty, pVal, tQty, tVal, ach, flow };
+        return { name:pn, pQty, pVal, tQty, tVal, ach, flow };
       }).filter(Boolean).sort((a,b) => {
         if (sortF==='ach_asc')   return a.ach-b.ach;
         if (sortF==='val_desc')  return b.pVal-a.pVal;
@@ -1000,12 +999,13 @@ function exportRepsExcel() {
         return b.ach-a.ach;
       });
 
-      prodDetails.forEach(p => {
+      if (!prodDetails.length) return;
+
+      // كل مادة — اسم المندوب فقط في أول سطر
+      prodDetails.forEach((p, i) => {
         rows.push([
-          repName,
-          repData.line||'—',
+          i===0 ? repName : '',
           p.name,
-          p.line,
           p.tQty,
           p.tVal.toFixed(2),
           p.pQty,
@@ -1014,18 +1014,22 @@ function exportRepsExcel() {
           p.flow!=null?p.flow.toFixed(1)+'%':'—'
         ]);
       });
-      rows.push([]); // سطر فاصل بين المندوبين
+
+      // سطر الإجمالي
+      const totTQty = prodDetails.reduce((s,p)=>s+p.tQty,0);
+      const totTVal = prodDetails.reduce((s,p)=>s+p.tVal,0);
+      const totPQty = prodDetails.reduce((s,p)=>s+p.pQty,0);
+      const totPVal = prodDetails.reduce((s,p)=>s+p.pVal,0);
+      const totAch  = totTVal>0?((totPVal/totTVal)*100):0;
+      rows.push(['','Total',totTQty,totTVal.toFixed(2),totPQty,totPVal.toFixed(2),totAch.toFixed(1)+'%','']);
+      rows.push([]); // فاصل
     });
 
-  // تحويل لـ CSV
-  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const BOM  = '\uFEFF';
-  const blob = new Blob([BOM+csv], {type:'text/csv;charset=utf-8;'});
+  const csv  = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `rep-performance-${year}.csv`;
-  a.click();
+  a.href = url; a.download = `rep-performance-${year}.csv`; a.click();
   URL.revokeObjectURL(url);
   toast('✓ تم التصدير');
 }
