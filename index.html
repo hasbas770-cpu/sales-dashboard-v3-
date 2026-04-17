@@ -349,6 +349,10 @@ tbody tr:hover   { background:rgba(79,142,247,.04); }
         style="padding:8px 14px;font-size:12px;font-family:inherit;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text);cursor:pointer">
         <span id="refresh-icon" style="display:inline-block;transition:transform .5s">🔄</span>
       </button>
+      <button class="topbar-btn" onclick="logout()" title="تسجيل خروج"
+        style="padding:8px 14px;font-size:12px;font-family:inherit;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text);cursor:pointer">
+        🚪
+      </button>
       <button class="topbar-btn sidebar-toggle" onclick="openSidebar()"
         style="padding:8px 14px;font-size:12px;font-family:inherit;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text);cursor:pointer">☰</button>
     </div>
@@ -950,6 +954,245 @@ function applyLanguage(lang) {
     document.documentElement.lang = 'en';
   }
 })();
+
+
+/* === JS/AUTH.JS === */
+
+/* ═══════════════════════════════════════
+   AUTH.JS — Firebase Authentication
+═══════════════════════════════════════ */
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAC7EvwDCFiPOt6mCZqBPVIzOswgZxKyc8",
+  authDomain: "dashboard1-5d74e.firebaseapp.com",
+  projectId: "dashboard1-5d74e",
+  storageBucket: "dashboard1-5d74e.firebasestorage.app",
+  messagingSenderId: "366417414609",
+  appId: "1:366417414609:web:ee25a7eb2a6e76ab01b8f0"
+};
+
+let _firebaseApp = null;
+let _firebaseAuth = null;
+let _currentUser = null;
+
+function initAuth() {
+  return new Promise((resolve) => {
+    // Load Firebase SDK dynamically
+    const appScript = document.createElement('script');
+    appScript.src = 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js';
+    appScript.onload = () => {
+      const authScript = document.createElement('script');
+      authScript.src = 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js';
+      authScript.onload = () => {
+        _firebaseApp = firebase.initializeApp(firebaseConfig);
+        _firebaseAuth = firebase.auth();
+
+        _firebaseAuth.onAuthStateChanged((user) => {
+          _currentUser = user;
+          if (user) {
+            hideLoginScreen();
+            updateUserUI(user);
+          } else {
+            showLoginScreen();
+          }
+          resolve(user);
+        });
+      };
+      document.head.appendChild(authScript);
+    };
+    document.head.appendChild(appScript);
+  });
+}
+
+function showLoginScreen() {
+  let screen = document.getElementById('login-screen');
+  if (screen) { screen.style.display='flex'; return; }
+
+  screen = document.createElement('div');
+  screen.id = 'login-screen';
+  screen.style.cssText = `
+    position:fixed;inset:0;z-index:10000;
+    background:linear-gradient(135deg,#0a0f1e 0%,#1a2236 100%);
+    display:flex;align-items:center;justify-content:center;padding:20px`;
+
+  screen.innerHTML = `
+    <div style="width:100%;max-width:420px;background:#111827;border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:36px;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+      <div style="text-align:center;margin-bottom:28px">
+        <div style="width:60px;height:60px;border-radius:16px;background:linear-gradient(135deg,#4f8ef7,#a78bfa);display:grid;place-items:center;margin:0 auto 12px;font-size:28px">📊</div>
+        <h1 style="color:#fff;font-size:22px;margin:0 0 4px 0;font-weight:700">Sales Dashboard</h1>
+        <p style="color:#64748b;font-size:13px;margin:0" id="login-subtitle">سجّل الدخول للمتابعة</p>
+      </div>
+
+      <!-- Tabs -->
+      <div style="display:flex;gap:4px;background:rgba(255,255,255,.04);padding:4px;border-radius:12px;margin-bottom:20px">
+        <button id="tab-login" onclick="switchAuthTab('login')"
+          style="flex:1;padding:10px;font-size:12px;font-family:inherit;border:none;background:#4f8ef7;color:#fff;border-radius:10px;cursor:pointer;font-weight:600">
+          تسجيل دخول
+        </button>
+        <button id="tab-signup" onclick="switchAuthTab('signup')"
+          style="flex:1;padding:10px;font-size:12px;font-family:inherit;border:none;background:transparent;color:#64748b;border-radius:10px;cursor:pointer;font-weight:600">
+          حساب جديد
+        </button>
+      </div>
+
+      <!-- Form -->
+      <form id="auth-form" onsubmit="return handleAuth(event)">
+        <div id="name-field" style="display:none;margin-bottom:14px">
+          <label style="font-size:11px;color:#64748b;font-weight:600;display:block;margin-bottom:6px">الاسم</label>
+          <input type="text" id="auth-name" placeholder="اسمك الكامل"
+            style="width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#fff;padding:12px 14px;border-radius:12px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+        </div>
+
+        <div style="margin-bottom:14px">
+          <label style="font-size:11px;color:#64748b;font-weight:600;display:block;margin-bottom:6px">الإيميل</label>
+          <input type="email" id="auth-email" required placeholder="you@example.com"
+            style="width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#fff;padding:12px 14px;border-radius:12px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+        </div>
+
+        <div style="margin-bottom:18px">
+          <label style="font-size:11px;color:#64748b;font-weight:600;display:block;margin-bottom:6px">كلمة السر</label>
+          <input type="password" id="auth-password" required minlength="6" placeholder="6 أحرف على الأقل"
+            style="width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#fff;padding:12px 14px;border-radius:12px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+        </div>
+
+        <div id="auth-error" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#ef4444;padding:10px 14px;border-radius:10px;font-size:12px;margin-bottom:14px"></div>
+
+        <button type="submit" id="auth-submit"
+          style="width:100%;padding:13px;background:linear-gradient(135deg,#4f8ef7,#a78bfa);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;transition:opacity .15s">
+          تسجيل دخول
+        </button>
+
+        <div style="text-align:center;margin-top:14px">
+          <a href="#" onclick="resetPassword();return false" style="color:#64748b;font-size:11px;text-decoration:none">نسيت كلمة السر؟</a>
+        </div>
+      </form>
+    </div>`;
+
+  document.body.appendChild(screen);
+}
+
+function hideLoginScreen() {
+  const screen = document.getElementById('login-screen');
+  if (screen) screen.style.display = 'none';
+}
+
+function switchAuthTab(tab) {
+  const loginTab  = document.getElementById('tab-login');
+  const signupTab = document.getElementById('tab-signup');
+  const nameField = document.getElementById('name-field');
+  const submit    = document.getElementById('auth-submit');
+  const subtitle  = document.getElementById('login-subtitle');
+
+  if (tab === 'signup') {
+    loginTab.style.background  = 'transparent';
+    loginTab.style.color       = '#64748b';
+    signupTab.style.background = '#4f8ef7';
+    signupTab.style.color      = '#fff';
+    nameField.style.display    = 'block';
+    submit.textContent         = 'إنشاء حساب';
+    subtitle.textContent       = 'أنشئ حساب جديد';
+  } else {
+    loginTab.style.background  = '#4f8ef7';
+    loginTab.style.color       = '#fff';
+    signupTab.style.background = 'transparent';
+    signupTab.style.color      = '#64748b';
+    nameField.style.display    = 'none';
+    submit.textContent         = 'تسجيل دخول';
+    subtitle.textContent       = 'سجّل الدخول للمتابعة';
+  }
+  document.getElementById('auth-form').dataset.mode = tab;
+  hideAuthError();
+}
+
+function handleAuth(e) {
+  e.preventDefault();
+  const mode  = document.getElementById('auth-form').dataset.mode || 'login';
+  const email = document.getElementById('auth-email').value.trim();
+  const pass  = document.getElementById('auth-password').value;
+  const name  = document.getElementById('auth-name')?.value.trim();
+  const submit = document.getElementById('auth-submit');
+
+  submit.disabled = true;
+  submit.style.opacity = '0.6';
+  submit.textContent = 'جاري...';
+
+  if (mode === 'signup') {
+    _firebaseAuth.createUserWithEmailAndPassword(email, pass)
+      .then((cred) => {
+        if (name) return cred.user.updateProfile({ displayName: name });
+      })
+      .then(() => {
+        toast('✓ تم إنشاء الحساب');
+      })
+      .catch(err => showAuthError(translateAuthError(err.code)))
+      .finally(() => {
+        submit.disabled = false;
+        submit.style.opacity = '1';
+        submit.textContent = 'إنشاء حساب';
+      });
+  } else {
+    _firebaseAuth.signInWithEmailAndPassword(email, pass)
+      .then(() => toast('✓ مرحباً'))
+      .catch(err => showAuthError(translateAuthError(err.code)))
+      .finally(() => {
+        submit.disabled = false;
+        submit.style.opacity = '1';
+        submit.textContent = 'تسجيل دخول';
+      });
+  }
+  return false;
+}
+
+function translateAuthError(code) {
+  const errors = {
+    'auth/invalid-email':         'صيغة الإيميل غير صحيحة',
+    'auth/user-disabled':         'هذا الحساب معطّل',
+    'auth/user-not-found':        'لا يوجد حساب بهذا الإيميل',
+    'auth/wrong-password':        'كلمة السر غير صحيحة',
+    'auth/invalid-credential':    'البيانات غير صحيحة',
+    'auth/email-already-in-use':  'الإيميل مستخدم بالفعل',
+    'auth/weak-password':         'كلمة السر ضعيفة (6 أحرف على الأقل)',
+    'auth/network-request-failed':'خطأ في الاتصال',
+    'auth/too-many-requests':     'محاولات كثيرة — حاول لاحقاً',
+  };
+  return errors[code] || 'خطأ غير متوقع';
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
+}
+
+function hideAuthError() {
+  const el = document.getElementById('auth-error');
+  if (el) el.style.display = 'none';
+}
+
+function resetPassword() {
+  const email = document.getElementById('auth-email').value.trim();
+  if (!email) return showAuthError('ادخل الإيميل أولاً');
+  _firebaseAuth.sendPasswordResetEmail(email)
+    .then(() => toast('✓ تم إرسال رابط إعادة التعيين'))
+    .catch(err => showAuthError(translateAuthError(err.code)));
+}
+
+function updateUserUI(user) {
+  // Update sidebar user info
+  const userInfo = document.querySelector('.user-info');
+  if (userInfo) {
+    const name = user.displayName || user.email.split('@')[0];
+    userInfo.innerHTML = `<p>${name}</p><span>${user.email}</span>`;
+  }
+}
+
+function logout() {
+  if (!_firebaseAuth) return;
+  confirmDialog('تريد تسجيل الخروج؟', () => {
+    _firebaseAuth.signOut().then(() => {
+      toast('✓ تم تسجيل الخروج');
+    });
+  }, { type:'warn', title:'تسجيل خروج' });
+}
 
 
 /* === JS/API.JS === */
@@ -5687,7 +5930,9 @@ function closeSidebar() { document.getElementById('sidebar').classList.remove('o
 /* ── Init ── */
 document.addEventListener('DOMContentLoaded', function() {
   seedDefaults();
-  navigate('dashboard', document.querySelector('.nav-link.active'));
+  initAuth().then(() => {
+    navigate('dashboard', document.querySelector('.nav-link.active'));
+  });
 });
 
 
